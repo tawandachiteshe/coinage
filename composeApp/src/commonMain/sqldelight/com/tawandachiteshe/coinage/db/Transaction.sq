@@ -1,12 +1,13 @@
 CREATE TABLE `Transaction` (
-    id          TEXT    NOT NULL PRIMARY KEY,
-    amount      REAL    NOT NULL,
-    type        TEXT    NOT NULL,
-    category_id TEXT    NOT NULL REFERENCES Category(id),
-    merchant    TEXT    NOT NULL,
-    notes       TEXT,
-    date        INTEGER NOT NULL,
-    created_at  INTEGER NOT NULL
+    id            TEXT    NOT NULL PRIMARY KEY,
+    amount        REAL    NOT NULL,
+    type          TEXT    NOT NULL,
+    category_id   TEXT    NOT NULL REFERENCES Category(id),
+    merchant      TEXT    NOT NULL,
+    notes         TEXT,
+    currency_code TEXT    NOT NULL DEFAULT 'USD',
+    date          INTEGER NOT NULL,
+    created_at    INTEGER NOT NULL
 );
 
 CREATE INDEX idx_tx_date     ON `Transaction`(date DESC);
@@ -46,7 +47,7 @@ GROUP BY category_id
 ORDER BY total DESC;
 
 insert:
-INSERT INTO `Transaction` VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO `Transaction` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM `Transaction` WHERE id = ?;

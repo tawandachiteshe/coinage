@@ -49,10 +49,11 @@ class TransactionRepository(db: ExpensifyDatabase) {
         categoryId: String,
         merchant: String,
         notes: String?,
+        currencyCode: String = "USD",
         date: Long,
         createdAt: Long,
     ) = withContext(Dispatchers.IO) {
-        q.insert(id, amount, type, categoryId, merchant, notes, date, createdAt)
+        q.insert(id, amount, type, categoryId, merchant, notes, currencyCode, date, createdAt)
     }
 
     suspend fun delete(id: String) = withContext(Dispatchers.IO) { q.delete(id) }

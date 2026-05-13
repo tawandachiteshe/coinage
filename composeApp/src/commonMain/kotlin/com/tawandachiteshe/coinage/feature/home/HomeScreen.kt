@@ -120,7 +120,7 @@ fun HomeScreen(
                         )
                         Spacer(Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("$", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
+                            Text(state.baseCurrencySymbol, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
                             Text(balanceWhole, fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 54.sp, color = TrackerColors.Paper)
                             Text(".$balanceCents", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
                         }

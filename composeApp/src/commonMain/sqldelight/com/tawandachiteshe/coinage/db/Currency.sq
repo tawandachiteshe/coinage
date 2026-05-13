@@ -1,0 +1,25 @@
+CREATE TABLE Currency (
+    code        TEXT NOT NULL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    symbol      TEXT NOT NULL,
+    rate_to_usd REAL NOT NULL DEFAULT 1.0,
+    is_base     INTEGER NOT NULL DEFAULT 0
+);
+
+selectAll:
+SELECT * FROM Currency ORDER BY is_base DESC, code ASC;
+
+selectBase:
+SELECT * FROM Currency WHERE is_base = 1 LIMIT 1;
+
+insert:
+INSERT OR IGNORE INTO Currency VALUES (?, ?, ?, ?, ?);
+
+clearBase:
+UPDATE Currency SET is_base = 0;
+
+setBase:
+UPDATE Currency SET is_base = 1 WHERE code = ?;
+
+updateRate:
+UPDATE Currency SET rate_to_usd = ? WHERE code = ?;

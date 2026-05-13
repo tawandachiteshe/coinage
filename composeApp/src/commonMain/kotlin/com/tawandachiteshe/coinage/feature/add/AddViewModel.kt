@@ -3,10 +3,12 @@ package com.tawandachiteshe.coinage.feature.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tawandachiteshe.coinage.data.CategoryRepository
+import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.DebtRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.db.Category
+import com.tawandachiteshe.coinage.db.Currency
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,7 @@ enum class AddType { Transaction, Goal, Debt }
 enum class TxType   { EXPENSE, INCOME }
 
 data class CategoryUi(val id: String, val name: String, val icon: String, val colorHex: String, val type: String)
+data class CurrencyUi(val code: String, val name: String, val symbol: String, val rateToUsd: Double, val isBase: Boolean)
 
 data class AddState(
     val addType: AddType = AddType.Transaction,
@@ -29,7 +32,8 @@ data class AddState(
     val merchant: String = "",
     val amount: String = "",
     val txType: TxType = TxType.EXPENSE,
-    val selectedCategoryId: String? = null,
+    val selectedCategoryId: String? = null,   // expense category
+    val selectedSourceId: String? = null,      // income source
     val notes: String = "",
     // --- goal ---
     val goalName: String = "",
@@ -42,7 +46,10 @@ data class AddState(
     val debtMinPayment: String = "",
     val debtType: String = "LOAN",
     // --- shared ---
-    val categories: List<CategoryUi> = emptyList(),
+    val expenseCategories: List<CategoryUi> = emptyList(),
+    val incomeSources: List<CategoryUi> = emptyList(),
+    val currencies: List<CurrencyUi> = emptyList(),
+    val selectedCurrencyCode: String = "USD",
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -54,6 +61,8 @@ sealed interface AddAction {
     data class OnAmountChange(val v: String) : AddAction
     data class OnTxTypeChange(val t: TxType) : AddAction
     data class OnCategorySelect(val id: String) : AddAction
+    data class OnSourceSelect(val id: String) : AddAction
+    data class OnCurrencyChange(val code: String) : AddAction
     data class OnNotesChange(val v: String) : AddAction
     // goal
     data class OnGoalNameChange(val v: String) : AddAction
@@ -79,6 +88,7 @@ class AddViewModel(
     private val goalRepo: GoalRepository,
     private val debtRepo: DebtRepository,
     private val catRepo: CategoryRepository,
+    private val curRepo: CurrencyRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AddState())
@@ -90,11 +100,27 @@ class AddViewModel(
     init {
         viewModelScope.launch {
             catRepo.getAll().collect { cats ->
+                val expenses = cats.filter { it.type == "EXPENSE" || it.type == "BOTH" }.map { it.toUi() }
+                val sources  = cats.filter { it.type == "INCOME"  || it.type == "BOTH" }.map { it.toUi() }
                 _state.update { s ->
                     s.copy(
-                        categories = cats.map { it.toUi() },
-                        selectedCategoryId = s.selectedCategoryId
-                            ?: cats.firstOrNull { it.type == "EXPENSE" || it.type == "BOTH" }?.id,
+                        expenseCategories = expenses,
+                        incomeSources     = sources,
+                        selectedCategoryId = s.selectedCategoryId ?: expenses.firstOrNull()?.id,
+                        selectedSourceId   = s.selectedSourceId   ?: sources.firstOrNull()?.id,
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            curRepo.getAll().collect { currencies ->
+                val base = currencies.firstOrNull { it.is_base == 1L }
+                _state.update { s ->
+                    s.copy(
+                        currencies = currencies.map { it.toUi() },
+                        selectedCurrencyCode = s.selectedCurrencyCode
+                            .takeIf { c -> currencies.any { it.code == c } }
+                            ?: base?.code ?: "USD",
                     )
                 }
             }
@@ -107,12 +133,24 @@ class AddViewModel(
             is AddAction.OnAddTypeChange  -> _state.update { it.copy(addType = action.type, error = null) }
             is AddAction.OnMerchantChange -> _state.update { it.copy(merchant = action.v, error = null) }
             is AddAction.OnAmountChange   -> _state.update { it.copy(amount = action.v, error = null) }
-            is AddAction.OnTxTypeChange   -> _state.update { it.copy(txType = action.t) }
+            is AddAction.OnTxTypeChange   -> _state.update { s ->
+                s.copy(
+                    txType = action.t,
+                    selectedCategoryId = if (action.t == TxType.EXPENSE)
+                        (s.selectedCategoryId ?: s.expenseCategories.firstOrNull()?.id)
+                    else s.selectedCategoryId,
+                    selectedSourceId = if (action.t == TxType.INCOME)
+                        (s.selectedSourceId ?: s.incomeSources.firstOrNull()?.id)
+                    else s.selectedSourceId,
+                )
+            }
             is AddAction.OnCategorySelect -> _state.update { it.copy(selectedCategoryId = action.id) }
+            is AddAction.OnSourceSelect   -> _state.update { it.copy(selectedSourceId = action.id) }
+            is AddAction.OnCurrencyChange -> _state.update { it.copy(selectedCurrencyCode = action.code) }
             is AddAction.OnNotesChange    -> _state.update { it.copy(notes = action.v) }
-            is AddAction.OnGoalNameChange -> _state.update { it.copy(goalName = action.v, error = null) }
+            is AddAction.OnGoalNameChange   -> _state.update { it.copy(goalName = action.v, error = null) }
             is AddAction.OnGoalTargetChange -> _state.update { it.copy(goalTarget = action.v, error = null) }
-            is AddAction.OnGoalIconChange -> _state.update { it.copy(goalIcon = action.v) }
+            is AddAction.OnGoalIconChange   -> _state.update { it.copy(goalIcon = action.v) }
             is AddAction.OnDebtCreditorChange -> _state.update { it.copy(debtCreditor = action.v, error = null) }
             is AddAction.OnDebtBalanceChange  -> _state.update { it.copy(debtBalance = action.v, error = null) }
             is AddAction.OnDebtAprChange      -> _state.update { it.copy(debtApr = action.v) }
@@ -143,9 +181,9 @@ class AddViewModel(
             _state.update { it.copy(error = "Enter a valid amount") }
             return
         }
-        val catId = s.selectedCategoryId
+        val catId = if (s.txType == TxType.INCOME) s.selectedSourceId else s.selectedCategoryId
         if (catId == null) {
-            _state.update { it.copy(error = "Select a category") }
+            _state.update { it.copy(error = if (s.txType == TxType.INCOME) "Select a source" else "Select a category") }
             return
         }
         txRepo.insert(
@@ -155,6 +193,7 @@ class AddViewModel(
             categoryId = catId,
             merchant = s.merchant.trim().ifBlank { "Unknown" },
             notes = s.notes.trim().ifBlank { null },
+            currencyCode = s.selectedCurrencyCode,
             date = now,
             createdAt = now,
         )
@@ -211,4 +250,5 @@ class AddViewModel(
     }
 
     private fun Category.toUi() = CategoryUi(id = id, name = name, icon = icon, colorHex = color_hex, type = type)
+    private fun Currency.toUi()  = CurrencyUi(code = code, name = name, symbol = symbol, rateToUsd = rate_to_usd, isBase = is_base == 1L)
 }

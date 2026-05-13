@@ -3,6 +3,7 @@ package com.tawandachiteshe.coinage.feature.add
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -138,7 +140,11 @@ fun AddScreen(
                                     modifier = Modifier
                                         .weight(1f)
                                         .clip(RoundedCornerShape(999.dp))
-                                        .background(if (state.txType == t) if (t == TxType.EXPENSE) TrackerColors.Cherry else TrackerColors.Mint else Color.Transparent, RoundedCornerShape(999.dp))
+                                        .background(
+                                            if (state.txType == t) if (t == TxType.EXPENSE) TrackerColors.Cherry else TrackerColors.Mint
+                                            else Color.Transparent,
+                                            RoundedCornerShape(999.dp),
+                                        )
                                         .clickable { viewModel.onAction(AddAction.OnTxTypeChange(t)) }
                                         .padding(vertical = 6.dp),
                                     contentAlignment = Alignment.Center,
@@ -148,44 +154,62 @@ fun AddScreen(
                             }
                         }
 
+                        // Currency picker
+                        if (state.currencies.isNotEmpty()) {
+                            CurrencyPicker(
+                                currencies = state.currencies,
+                                selected = state.selectedCurrencyCode,
+                                onSelect = { viewModel.onAction(AddAction.OnCurrencyChange(it)) },
+                            )
+                        }
+
                         // Amount
-                        AmountField(
+                        val currencySymbol = state.currencies.find { it.code == state.selectedCurrencyCode }?.symbol ?: "$"
+                        OutlinedTextField(
                             value = state.amount,
                             onValueChange = { viewModel.onAction(AddAction.OnAmountChange(it)) },
+                            label = { Text("Amount") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            leadingIcon = { Text(currencySymbol, fontSize = 16.sp, color = TrackerColors.Ink2) },
+                            modifier = Modifier.fillMaxWidth(),
                         )
 
                         OutlinedTextField(
                             value = state.merchant,
                             onValueChange = { viewModel.onAction(AddAction.OnMerchantChange(it)) },
-                            label = { Text("Merchant / description") },
+                            label = { Text(if (state.txType == TxType.INCOME) "From (payer / employer)" else "Merchant / description") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
 
-                        // Category chips
-                        if (state.categories.isNotEmpty()) {
-                            Text("Category", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                        // Source or Category chips
+                        val isIncome = state.txType == TxType.INCOME
+                        val items = if (isIncome) state.incomeSources else state.expenseCategories
+                        val selectedId = if (isIncome) state.selectedSourceId else state.selectedCategoryId
+                        val sectionLabel = if (isIncome) "Source" else "Category"
+
+                        if (items.isNotEmpty()) {
+                            Text(sectionLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
                             FlowRow(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                state.categories.forEach { cat ->
-                                    val selected = cat.id == state.selectedCategoryId
+                                items.forEach { cat ->
+                                    val selected = cat.id == selectedId
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(999.dp))
                                             .background(if (selected) TrackerColors.Ink else TrackerColors.PaperWhite, RoundedCornerShape(999.dp))
                                             .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                                            .clickable { viewModel.onAction(AddAction.OnCategorySelect(cat.id)) }
+                                            .clickable {
+                                                if (isIncome) viewModel.onAction(AddAction.OnSourceSelect(cat.id))
+                                                else viewModel.onAction(AddAction.OnCategorySelect(cat.id))
+                                            }
                                             .padding(horizontal = 12.dp, vertical = 6.dp),
                                     ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = TrackerIcons.fromKey(cat.icon),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(14.dp),
-                                                tint = if (selected) TrackerColors.Paper else TrackerColors.Ink,
-                                            )
+                                            Icon(imageVector = TrackerIcons.fromKey(cat.icon), contentDescription = null, modifier = Modifier.size(14.dp), tint = if (selected) TrackerColors.Paper else TrackerColors.Ink)
                                             Spacer(Modifier.width(6.dp))
                                             Text(cat.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (selected) TrackerColors.Paper else TrackerColors.Ink)
                                         }
@@ -211,10 +235,14 @@ fun AddScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        AmountField(
+                        OutlinedTextField(
                             value = state.goalTarget,
                             onValueChange = { viewModel.onAction(AddAction.OnGoalTargetChange(it)) },
-                            label = "Target amount",
+                            label = { Text("Target amount") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
 
@@ -233,10 +261,14 @@ fun AddScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        AmountField(
+                        OutlinedTextField(
                             value = state.debtBalance,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtBalanceChange(it)) },
-                            label = "Current balance",
+                            label = { Text("Current balance") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         OutlinedTextField(
                             value = state.debtApr,
@@ -249,9 +281,10 @@ fun AddScreen(
                         OutlinedTextField(
                             value = state.debtMinPayment,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtMinPayChange(it)) },
-                            label = { Text("Min monthly payment $") },
+                            label = { Text("Min monthly payment") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -264,14 +297,7 @@ fun AddScreen(
 
                 // Save button
                 Spacer(Modifier.height(4.dp))
-                StickerCard(
-                    bgColor = TrackerColors.Tangerine,
-                    modifier = Modifier.fillMaxWidth(),
-                    cornerRadius = 16.dp,
-                    borderWidth = 2.dp,
-                    shadowX = 4.dp,
-                    shadowY = 4.dp,
-                ) {
+                StickerCard(bgColor = TrackerColors.Tangerine, modifier = Modifier.fillMaxWidth(), cornerRadius = 16.dp, borderWidth = 2.dp, shadowX = 4.dp, shadowY = 4.dp) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -282,12 +308,7 @@ fun AddScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(TrackerIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink)
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                if (state.isLoading) "Saving…" else "Save",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = TrackerColors.Ink,
-                            )
+                            Text(if (state.isLoading) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                         }
                     }
                 }
@@ -299,18 +320,35 @@ fun AddScreen(
 }
 
 @Composable
-private fun AmountField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String = "Amount",
+private fun CurrencyPicker(
+    currencies: List<CurrencyUi>,
+    selected: String,
+    onSelect: (String) -> Unit,
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
-        modifier = Modifier.fillMaxWidth(),
-    )
+    Column {
+        Text("Currency".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+        Spacer(Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            currencies.forEach { currency ->
+                val isSelected = currency.code == selected
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (isSelected) TrackerColors.Ink else TrackerColors.PaperWhite, RoundedCornerShape(999.dp))
+                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                        .clickable { onSelect(currency.code) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(currency.symbol, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (isSelected) TrackerColors.Paper else TrackerColors.Ink)
+                        Spacer(Modifier.width(4.dp))
+                        Text(currency.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.5.sp, color = if (isSelected) TrackerColors.Paper.copy(alpha = 0.8f) else TrackerColors.Ink2)
+                    }
+                }
+            }
+        }
+    }
 }

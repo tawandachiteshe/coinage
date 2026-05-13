@@ -3,6 +3,7 @@ package com.tawandachiteshe.coinage.feature.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tawandachiteshe.coinage.data.CategoryRepository
+import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.db.SelectAll
 import com.tawandachiteshe.coinage.feature.jars.JarUi
@@ -25,6 +26,7 @@ data class TransactionUi(
     val id: String,
     val merchant: String,
     val amount: Double,
+    val currencyCode: String,
     val type: String,
     val categoryName: String,
     val categoryIcon: String,
@@ -59,6 +61,8 @@ data class HomeState(
     val zoom: Zoom = Zoom.Month,
     val transactions: List<TransactionUi> = emptyList(),
     val jars: List<JarUi> = emptyList(),
+    val baseCurrencySymbol: String = "$",
+    val baseCurrencyCode: String = "USD",
     val isLoading: Boolean = true,
 )
 
@@ -70,12 +74,20 @@ sealed interface HomeAction {
 class HomeViewModel(
     private val txRepo: TransactionRepository,
     private val catRepo: CategoryRepository,
+    private val curRepo: CurrencyRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            curRepo.getBase().collect { base ->
+                if (base != null) {
+                    _state.update { it.copy(baseCurrencySymbol = base.symbol, baseCurrencyCode = base.code) }
+                }
+            }
+        }
         viewModelScope.launch {
             txRepo.getAll().collect { rows ->
                 _state.update { s -> s.copy(transactions = rows.map { it.toUi() }, isLoading = false) }
@@ -130,6 +142,7 @@ class HomeViewModel(
         id = id,
         merchant = merchant,
         amount = amount,
+        currencyCode = currency_code,
         type = type,
         categoryName = category_name,
         categoryIcon = category_icon,

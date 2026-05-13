@@ -1,6 +1,7 @@
 package com.tawandachiteshe.coinage.di
 
 import com.tawandachiteshe.coinage.data.CategoryRepository
+import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.DebtRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
@@ -17,14 +18,15 @@ import org.koin.dsl.module
 val appModule = module {
     single { createHttpClient(get()) }
     single { CategoryRepository(get()) }
+    single { CurrencyRepository(get()) }
     single { TransactionRepository(get()) }
     single { DebtRepository(get()) }
     single { GoalRepository(get()) }
 
-    viewModel { HomeViewModel(get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { GoalsViewModel(get()) }
     viewModel { DebtViewModel(get()) }
     viewModel { InsightsViewModel(get(), get()) }
-    viewModel { AddViewModel(get(), get(), get(), get()) }
+    viewModel { AddViewModel(get(), get(), get(), get(), get()) }
     viewModel { JarsManagerViewModel(get(), get()) }
 }
