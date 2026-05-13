@@ -3,9 +3,11 @@ package com.tawandachiteshe.coinage.data
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.tawandachiteshe.coinage.db.ExpensifyDatabase
+import com.tawandachiteshe.coinage.db.BiggestExpenseInRange
 import com.tawandachiteshe.coinage.db.SelectAll
 import com.tawandachiteshe.coinage.db.SelectByDateRange
 import com.tawandachiteshe.coinage.db.SelectByType
+import com.tawandachiteshe.coinage.db.TopMerchantInRange
 import com.tawandachiteshe.coinage.db.TotalByCategoryAndDateRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -40,6 +42,21 @@ class TransactionRepository(db: ExpensifyDatabase) {
             q.totalByCategoryAndDateRange(startMs, endMs)
                 .executeAsList()
                 .associate { it.category_id to it.total }
+        }
+
+    suspend fun getBiggestExpense(startMs: Long, endMs: Long): BiggestExpenseInRange? =
+        withContext(Dispatchers.IO) {
+            q.biggestExpenseInRange(startMs, endMs).executeAsOneOrNull()
+        }
+
+    suspend fun getTopMerchant(startMs: Long, endMs: Long): TopMerchantInRange? =
+        withContext(Dispatchers.IO) {
+            q.topMerchantInRange(startMs, endMs).executeAsOneOrNull()
+        }
+
+    suspend fun countInRange(startMs: Long, endMs: Long): Long =
+        withContext(Dispatchers.IO) {
+            q.countInRange(startMs, endMs).executeAsOne()
         }
 
     suspend fun insert(

@@ -46,6 +46,26 @@ WHERE date >= :startMs AND date < :endMs AND type = 'EXPENSE'
 GROUP BY category_id
 ORDER BY total DESC;
 
+biggestExpenseInRange:
+SELECT merchant, amount FROM `Transaction`
+WHERE type = 'EXPENSE' AND date >= :startMs AND date < :endMs
+ORDER BY amount DESC
+LIMIT 1;
+
+topMerchantInRange:
+SELECT merchant,
+       COUNT(*) AS visit_count,
+       COALESCE(SUM(amount), 0.0) AS total_amount
+FROM `Transaction`
+WHERE type = 'EXPENSE' AND date >= :startMs AND date < :endMs
+GROUP BY merchant
+ORDER BY visit_count DESC
+LIMIT 1;
+
+countInRange:
+SELECT COUNT(*) AS tx_count FROM `Transaction`
+WHERE date >= :startMs AND date < :endMs;
+
 insert:
 INSERT INTO `Transaction` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 

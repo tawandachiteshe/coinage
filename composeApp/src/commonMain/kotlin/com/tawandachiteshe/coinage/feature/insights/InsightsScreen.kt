@@ -177,71 +177,107 @@ fun InsightsScreen(
                     Text("Moments ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                     Text("worth a sticker", fontSize = 22.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Grape)
                 }
-                Spacer(Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MomentCard(
-                        eyebrow = "BIGGEST SPLURGE",
-                        title = "Thai dinner with Theo",
-                        value = "\$48.20",
-                        bgColor = TrackerColors.Butter,
-                        tilt = -1.6f,
-                        modifier = Modifier.weight(1f),
+
+                if (state.txCount == 0L && !state.isLoading) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "No transactions yet for this period.",
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = TrackerColors.Ink2.copy(alpha = 0.55f),
                     )
-                    MomentCard(
-                        eyebrow = "SAVED THIS MONTH",
-                        title = "+\$48 vs last month",
-                        value = "\$312",
-                        bgColor = TrackerColors.Mint,
-                        tilt = 1.4f,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                // 3-week streak card — full width
-                StickerCard(
-                    bgColor = TrackerColors.Sky,
-                    modifier = Modifier.fillMaxWidth().rotate(0.8f),
-                    cornerRadius = 16.dp,
-                ) {
-                    Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(50.dp).rotate(-8f)
-                                .clip(RoundedCornerShape(25.dp))
-                                .background(TrackerColors.Paper)
-                                .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(25.dp)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text("3w", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink)
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text("Three weeks under budget", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                            Text("Quietly impressive. One more and you'll match your record.", fontSize = 14.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
+                } else {
+                    Spacer(Modifier.height(12.dp))
+                    // Row 1: biggest splurge + income
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        MomentCard(
+                            eyebrow = "BIGGEST SPLURGE",
+                            title = state.biggestSplurgeMerchant ?: "—",
+                            value = "\$${state.biggestSplurgeAmt.fmtWhole()}",
+                            bgColor = TrackerColors.Butter,
+                            tilt = -1.6f,
+                            modifier = Modifier.weight(1f),
+                        )
+                        MomentCard(
+                            eyebrow = "INCOME",
+                            title = "earned this period",
+                            value = "\$${state.totalIncome.fmtWhole()}",
+                            bgColor = TrackerColors.Mint,
+                            tilt = 1.4f,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+
+                    // Net balance full-width card
+                    Spacer(Modifier.height(12.dp))
+                    val net = state.totalIncome - state.totalSpent
+                    val netPositive = net >= 0
+                    StickerCard(
+                        bgColor = if (netPositive) TrackerColors.Sky else TrackerColors.Coral,
+                        modifier = Modifier.fillMaxWidth().rotate(0.5f),
+                        cornerRadius = 16.dp,
+                    ) {
+                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .rotate(-8f)
+                                    .clip(RoundedCornerShape(25.dp))
+                                    .background(TrackerColors.Paper)
+                                    .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(25.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = if (netPositive) "+" else "−",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = TrackerColors.Ink,
+                                )
+                            }
+                            Spacer(Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Net \$${net.fmtAbsWhole()} ${if (netPositive) "ahead" else "over budget"}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TrackerColors.Ink,
+                                )
+                                Text(
+                                    text = "${state.txCount} transaction${if (state.txCount != 1L) "s" else ""} · \$${state.totalSpent.fmtWhole()} out",
+                                    fontSize = 13.sp,
+                                    fontStyle = FontStyle.Italic,
+                                    fontFamily = FontFamily.Serif,
+                                    color = TrackerColors.Ink2,
+                                )
+                            }
                         }
                     }
-                }
-                Spacer(Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MomentCard(
-                        eyebrow = "MOST-VISITED",
-                        title = "Sunny Café",
-                        value = "14 visits · \$89.60",
-                        isValueSmall = true,
-                        bgColor = TrackerColors.Coral,
-                        tilt = -0.8f,
-                        modifier = Modifier.weight(1f),
-                    )
-                    MomentCard(
-                        eyebrow = "QUIETEST DAY",
-                        title = "Sunday Apr 14",
-                        value = "\$0",
-                        bgColor = TrackerColors.Paper,
-                        tilt = 1.0f,
-                        modifier = Modifier.weight(1f),
-                    )
+
+                    // Row 2: most visited + top category
+                    Spacer(Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        MomentCard(
+                            eyebrow = "MOST-VISITED",
+                            title = state.mostVisitedMerchant ?: "—",
+                            value = "${state.mostVisitedCount} visit${if (state.mostVisitedCount != 1L) "s" else ""} · \$${state.mostVisitedTotal.fmtWhole()}",
+                            isValueSmall = true,
+                            bgColor = TrackerColors.Coral,
+                            tilt = -0.8f,
+                            modifier = Modifier.weight(1f),
+                        )
+                        val topCat = state.categoryTotals.firstOrNull()
+                        MomentCard(
+                            eyebrow = "TOP CATEGORY",
+                            title = topCat?.categoryName ?: "—",
+                            value = if (topCat != null) "\$${topCat.total.fmtWhole()}" else "\$0",
+                            bgColor = TrackerColors.Paper,
+                            tilt = 1.0f,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
 
-                // Footer mantra
+                // Footer summary bar
                 Spacer(Modifier.height(22.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth()
@@ -255,11 +291,10 @@ fun InsightsScreen(
                     Icon(TrackerIcons.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = TrackerColors.Butter)
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        "\"Spending less, hugging tighter.\" — May's mantra, picked just for you.",
-                        fontSize = 15.sp,
-                        fontStyle = FontStyle.Italic,
-                        fontFamily = FontFamily.Serif,
-                        lineHeight = 20.sp,
+                        text = "${state.txCount} transactions · \$${state.totalSpent.fmtWhole()} spent · \$${state.totalIncome.fmtWhole()} earned",
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 0.4.sp,
                         color = TrackerColors.Paper,
                         modifier = Modifier.weight(1f),
                     )
@@ -326,6 +361,8 @@ private fun Double.fmtWhole(): String {
     val l = kotlin.math.abs(toLong())
     return if (l >= 1000) "${l / 1000},${(l % 1000).toString().padStart(3, '0')}" else l.toString()
 }
+
+private fun Double.fmtAbsWhole(): String = kotlin.math.abs(this).fmtWhole()
 
 private fun parseHexColor(hex: String): Color {
     val clean = hex.trimStart('#').padStart(6, '0')
