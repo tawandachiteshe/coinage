@@ -18,6 +18,7 @@ import kotlinx.coroutines.tasks.await
 class GoogleAuthRepositoryImpl(
     private val context: Context,
     private val dataStore: DataStore<Preferences>,
+    private val clientId: String,
 ) : GoogleAuthRepository {
 
     private val authClient = Identity.getAuthorizationClient(context)
@@ -36,7 +37,8 @@ class GoogleAuthRepositoryImpl(
     // and launch the PendingIntent if consent is still needed.
     suspend fun requestAuthorization(): AuthorizationResult {
         val request = AuthorizationRequest.builder()
-            .setRequestedScopes(listOf(Scope(SHEETS_SCOPE)))
+            .setRequestedScopes(listOf(Scope(SHEETS_SCOPE), Scope(DRIVE_SCOPE)))
+            .requestOfflineAccess(clientId)
             .build()
         return authClient.authorize(request).await()
     }
@@ -67,7 +69,8 @@ class GoogleAuthRepositoryImpl(
 
     companion object {
         const val SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+        const val DRIVE_SCOPE  = "https://www.googleapis.com/auth/drive.appdata"
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("google_access_token")
-        private val EMAIL_KEY = stringPreferencesKey("google_email")
+        private val EMAIL_KEY        = stringPreferencesKey("google_email")
     }
 }
