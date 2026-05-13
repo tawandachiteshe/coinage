@@ -35,6 +35,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 
 // Hard pixel shadow matching CSS box-shadow: Xpx Ypx 0 ink
@@ -247,8 +259,7 @@ fun PageHeader(
     kicker: String? = null,
 ) {
     Box(modifier = modifier.padding(horizontal = 22.dp, vertical = 4.dp)) {
-        // We compose using Column inline to avoid import conflicts
-        androidx.compose.foundation.layout.Column {
+        Column {
             if (eyebrow != null) {
                 Text(
                     text = eyebrow.uppercase(),
@@ -328,7 +339,7 @@ fun ReceiptRow(
                 Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Ink)
             }
             Spacer(Modifier.width(10.dp))
-            androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = merchant,
                     fontSize = 14.sp,
@@ -351,5 +362,90 @@ fun ReceiptRow(
                 color = TrackerColors.Ink,
             )
         }
+    }
+}
+
+@Composable
+fun TrackerTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    leadingText: String? = null,
+    singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    isError: Boolean = false,
+    enabled: Boolean = true,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val borderColor by animateColorAsState(
+        targetValue = when {
+            isError   -> TrackerColors.Cherry
+            isFocused -> TrackerColors.Tangerine
+            else      -> TrackerColors.Ink
+        },
+        animationSpec = tween(150),
+    )
+    val shape = RoundedCornerShape(12.dp)
+    Column(modifier = modifier) {
+        Text(
+            text = label.uppercase(),
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace,
+            letterSpacing = 1.2.sp,
+            color = TrackerColors.Ink2.copy(alpha = 0.7f),
+        )
+        Spacer(Modifier.height(5.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = enabled,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            interactionSource = interactionSource,
+            textStyle = TextStyle(
+                color = TrackerColors.Ink,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+            ),
+            cursorBrush = SolidColor(TrackerColors.Tangerine),
+            decorationBox = { innerTextField ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(shape)
+                        .background(TrackerColors.PaperWhite, shape)
+                        .border(1.8.dp, borderColor, shape)
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (leadingText != null) {
+                        Text(
+                            text = leadingText,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TrackerColors.Ink2,
+                        )
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (value.isEmpty() && placeholder.isNotEmpty()) {
+                            Text(
+                                text = placeholder,
+                                fontSize = 15.sp,
+                                color = TrackerColors.Ink2.copy(alpha = 0.45f),
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            },
+        )
     }
 }

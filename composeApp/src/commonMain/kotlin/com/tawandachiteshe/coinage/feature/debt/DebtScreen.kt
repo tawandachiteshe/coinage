@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
@@ -301,11 +301,11 @@ private fun AddDebtDialog(
         StickerCard(bgColor = TrackerColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("New debt", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                OutlinedTextField(value = creditor, onValueChange = { creditor = it }, label = { Text("Creditor name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type (e.g. LOAN, CARD)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = principal, onValueChange = { principal = it }, label = { Text("Balance $") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = apr, onValueChange = { apr = it }, label = { Text("APR %") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = minPayment, onValueChange = { minPayment = it }, label = { Text("Min payment $") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                TrackerTextField(value = creditor, onValueChange = { creditor = it }, label = "Creditor name", modifier = Modifier.fillMaxWidth())
+                TrackerTextField(value = type, onValueChange = { type = it }, label = "Type (e.g. LOAN, CARD)", modifier = Modifier.fillMaxWidth())
+                TrackerTextField(value = principal, onValueChange = { principal = it }, label = "Balance", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                TrackerTextField(value = apr, onValueChange = { apr = it }, label = "APR %", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                TrackerTextField(value = minPayment, onValueChange = { minPayment = it }, label = "Min payment", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                     Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = TrackerColors.Ink2) }
                     Spacer(Modifier.width(8.dp))

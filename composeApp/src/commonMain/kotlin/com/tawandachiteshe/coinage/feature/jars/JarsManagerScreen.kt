@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +41,7 @@ import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.ProgressJar
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
+import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import org.koin.compose.viewmodel.koinViewModel
@@ -345,12 +345,13 @@ private fun EditBudgetDialog(
                     color = TrackerColors.Ink2,
                 )
                 Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
+                TrackerTextField(
                     value = budgetText,
                     onValueChange = { budgetText = it },
-                    label = { Text("Budget ($)") },
+                    label = "Budget",
+                    leadingText = "$",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
@@ -393,30 +394,31 @@ private fun AddJarDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
+                TrackerTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
-                    singleLine = true,
+                    label = "Name",
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
+                TrackerTextField(
                     value = iconKey,
                     onValueChange = { iconKey = it },
-                    label = { Text("Icon key (e.g. coffee, car)") },
-                    singleLine = true,
+                    label = "Icon key (e.g. coffee, car)",
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
+                TrackerTextField(
                     value = colorHex,
                     onValueChange = { colorHex = it },
-                    label = { Text("Color (#hex)") },
-                    singleLine = true,
+                    label = "Color (#hex)",
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
+                TrackerTextField(
                     value = budgetText,
                     onValueChange = { budgetText = it },
-                    label = { Text("Monthly budget ($)") },
+                    label = "Monthly budget",
+                    leadingText = "$",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         },

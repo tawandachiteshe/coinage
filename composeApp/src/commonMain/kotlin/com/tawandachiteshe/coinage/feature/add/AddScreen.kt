@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
@@ -165,21 +165,19 @@ fun AddScreen(
 
                         // Amount
                         val currencySymbol = state.currencies.find { it.code == state.selectedCurrencyCode }?.symbol ?: "$"
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.amount,
                             onValueChange = { viewModel.onAction(AddAction.OnAmountChange(it)) },
-                            label = { Text("Amount") },
-                            singleLine = true,
+                            label = "Amount",
+                            leadingText = currencySymbol,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            leadingIcon = { Text(currencySymbol, fontSize = 16.sp, color = TrackerColors.Ink2) },
                             modifier = Modifier.fillMaxWidth(),
                         )
 
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.merchant,
                             onValueChange = { viewModel.onAction(AddAction.OnMerchantChange(it)) },
-                            label = { Text(if (state.txType == TxType.INCOME) "From (payer / employer)" else "Merchant / description") },
-                            singleLine = true,
+                            label = if (state.txType == TxType.INCOME) "From (payer / employer)" else "Merchant / description",
                             modifier = Modifier.fillMaxWidth(),
                         )
 
@@ -218,73 +216,65 @@ fun AddScreen(
                             }
                         }
 
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.notes,
                             onValueChange = { viewModel.onAction(AddAction.OnNotesChange(it)) },
-                            label = { Text("Notes (optional)") },
-                            singleLine = true,
+                            label = "Notes (optional)",
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
 
                     AddType.Goal -> {
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.goalName,
                             onValueChange = { viewModel.onAction(AddAction.OnGoalNameChange(it)) },
-                            label = { Text("Goal name") },
-                            singleLine = true,
+                            label = "Goal name",
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.goalTarget,
                             onValueChange = { viewModel.onAction(AddAction.OnGoalTargetChange(it)) },
-                            label = { Text("Target amount") },
-                            singleLine = true,
+                            label = "Target amount",
+                            leadingText = "$",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
 
                     AddType.Debt -> {
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.debtCreditor,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtCreditorChange(it)) },
-                            label = { Text("Creditor name") },
-                            singleLine = true,
+                            label = "Creditor name",
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.debtType,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtTypeChange(it)) },
-                            label = { Text("Type (LOAN, CARD, STUDENT…)") },
-                            singleLine = true,
+                            label = "Type (LOAN, CARD, STUDENT)",
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.debtBalance,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtBalanceChange(it)) },
-                            label = { Text("Current balance") },
-                            singleLine = true,
+                            label = "Current balance",
+                            leadingText = "$",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.debtApr,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtAprChange(it)) },
-                            label = { Text("APR %") },
-                            singleLine = true,
+                            label = "APR %",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        OutlinedTextField(
+                        TrackerTextField(
                             value = state.debtMinPayment,
                             onValueChange = { viewModel.onAction(AddAction.OnDebtMinPayChange(it)) },
-                            label = { Text("Min monthly payment") },
-                            singleLine = true,
+                            label = "Min monthly payment",
+                            leadingText = "$",
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
