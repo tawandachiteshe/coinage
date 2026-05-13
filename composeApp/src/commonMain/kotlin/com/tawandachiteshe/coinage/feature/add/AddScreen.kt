@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +46,7 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -52,7 +55,7 @@ private data class QueueCard(
     val amount: String,
     val timestamp: String,
     val hint: String,
-    val glyph: String,
+    val icon: ImageVector,
 )
 
 private data class CatTarget(
@@ -68,9 +71,9 @@ fun AddScreen(
 ) {
     val queue = remember {
         listOf(
-            QueueCard("Trader Joe's",  "42.18", "today · 6:14pm",   "Groceries · debit ··3421", "🛒"),
-            QueueCard("Apple Music",   "10.99", "today · 12:00pm",  "Recurring · monthly",       "♪"),
-            QueueCard("Hara Sushi",    "28.50", "yesterday",        "Lunch · venmo",             "🍣"),
+            QueueCard("Trader Joe's",  "42.18", "today · 6:14pm",   "Groceries · debit ··3421", TrackerIcons.ShoppingCart),
+            QueueCard("Apple Music",   "10.99", "today · 12:00pm",  "Recurring · monthly",       TrackerIcons.Music),
+            QueueCard("Hara Sushi",    "28.50", "yesterday",        "Lunch · venmo",             TrackerIcons.Utensils),
         )
     }
     val cats = remember {
@@ -216,7 +219,7 @@ fun AddScreen(
                                     .background(TrackerColors.Butter, RoundedCornerShape(12.dp))
                                     .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
                                 contentAlignment = Alignment.Center,
-                            ) { Text(card.glyph, fontSize = 22.sp) }
+                            ) { Icon(imageVector = card.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink) }
                         }
                         Column {
                             Text(card.merchant, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink, lineHeight = 28.sp)

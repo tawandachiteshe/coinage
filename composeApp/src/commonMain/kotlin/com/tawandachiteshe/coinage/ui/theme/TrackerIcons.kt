@@ -1,6 +1,7 @@
 package com.tawandachiteshe.coinage.ui.theme
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.composables.icons.lucide.ArrowUpRight
 import com.composables.icons.lucide.Banknote
 import com.composables.icons.lucide.Briefcase
 import com.composables.icons.lucide.Bus
@@ -13,18 +14,28 @@ import com.composables.icons.lucide.Coffee
 import com.composables.icons.lucide.CreditCard
 import com.composables.icons.lucide.Droplets
 import com.composables.icons.lucide.Dumbbell
+import com.composables.icons.lucide.Flame
+import com.composables.icons.lucide.Gem
 import com.composables.icons.lucide.GraduationCap
+import com.composables.icons.lucide.Hand
 import com.composables.icons.lucide.Heart
 import com.composables.icons.lucide.House
+import com.composables.icons.lucide.Keyboard
 import com.composables.icons.lucide.Laptop
+import com.composables.icons.lucide.Lock
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Mountain
 import com.composables.icons.lucide.Music
 import com.composables.icons.lucide.PiggyBank
 import com.composables.icons.lucide.Plane
+import com.composables.icons.lucide.Play
 import com.composables.icons.lucide.Receipt
+import com.composables.icons.lucide.Shield
 import com.composables.icons.lucide.ShoppingBag
 import com.composables.icons.lucide.ShoppingCart
+import com.composables.icons.lucide.Snowflake
 import com.composables.icons.lucide.Sparkles
+import com.composables.icons.lucide.Star
 import com.composables.icons.lucide.Store
 import com.composables.icons.lucide.Tag
 import com.composables.icons.lucide.Target
@@ -77,9 +88,22 @@ object TrackerIcons {
     // ── Entertainment ────────────────────────────────────────────────────────
     val Clapperboard: ImageVector = Lucide.Clapperboard
     val Music: ImageVector        = Lucide.Music
+    val Play: ImageVector         = Lucide.Play
 
     // ── Goals & tracking ─────────────────────────────────────────────────────
-    val Target: ImageVector = Lucide.Target
+    val Target: ImageVector    = Lucide.Target
+    val Star: ImageVector      = Lucide.Star
+    val Snowflake: ImageVector = Lucide.Snowflake
+    val Shield: ImageVector    = Lucide.Shield
+    val Keyboard: ImageVector  = Lucide.Keyboard
+    val Gem: ImageVector       = Lucide.Gem
+    val Mountain: ImageVector  = Lucide.Mountain
+    val Flame: ImageVector     = Lucide.Flame
+
+    // ── Navigation & misc ────────────────────────────────────────────────────
+    val ArrowUpRight: ImageVector = Lucide.ArrowUpRight
+    val Lock: ImageVector         = Lucide.Lock
+    val Hand: ImageVector         = Lucide.Hand
 
     // ── App chrome ───────────────────────────────────────────────────────────
     val Add: ImageVector      = Lucide.CirclePlus

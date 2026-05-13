@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
 private data class Debt(
     val who: String,
@@ -143,7 +145,7 @@ fun DebtScreen(
                             .background(TrackerColors.Paper, RoundedCornerShape(10.dp))
                             .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center,
-                    ) { Text("❄", fontSize = 18.sp) }
+                    ) { Icon(TrackerIcons.Snowflake, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink) }
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Snowball plan · pay smallest first", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
@@ -233,14 +235,20 @@ fun DebtScreen(
 private fun MountainVisual(paidPct: Int, modifier: Modifier = Modifier) {
     // Simple mountain using stacked boxes to approximate the SVG
     Box(modifier = modifier) {
-        Text(
-            text = "⛰️  $paidPct% of the mountain climbed",
-            fontSize = 14.sp,
-            fontStyle = FontStyle.Italic,
-            fontFamily = FontFamily.Serif,
-            color = TrackerColors.Butter,
+        Row(
             modifier = Modifier.align(Alignment.Center),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(TrackerIcons.Mountain, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Butter)
+            Text(
+                text = "$paidPct% of the mountain climbed",
+                fontSize = 14.sp,
+                fontStyle = FontStyle.Italic,
+                fontFamily = FontFamily.Serif,
+                color = TrackerColors.Butter,
+            )
+        }
     }
 }
 

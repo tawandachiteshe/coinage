@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -162,10 +164,11 @@ fun CategoryChip(
     label: String,
     color: Color,
     modifier: Modifier = Modifier,
-    glyph: String? = null,
+    icon: ImageVector? = null,
     small: Boolean = false,
 ) {
     val fontSize = if (small) 11.sp else 13.sp
+    val iconSize = if (small) 12.dp else 14.dp
     val padding = if (small) 4.dp to 8.dp else 5.dp to 10.dp
     val shape = RoundedCornerShape(999.dp)
     Row(
@@ -177,11 +180,12 @@ fun CategoryChip(
             .padding(vertical = padding.first, horizontal = padding.second),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (glyph != null) {
-            Text(
-                text = glyph,
-                fontSize = if (small) 12.sp else 14.sp,
-                color = TrackerColors.Ink,
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(iconSize),
+                tint = TrackerColors.Ink,
             )
             Spacer(Modifier.width(6.dp))
         }
@@ -294,8 +298,8 @@ fun ReceiptRow(
     amount: String,
     category: String,
     time: String,
-    glyph: String,
-    glyphColor: Color,
+    icon: ImageVector,
+    iconColor: Color,
     modifier: Modifier = Modifier,
     tilt: Float = 0f,
 ) {
@@ -317,11 +321,11 @@ fun ReceiptRow(
                 modifier = Modifier
                     .size(30.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(glyphColor, RoundedCornerShape(8.dp))
+                    .background(iconColor, RoundedCornerShape(8.dp))
                     .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(text = glyph, fontSize = 16.sp)
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Ink)
             }
             Spacer(Modifier.width(10.dp))
             androidx.compose.foundation.layout.Column(modifier = Modifier.weight(1f)) {

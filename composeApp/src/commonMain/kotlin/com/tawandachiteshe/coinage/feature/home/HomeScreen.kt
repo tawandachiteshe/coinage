@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +44,7 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
 private enum class Zoom { Year, Month, Week }
 
@@ -50,7 +53,7 @@ private data class Jar(
     val spent: Int,
     val of: Int,
     val color: Color,
-    val glyph: String,
+    val icon: ImageVector,
     val tilt: Float,
 )
 
@@ -74,12 +77,12 @@ fun HomeScreen(
 
     val jars = remember {
         listOf(
-            Jar("Food",    340, 500,  TrackerColors.Tangerine, "🍜", -1.5f),
-            Jar("Rent",    1200, 1200, TrackerColors.Grape,    "⌂",   1.0f),
-            Jar("Fun",     89,  200,  TrackerColors.Butter,    "♪",  -0.8f),
-            Jar("Subs",    42,  80,   TrackerColors.Sky,       "▶",   1.5f),
-            Jar("Saving",  250, 300,  TrackerColors.Mint,      "★",  -1.0f),
-            Jar("Misc",    38,  100,  TrackerColors.Coral,     "◇",   0.8f),
+            Jar("Food",    340, 500,  TrackerColors.Tangerine, TrackerIcons.Utensils,     -1.5f),
+            Jar("Rent",    1200, 1200, TrackerColors.Grape,   TrackerIcons.Home,          1.0f),
+            Jar("Fun",     89,  200,  TrackerColors.Butter,   TrackerIcons.Music,        -0.8f),
+            Jar("Subs",    42,  80,   TrackerColors.Sky,      TrackerIcons.Play,          1.5f),
+            Jar("Saving",  250, 300,  TrackerColors.Mint,     TrackerIcons.PiggyBank,    -1.0f),
+            Jar("Misc",    38,  100,  TrackerColors.Coral,    TrackerIcons.Gem,           0.8f),
         )
     }
 
@@ -275,9 +278,9 @@ fun HomeScreen(
                 modifier = Modifier.padding(horizontal = 22.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                ReceiptRow("Sunny Café", "6.40", "Food", "9:12am", "☕", TrackerColors.Tangerine, tilt = -0.6f)
-                ReceiptRow("Bandcamp · Nilüfer Y.", "9.99", "Fun", "11:30am", "♪", TrackerColors.Butter, tilt = 0.8f)
-                ReceiptRow("MTA · weekly pass", "34.00", "Transit", "yesterday", "↗", TrackerColors.Sky, tilt = -0.4f)
+                ReceiptRow("Sunny Café", "6.40", "Food", "9:12am", TrackerIcons.Coffee, TrackerColors.Tangerine, tilt = -0.6f)
+                ReceiptRow("Bandcamp · Nilüfer Y.", "9.99", "Fun", "11:30am", TrackerIcons.Music, TrackerColors.Butter, tilt = 0.8f)
+                ReceiptRow("MTA · weekly pass", "34.00", "Transit", "yesterday", TrackerIcons.ArrowUpRight, TrackerColors.Sky, tilt = -0.4f)
             }
         }
 

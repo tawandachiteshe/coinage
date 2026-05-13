@@ -1,10 +1,10 @@
 package com.tawandachiteshe.coinage.feature.onboarding
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -31,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -341,7 +343,10 @@ private fun OnboardingArt(step: Int, accent: Color) {
                 tilt = 8f, cornerRadius = 18.dp,
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("hi 👋", fontSize = 26.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = Color.White)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text("hi", fontSize = 26.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = Color.White)
+                                        Icon(TrackerIcons.Hand, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
+                                    }
                 }
             }
             StickerCard(
@@ -422,7 +427,7 @@ private fun OnboardingArt(step: Int, accent: Color) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("🔒", fontSize = 48.sp)
+                    Icon(TrackerIcons.Lock, contentDescription = null, modifier = Modifier.size(48.dp), tint = TrackerColors.Ink)
                     Spacer(Modifier.height(8.dp))
                     Text("FACE ID", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp, color = TrackerColors.Ink)
                 }

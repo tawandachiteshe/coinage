@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
 private data class Category(val name: String, val value: Int, val color: Color)
 
@@ -93,11 +95,11 @@ fun InsightsScreen(
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Tag("↓ \$134 vs March", TrackerColors.Ink, TrackerColors.Butter)
-                            Tag("3-wk streak 🔥", TrackerColors.Ink, TrackerColors.Paper)
+                            IconTag("3-wk streak", TrackerIcons.Flame, TrackerColors.Ink, TrackerColors.Paper)
                         }
                     }
                     // Star decoration
-                    Text("★", fontSize = 36.sp, color = TrackerColors.Butter, modifier = Modifier.align(Alignment.TopEnd).rotate(10f))
+                    Icon(TrackerIcons.Star, contentDescription = null, modifier = Modifier.size(36.dp).align(Alignment.TopEnd).rotate(10f), tint = TrackerColors.Butter)
                 }
             }
 
@@ -279,6 +281,27 @@ private fun Tag(label: String, textColor: Color, bgColor: Color) {
             .padding(horizontal = 9.dp, vertical = 3.dp),
     ) {
         Text(label, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = textColor)
+    }
+}
+
+@Composable
+private fun IconTag(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    textColor: Color,
+    bgColor: Color,
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bgColor)
+            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .padding(horizontal = 9.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(label, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = textColor)
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(12.dp), tint = textColor)
     }
 }
 

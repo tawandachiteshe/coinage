@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,10 +39,11 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
 private data class Goal(
     val title: String,
-    val emoji: String,
+    val icon: ImageVector,
     val saved: Int,
     val of: Int,
     val due: String,
@@ -56,10 +59,10 @@ fun GoalsScreen(
 ) {
     val goals = remember {
         listOf(
-            Goal("Iceland trip",     "❄️", 850,  2000, "Oct 2026", "+\$120/wk", TrackerColors.Sky,    -1.4f),
-            Goal("Emergency fund",  "🛟",  1200, 3000, "no rush",  "+\$80/wk",  TrackerColors.Mint,    0.9f),
-            Goal("New laptop",      "⌨️", 200,  1400, "Jan 2027", "+\$50/wk",  TrackerColors.Grape,  -0.6f),
-            Goal("Mitski tickets",  "♪",   0,    120,  "Jul 30",   "just started", TrackerColors.Coral, 1.4f),
+            Goal("Iceland trip",    TrackerIcons.Snowflake, 850,  2000, "Oct 2026", "+\$120/wk", TrackerColors.Sky,   -1.4f),
+            Goal("Emergency fund", TrackerIcons.Shield,    1200, 3000, "no rush",  "+\$80/wk",  TrackerColors.Mint,   0.9f),
+            Goal("New laptop",     TrackerIcons.Keyboard,  200,  1400, "Jan 2027", "+\$50/wk",  TrackerColors.Grape, -0.6f),
+            Goal("Mitski tickets", TrackerIcons.Music,     0,    120,  "Jul 30",   "just started", TrackerColors.Coral, 1.4f),
         )
     }
 
@@ -149,7 +152,7 @@ fun GoalsScreen(
                                             .background(goal.color, RoundedCornerShape(12.dp))
                                             .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
                                         contentAlignment = Alignment.Center,
-                                    ) { Text(goal.emoji, fontSize = 22.sp) }
+                                    ) { Icon(imageVector = goal.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink) }
                                     Spacer(Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(goal.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
