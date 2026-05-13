@@ -79,6 +79,7 @@ fun AppNavHost(
                     onTabClick = { tab -> navController.navigateToTab(tab) },
                     onAddClick = { addType = AddType.Transaction },
                     onOpenSettings = { navController.navigate(Route.Settings) },
+                    onManageJars = { navController.navigate(Route.JarsManager) },
                 )
             }
 

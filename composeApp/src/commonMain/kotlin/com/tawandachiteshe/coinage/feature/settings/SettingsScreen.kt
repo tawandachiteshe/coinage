@@ -317,10 +317,10 @@ private fun PillGroup(selected: String, options: List<String>, color: Color, onS
             val isSelected = opt == selected
             Box(
                 modifier = Modifier
+                    .then(if (isSelected) Modifier.popShadow(cornerRadius = 999.dp, offsetX = 1.5.dp, offsetY = 2.dp) else Modifier)
                     .clip(RoundedCornerShape(999.dp))
                     .background(if (isSelected) color else TrackerColors.Paper)
                     .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                    .then(if (isSelected) Modifier.popShadow(cornerRadius = 999.dp, offsetX = 1.5.dp, offsetY = 2.dp) else Modifier)
                     .clickable { onSelect(opt) }
                     .padding(horizontal = 9.dp, vertical = 4.dp),
             ) {

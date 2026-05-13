@@ -35,6 +35,6 @@ val appModule = module {
     viewModel { AddViewModel(get(), get(), get(), get(), get()) }
     viewModel { JarsManagerViewModel(get(), get()) }
     viewModel { OnboardingViewModel(get()) }
-    viewModel { ProfileViewModel(get()) }
+    viewModel { ProfileViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
 }
