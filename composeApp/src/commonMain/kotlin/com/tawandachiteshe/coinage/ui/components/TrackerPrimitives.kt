@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.animateColorAsState
@@ -42,12 +41,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.SolidColor
@@ -380,57 +381,65 @@ fun TrackerScaffold(
     onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val hasTabBar = onTabClick != null
-    val topPad: Dp = if (onBack != null) 0.dp else 56.dp
-    val bottomPad: Dp = if (hasTabBar) 120.dp else 32.dp
-
-    Box(modifier = modifier.fillMaxSize().background(TrackerColors.Paper)) {
+    Scaffold(
+        modifier = modifier,
+        containerColor = TrackerColors.Paper,
+        topBar = {
+            if (onBack != null) {
+                // Pinned top bar — Paper background so content scrolls cleanly underneath
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(TrackerColors.Paper)
+                        .padding(start = 22.dp, top = 52.dp, bottom = 8.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .clickable { onBack() }
+                            .padding(horizontal = 12.dp, vertical = 7.dp),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = TrackerIcons.ChevronLeft,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(14.dp),
+                                tint = TrackerColors.Ink,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "back",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = 0.8.sp,
+                                color = TrackerColors.Ink,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        bottomBar = {
+            if (onTabClick != null) {
+                TrackerTabBar(
+                    active = activeTab,
+                    onTabClick = onTabClick,
+                    onAddClick = onAddClick ?: {},
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(top = topPad, bottom = bottomPad),
-            content = {
-                if (onBack != null) {
-                    Row(modifier = Modifier.padding(start = 22.dp, top = 52.dp, bottom = 4.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                                .clickable { onBack() }
-                                .padding(horizontal = 12.dp, vertical = 7.dp),
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = TrackerIcons.ChevronLeft,
-                                    contentDescription = "Back",
-                                    modifier = Modifier.size(14.dp),
-                                    tint = TrackerColors.Ink,
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    text = "back",
-                                    fontSize = 12.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    letterSpacing = 0.8.sp,
-                                    color = TrackerColors.Ink,
-                                )
-                            }
-                        }
-                    }
-                }
-                content()
-            },
+                .padding(innerPadding)
+                .padding(top = if (onBack == null) 56.dp else 0.dp, bottom = 16.dp),
+            content = content,
         )
-        if (hasTabBar) {
-            TrackerTabBar(
-                active = activeTab,
-                onTabClick = onTabClick,
-                onAddClick = onAddClick ?: {},
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
     }
 }
 
