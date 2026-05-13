@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,11 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
 enum class TrackerTab { Home, Goals, Debt, Insights }
 
@@ -37,11 +40,11 @@ fun TrackerTabBar(
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabs = listOf(
-        TrackerTab.Home     to ("◐" to "Home"),
-        TrackerTab.Goals    to ("★" to "Goals"),
-        TrackerTab.Debt     to ("▲" to "Debts"),
-        TrackerTab.Insights to ("◇" to "Recap"),
+    val tabs: List<Pair<TrackerTab, Pair<ImageVector, String>>> = listOf(
+        TrackerTab.Home     to (TrackerIcons.Home      to "Home"),
+        TrackerTab.Goals    to (TrackerIcons.Target    to "Goals"),
+        TrackerTab.Debt     to (TrackerIcons.CreditCard to "Debts"),
+        TrackerTab.Insights to (TrackerIcons.BarChart  to "Recap"),
     )
 
     Box(modifier = modifier) {
@@ -58,12 +61,11 @@ fun TrackerTabBar(
                 .clickable(onClick = onAddClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "+",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Normal,
-                color = TrackerColors.Paper,
-                lineHeight = 32.sp,
+            Icon(
+                imageVector = TrackerIcons.Add,
+                contentDescription = "Add transaction",
+                tint = TrackerColors.Paper,
+                modifier = Modifier.size(26.dp),
             )
         }
 
@@ -105,7 +107,7 @@ fun TrackerTabBar(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(30.dp)
+                                .size(36.dp)
                                 .then(
                                     if (isActive) Modifier
                                         .popShadowSm(cornerRadius = 9.dp)
@@ -116,10 +118,11 @@ fun TrackerTabBar(
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = icon,
-                                fontSize = 16.sp,
-                                color = TrackerColors.Ink,
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = label,
+                                tint = if (isActive) TrackerColors.Ink else TrackerColors.Ink2.copy(alpha = 0.55f),
+                                modifier = Modifier.size(18.dp),
                             )
                         }
                         Spacer(Modifier.height(3.dp))
