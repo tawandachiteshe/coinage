@@ -5,7 +5,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.tawandachiteshe.coinage.feature.add.AddScreen
+import com.tawandachiteshe.coinage.feature.add.AddType
 import com.tawandachiteshe.coinage.feature.debt.DebtScreen
 import com.tawandachiteshe.coinage.feature.goals.GoalsScreen
 import com.tawandachiteshe.coinage.feature.home.HomeScreen
@@ -36,7 +38,7 @@ fun AppNavHost(
         composable<Route.Home> {
             HomeScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Transaction")) },
                 onManageJars = { navController.navigate(Route.JarsManager) },
             )
         }
@@ -44,36 +46,37 @@ fun AppNavHost(
         composable<Route.Goals> {
             GoalsScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Goal")) },
             )
         }
 
         composable<Route.Debt> {
             DebtScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Debt")) },
             )
         }
 
         composable<Route.Insights> {
             InsightsScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Transaction")) },
             )
         }
 
-        composable<Route.Add> {
+        composable<Route.Add> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.Add>()
+            val initialType = AddType.entries.firstOrNull { it.name == route.type } ?: AddType.Transaction
             AddScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = {},
-                onSaved = { navController.popBackStack() },
+                initialType = initialType,
+                onDismiss = { navController.popBackStack() },
             )
         }
 
         composable<Route.Profile> {
             ProfileScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Transaction")) },
                 onOpenSettings = { navController.navigate(Route.Settings) },
             )
         }
@@ -81,7 +84,7 @@ fun AppNavHost(
         composable<Route.Settings> {
             SettingsScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add) },
+                onAddClick = { navController.navigate(Route.Add("Transaction")) },
             )
         }
 
