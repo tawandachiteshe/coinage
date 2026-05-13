@@ -1,0 +1,38 @@
+CREATE TABLE Debt (
+    id              TEXT    NOT NULL PRIMARY KEY,
+    creditor_name   TEXT    NOT NULL,
+    debt_type       TEXT    NOT NULL DEFAULT 'LOAN',
+    principal       REAL    NOT NULL,
+    current_balance REAL    NOT NULL,
+    interest_rate   REAL    NOT NULL DEFAULT 0.0,
+    minimum_payment REAL    NOT NULL DEFAULT 0.0,
+    due_date        INTEGER,
+    created_at      INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM Debt ORDER BY current_balance DESC;
+
+selectById:
+SELECT * FROM Debt WHERE id = ?;
+
+totalOwed:
+SELECT COALESCE(SUM(current_balance), 0.0) AS total FROM Debt;
+
+snowballOrder:
+SELECT * FROM Debt WHERE current_balance > 0 ORDER BY current_balance ASC;
+
+avalancheOrder:
+SELECT * FROM Debt WHERE current_balance > 0 ORDER BY interest_rate DESC;
+
+insert:
+INSERT INTO Debt VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateBalance:
+UPDATE Debt SET current_balance = ? WHERE id = ?;
+
+updateDueDate:
+UPDATE Debt SET due_date = ? WHERE id = ?;
+
+delete:
+DELETE FROM Debt WHERE id = ?;

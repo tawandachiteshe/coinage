@@ -1,0 +1,28 @@
+CREATE TABLE Category (
+    id           TEXT    NOT NULL PRIMARY KEY,
+    name         TEXT    NOT NULL,
+    icon         TEXT    NOT NULL DEFAULT 'other',
+    color_hex    TEXT    NOT NULL DEFAULT '#1a1230',
+    type         TEXT    NOT NULL DEFAULT 'BOTH',
+    budget_limit REAL    NOT NULL DEFAULT 0.0,
+    is_default   INTEGER NOT NULL DEFAULT 0
+);
+
+selectAll:
+SELECT * FROM Category ORDER BY is_default DESC, name ASC;
+
+selectById:
+SELECT * FROM Category WHERE id = ?;
+
+selectByType:
+SELECT * FROM Category WHERE type = ? OR type = 'BOTH' ORDER BY name ASC;
+
+insert:
+INSERT OR IGNORE INTO Category VALUES (?, ?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE Category SET name = ?, icon = ?, color_hex = ?, budget_limit = ?
+WHERE id = ? AND is_default = 0;
+
+delete:
+DELETE FROM Category WHERE id = ? AND is_default = 0;
