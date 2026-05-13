@@ -42,8 +42,8 @@ import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
+import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
-import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
@@ -66,17 +66,7 @@ fun GoalsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TrackerColors.Paper),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = 56.dp, bottom = 120.dp),
-        ) {
+    TrackerScaffold(activeTab = TrackerTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick) {
             PageHeader(
                 eyebrow = "Goals · ${state.goals.size} in flight",
                 title = "Saving",
@@ -219,7 +209,6 @@ fun GoalsScreen(
                     }
                 }
             }
-        }
 
         if (showAddDialog) {
             AddGoalDialog(
@@ -230,8 +219,6 @@ fun GoalsScreen(
                 },
             )
         }
-
-        TrackerTabBar(active = TrackerTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick, modifier = Modifier.fillMaxSize())
     }
 }
 

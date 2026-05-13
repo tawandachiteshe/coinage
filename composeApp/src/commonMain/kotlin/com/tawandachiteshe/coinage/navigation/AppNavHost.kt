@@ -82,10 +82,7 @@ fun AppNavHost(
             }
 
             composable<Route.Settings> {
-                SettingsScreen(
-                    onTabClick = { tab -> navController.navigateToTab(tab) },
-                    onAddClick = { addType = AddType.Transaction },
-                )
+                SettingsScreen(onBack = { navController.popBackStack() })
             }
 
             composable<Route.JarsManager> {

@@ -37,16 +37,14 @@ import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerTab
-import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
+import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(
-    onTabClick: (TrackerTab) -> Unit,
-    onAddClick: () -> Unit,
+    onBack: () -> Unit,
     googleAuthRepository: GoogleAuthRepository = koinInject(),
 ) {
     var theme by remember { mutableStateOf("Tropicana") }
@@ -56,17 +54,7 @@ fun SettingsScreen(
     var aiEnabled by remember { mutableStateOf(false) }
     var roundUpEnabled by remember { mutableStateOf(true) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TrackerColors.Paper),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = 56.dp, bottom = 120.dp),
-        ) {
+    TrackerScaffold(onBack = onBack) {
             PageHeader(
                 eyebrow = "Settings",
                 title = "Make it",
@@ -202,9 +190,6 @@ fun SettingsScreen(
                 letterSpacing = 1.sp,
                 color = TrackerColors.Ink2.copy(alpha = 0.5f),
             )
-        }
-
-        TrackerTabBar(active = null, onTabClick = onTabClick, onAddClick = onAddClick, modifier = Modifier.fillMaxSize())
     }
 }
 

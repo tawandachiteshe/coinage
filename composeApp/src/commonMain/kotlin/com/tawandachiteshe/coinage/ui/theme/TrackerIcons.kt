@@ -42,6 +42,7 @@ import com.composables.icons.lucide.Tag
 import com.composables.icons.lucide.Target
 import com.composables.icons.lucide.TrendingUp
 import com.composables.icons.lucide.Utensils
+import com.composables.icons.lucide.ChevronLeft
 import com.composables.icons.lucide.Wallet
 import com.composables.icons.lucide.Wifi
 import com.composables.icons.lucide.X
@@ -103,11 +104,12 @@ object TrackerIcons {
     val Flame: ImageVector     = Lucide.Flame
 
     // ── Navigation & misc ────────────────────────────────────────────────────
-    val ArrowUpRight: ImageVector = Lucide.ArrowUpRight
-    val Lock: ImageVector         = Lucide.Lock
-    val Hand: ImageVector         = Lucide.Hand
-    val Check: ImageVector        = Lucide.Check
-    val X: ImageVector            = Lucide.X
+    val ArrowUpRight: ImageVector  = Lucide.ArrowUpRight
+    val Lock: ImageVector          = Lucide.Lock
+    val Hand: ImageVector          = Lucide.Hand
+    val Check: ImageVector         = Lucide.Check
+    val X: ImageVector             = Lucide.X
+    val ChevronLeft: ImageVector   = Lucide.ChevronLeft
 
     // ── App chrome ───────────────────────────────────────────────────────────
     val Add: ImageVector      = Lucide.CirclePlus

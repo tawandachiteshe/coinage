@@ -42,6 +42,7 @@ import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.ProgressJar
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
+import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
@@ -58,31 +59,7 @@ fun JarsManagerScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editBudgetJar by remember { mutableStateOf<JarUi?>(null) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TrackerColors.Paper),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(top = 16.dp, bottom = 40.dp),
-        ) {
-            // Back button
-            Row(modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp)) {
-                Text(
-                    text = "← back",
-                    modifier = Modifier
-                        .clickable { onBack() }
-                        .padding(8.dp),
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.8.sp,
-                    color = TrackerColors.Ink2,
-                )
-            }
-
+    TrackerScaffold(onBack = onBack) {
             // Page header
             PageHeader(
                 eyebrow = "${jars.size} jars",
@@ -143,7 +120,6 @@ fun JarsManagerScreen(
                     )
                 }
             }
-        }
     }
 
     // Edit budget dialog
