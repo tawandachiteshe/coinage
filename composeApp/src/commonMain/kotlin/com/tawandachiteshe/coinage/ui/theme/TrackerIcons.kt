@@ -3,6 +3,7 @@ package com.tawandachiteshe.coinage.ui.theme
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.composables.icons.lucide.ArrowUpRight
 import com.composables.icons.lucide.Banknote
+import com.composables.icons.lucide.Check
 import com.composables.icons.lucide.Briefcase
 import com.composables.icons.lucide.Bus
 import com.composables.icons.lucide.Calendar
@@ -104,6 +105,7 @@ object TrackerIcons {
     val ArrowUpRight: ImageVector = Lucide.ArrowUpRight
     val Lock: ImageVector         = Lucide.Lock
     val Hand: ImageVector         = Lucide.Hand
+    val Check: ImageVector        = Lucide.Check
 
     // ── App chrome ───────────────────────────────────────────────────────────
     val Add: ImageVector      = Lucide.CirclePlus

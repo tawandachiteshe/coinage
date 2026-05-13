@@ -13,6 +13,10 @@ class CategoryRepository(db: ExpensifyDatabase) {
 
     private val q = db.categoryQueries
 
+    init {
+        seedDefaults()
+    }
+
     fun getAll(): Flow<List<Category>> =
         q.selectAll().asFlow().mapToList(Dispatchers.IO)
 

@@ -2,6 +2,7 @@ package com.tawandachiteshe.coinage.feature.goals
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +36,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
@@ -40,31 +46,25 @@ import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.KeyboardType
 
-private data class Goal(
-    val title: String,
-    val icon: ImageVector,
-    val saved: Int,
-    val of: Int,
-    val due: String,
-    val pace: String,
-    val color: Color,
-    val tilt: Float,
+private val GOAL_COLORS = listOf(
+    TrackerColors.Sky, TrackerColors.Mint, TrackerColors.Grape,
+    TrackerColors.Coral, TrackerColors.Butter, TrackerColors.Tangerine,
 )
+private val GOAL_TILTS = listOf(-1.4f, 0.9f, -0.6f, 1.4f, -0.8f, 0.5f)
 
 @Composable
 fun GoalsScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
+    viewModel: GoalsViewModel = koinViewModel(),
 ) {
-    val goals = remember {
-        listOf(
-            Goal("Iceland trip",    TrackerIcons.Snowflake, 850,  2000, "Oct 2026", "+\$120/wk", TrackerColors.Sky,   -1.4f),
-            Goal("Emergency fund", TrackerIcons.Shield,    1200, 3000, "no rush",  "+\$80/wk",  TrackerColors.Mint,   0.9f),
-            Goal("New laptop",     TrackerIcons.Keyboard,  200,  1400, "Jan 2027", "+\$50/wk",  TrackerColors.Grape, -0.6f),
-            Goal("Mitski tickets", TrackerIcons.Music,     0,    120,  "Jul 30",   "just started", TrackerColors.Coral, 1.4f),
-        )
-    }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    var showAddDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -78,7 +78,7 @@ fun GoalsScreen(
                 .padding(top = 56.dp, bottom = 120.dp),
         ) {
             PageHeader(
-                eyebrow = "Goals · 4 in flight",
+                eyebrow = "Goals · ${state.goals.size} in flight",
                 title = "Saving",
                 italicWord = "for…",
                 accent = TrackerColors.Grape,
@@ -86,6 +86,7 @@ fun GoalsScreen(
             )
 
             // Summary sticker
+            val overallPct = if (state.totalTarget > 0) ((state.totalSaved / state.totalTarget) * 100).toInt() else 0
             Spacer(Modifier.height(14.dp))
             StickerCard(
                 bgColor = TrackerColors.Butter,
@@ -105,11 +106,11 @@ fun GoalsScreen(
                             .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(28.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("37%", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink)
+                        Text("$overallPct%", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink)
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("\$2,250 of \$6,520 saved", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                        Text("\$${state.totalSaved.fmtWhole()} of \$${state.totalTarget.fmtWhole()} saved", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                         Text("You're a steady saver. Keep showing up.", fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
                     }
                 }
@@ -121,12 +122,22 @@ fun GoalsScreen(
                 modifier = Modifier.padding(horizontal = 22.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                goals.forEach { goal ->
-                    val pct = (goal.saved.toFloat() / goal.of * 100f).coerceIn(0f, 100f)
+                if (state.goals.isEmpty() && !state.isLoading) {
+                    Text(
+                        text = "No goals yet — plant one below.",
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    )
+                }
+                state.goals.forEachIndexed { i, goal ->
+                    val color = GOAL_COLORS[i % GOAL_COLORS.size]
+                    val tilt = GOAL_TILTS[i % GOAL_TILTS.size]
                     StickerCard(
                         bgColor = TrackerColors.PaperWhite,
                         modifier = Modifier.fillMaxWidth(),
-                        tilt = goal.tilt,
+                        tilt = tilt,
                         cornerRadius = 18.dp,
                         borderWidth = 1.8.dp,
                         shadowX = 4.dp,
@@ -149,23 +160,23 @@ fun GoalsScreen(
                                         modifier = Modifier
                                             .size(46.dp)
                                             .clip(RoundedCornerShape(12.dp))
-                                            .background(goal.color, RoundedCornerShape(12.dp))
+                                            .background(color, RoundedCornerShape(12.dp))
                                             .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
                                         contentAlignment = Alignment.Center,
-                                    ) { Icon(imageVector = goal.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink) }
+                                    ) { Icon(imageVector = TrackerIcons.fromKey(goal.icon), contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink) }
                                     Spacer(Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(goal.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                        Text("${goal.due} · ${goal.pace}", fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                                        Text(goal.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                                        if (goal.due != null) Text(goal.due, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f))
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text("\$${goal.saved.toLocaleString()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                        Text("/${(goal.of / 1000f).let { if (it == it.toInt().toFloat()) "${it.toInt()}k" else "${it}k" }}", fontSize = 12.sp, color = TrackerColors.Ink2.copy(alpha = 0.55f))
+                                        Text("\$${goal.savedAmount.fmtWhole()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                                        Text("/\$${goal.targetAmount.fmtWhole()}", fontSize = 12.sp, color = TrackerColors.Ink2.copy(alpha = 0.55f))
                                     }
                                 }
 
                                 Spacer(Modifier.height(12.dp))
-                                StripedProgressBar(pct = pct, color = goal.color, modifier = Modifier.fillMaxWidth())
+                                StripedProgressBar(pct = goal.pct, color = color, modifier = Modifier.fillMaxWidth())
 
                                 Spacer(Modifier.height(10.dp))
                                 Row(
@@ -178,13 +189,14 @@ fun GoalsScreen(
                                                 .clip(RoundedCornerShape(999.dp))
                                                 .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
                                                 .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                                .clickable { viewModel.onAction(GoalsAction.OnAddContribution(goal.id, amt.toDouble())) }
                                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                                         ) {
                                             Text("+ \$$amt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
                                         }
                                     }
                                     Spacer(Modifier.weight(1f))
-                                    Text("auto · fri", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                                    Text("${goal.pct.toInt()}%", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.65f))
                                 }
                             }
                         }
@@ -196,7 +208,8 @@ fun GoalsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
-                        .border(2.dp, TrackerColors.Ink, RoundedCornerShape(18.dp)),
+                        .border(2.dp, TrackerColors.Ink, RoundedCornerShape(18.dp))
+                        .clickable { showAddDialog = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -208,11 +221,47 @@ fun GoalsScreen(
             }
         }
 
+        if (showAddDialog) {
+            AddGoalDialog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { name, target ->
+                    viewModel.onAction(GoalsAction.OnCreateGoal(name = name, icon = "target", targetAmount = target, deadlineMs = null))
+                    showAddDialog = false
+                },
+            )
+        }
+
         TrackerTabBar(active = TrackerTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick, modifier = Modifier.fillMaxSize())
     }
 }
 
-private fun Int.toLocaleString(): String {
-    // Simple thousands formatting for KMP
-    return if (this >= 1000) "${this / 1000},${(this % 1000).toString().padStart(3, '0')}" else this.toString()
+@Composable
+private fun AddGoalDialog(onDismiss: () -> Unit, onConfirm: (name: String, target: Double) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var target by remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        StickerCard(bgColor = TrackerColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("New goal", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Goal name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = target, onValueChange = { target = it }, label = { Text("Target $") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = TrackerColors.Ink2) }
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(TrackerColors.Ink)
+                            .clickable { onConfirm(name, target.toDoubleOrNull() ?: 0.0) }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) { Text("Save", color = TrackerColors.Paper, fontWeight = FontWeight.Bold) }
+                }
+            }
+        }
+    }
+}
+
+private fun Double.fmtWhole(): String {
+    val l = kotlin.math.abs(toLong())
+    return if (l >= 1000) "${l / 1000},${(l % 1000).toString().padStart(3, '0')}" else l.toString()
 }

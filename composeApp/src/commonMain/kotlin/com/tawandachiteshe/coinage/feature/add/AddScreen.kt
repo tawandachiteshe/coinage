@@ -1,116 +1,67 @@
 package com.tawandachiteshe.coinage.feature.add
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
-import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
-import kotlin.math.abs
-import kotlin.math.roundToInt
+import org.koin.compose.viewmodel.koinViewModel
 
-private data class QueueCard(
-    val merchant: String,
-    val amount: String,
-    val timestamp: String,
-    val hint: String,
-    val icon: ImageVector,
-)
-
-private data class CatTarget(
-    val label: String,
-    val color: Color,
-    val dir: Char, // 'l','r','u','d'
-)
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
+    onSaved: () -> Unit = {},
+    viewModel: AddViewModel = koinViewModel(),
 ) {
-    val queue = remember {
-        listOf(
-            QueueCard("Trader Joe's",  "42.18", "today · 6:14pm",   "Groceries · debit ··3421", TrackerIcons.ShoppingCart),
-            QueueCard("Apple Music",   "10.99", "today · 12:00pm",  "Recurring · monthly",       TrackerIcons.Music),
-            QueueCard("Hara Sushi",    "28.50", "yesterday",        "Lunch · venmo",             TrackerIcons.Utensils),
-        )
-    }
-    val cats = remember {
-        listOf(
-            CatTarget("Need",  TrackerColors.Mint,  'l'),
-            CatTarget("Want",  TrackerColors.Coral, 'r'),
-            CatTarget("Save",  TrackerColors.Mint,  'u'),
-            CatTarget("Skip",  TrackerColors.Paper3,'d'),
-        )
-    }
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var idx by remember { mutableStateOf(0) }
-    var dragX by remember { mutableStateOf(0f) }
-    var dragY by remember { mutableStateOf(0f) }
-
-    val card = queue[idx % queue.size]
-
-    val threshold = 200f
-    val intent: Char? = if (abs(dragX) > abs(dragY)) {
-        when {
-            dragX > 80f  -> 'r'
-            dragX < -80f -> 'l'
-            else -> null
-        }
-    } else {
-        when {
-            dragY < -80f -> 'u'
-            dragY > 80f  -> 'd'
-            else -> null
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is AddEvent.Saved -> onSaved()
+                is AddEvent.ShowError -> Unit
+            }
         }
     }
-
-    val cardOffsetX = dragX
-    val cardOffsetY = dragY
-
-    val cardRotation = (dragX * 0.04f).coerceIn(-20f, 20f)
-    val stampAlpha = (abs(dragX) + abs(dragY)).coerceIn(0f, 200f) / 200f
 
     Box(
         modifier = Modifier
@@ -123,163 +74,222 @@ fun AddScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(top = 56.dp, bottom = 120.dp),
         ) {
+            val (title, italicWord) = when (state.addType) {
+                AddType.Transaction -> "New" to "transaction."
+                AddType.Goal        -> "New" to "goal."
+                AddType.Debt        -> "New" to "debt."
+            }
             PageHeader(
-                title = "What kind of",
-                italicWord = "spend?",
-                eyebrow = "${(queue.size - idx % queue.size)} to file",
-                accent = TrackerColors.Grape,
-                kicker = "Drag a card into a pile or tap a corner to sort.",
+                title = title,
+                italicWord = italicWord,
+                eyebrow = "add · record",
+                accent = TrackerColors.Tangerine,
+                kicker = when (state.addType) {
+                    AddType.Transaction -> "Every receipt tells a story. Log it."
+                    AddType.Goal        -> "Plant the seed. Watch it grow."
+                    AddType.Debt        -> "Name it to tame it."
+                },
             )
 
-            // Progress dots
-            Spacer(Modifier.height(4.dp))
-            Row(modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                queue.forEachIndexed { i, _ ->
-                    val pct = idx % queue.size
+            // Type picker
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 22.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                    .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                    .padding(4.dp),
+            ) {
+                listOf(AddType.Transaction to "transaction", AddType.Goal to "goal", AddType.Debt to "debt").forEach { (type, label) ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                when {
-                                    i < pct -> TrackerColors.Mint
-                                    i == pct -> TrackerColors.Butter
-                                    else -> TrackerColors.Paper2
-                                },
-                                RoundedCornerShape(3.dp),
-                            )
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(3.dp)),
-                    )
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (state.addType == type) TrackerColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
+                            .clickable { viewModel.onAction(AddAction.OnAddTypeChange(type)) }
+                            .padding(horizontal = 8.dp, vertical = 7.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, color = if (state.addType == type) TrackerColors.Paper else TrackerColors.Ink)
+                    }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // Card stage
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 22.dp)
-                    .fillMaxWidth()
-                    .height(360.dp),
+            // Form body
+            Column(
+                modifier = Modifier.padding(horizontal = 22.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                // Category targets at edges
-                CatLabel("Need",  TrackerColors.Mint,  modifier = Modifier.align(Alignment.CenterStart), lit = intent == 'l', hint = "needs, bills")
-                CatLabel("Want",  TrackerColors.Coral, modifier = Modifier.align(Alignment.CenterEnd),   lit = intent == 'r', hint = "fun, dining")
-                CatLabel("Save",  TrackerColors.Mint,  modifier = Modifier.align(Alignment.TopCenter),   lit = intent == 'u', hint = "goals")
-                CatLabel("Skip",  TrackerColors.Paper3,modifier = Modifier.align(Alignment.BottomCenter),lit = intent == 'd', hint = "reimburse")
-
-                // Back cards
-                StickerCard(bgColor = TrackerColors.PaperWhite, modifier = Modifier.size(220.dp, 280.dp).align(Alignment.Center).rotate(-2.5f).graphicsLayer { alpha = 0.4f }, tilt = 0f, cornerRadius = 18.dp, borderWidth = 1.8.dp) {}
-                StickerCard(bgColor = TrackerColors.PaperWhite, modifier = Modifier.size(230.dp, 288.dp).align(Alignment.Center).rotate(1.6f).graphicsLayer { alpha = 0.65f }, tilt = 0f, cornerRadius = 18.dp, borderWidth = 1.8.dp) {}
-
-                // Front card — draggable
-                Box(
-                    modifier = Modifier
-                        .size(240.dp, 300.dp)
-                        .align(Alignment.Center)
-                        .offset { IntOffset(cardOffsetX.roundToInt(), cardOffsetY.roundToInt()) }
-                        .rotate(cardRotation)
-                        .pointerInput(idx) {
-                            detectDragGestures(
-                                onDragEnd = {
-                                    val dir = when {
-                                        abs(dragX) > abs(dragY) -> if (dragX > threshold) 'r' else if (dragX < -threshold) 'l' else null
-                                        else -> if (dragY < -threshold) 'u' else if (dragY > threshold) 'd' else null
-                                    }
-                                    if (dir != null) {
-                                        idx++
-                                        dragX = 0f
-                                        dragY = 0f
-                                    } else {
-                                        dragX = 0f
-                                        dragY = 0f
-                                    }
-                                },
-                                onDragCancel = { dragX = 0f; dragY = 0f },
-                            ) { _, dragAmount ->
-                                dragX += dragAmount.x
-                                dragY += dragAmount.y
+                when (state.addType) {
+                    AddType.Transaction -> {
+                        // Expense / Income toggle
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                .padding(3.dp),
+                        ) {
+                            listOf(TxType.EXPENSE to "expense", TxType.INCOME to "income").forEach { (t, label) ->
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(if (state.txType == t) if (t == TxType.EXPENSE) TrackerColors.Cherry else TrackerColors.Mint else Color.Transparent, RoundedCornerShape(999.dp))
+                                        .clickable { viewModel.onAction(AddAction.OnTxTypeChange(t)) }
+                                        .padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, color = if (state.txType == t) TrackerColors.Paper else TrackerColors.Ink)
+                                }
                             }
                         }
-                        .popShadow(cornerRadius = 20.dp, offsetX = 4.dp, offsetY = 5.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(TrackerColors.PaperWhite, RoundedCornerShape(20.dp))
-                        .border(2.dp, TrackerColors.Ink, RoundedCornerShape(20.dp)),
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(20.dp),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(card.timestamp, fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
-                            Box(
-                                modifier = Modifier.size(44.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(TrackerColors.Butter, RoundedCornerShape(12.dp))
-                                    .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center,
-                            ) { Icon(imageVector = card.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink) }
+
+                        // Amount
+                        AmountField(
+                            value = state.amount,
+                            onValueChange = { viewModel.onAction(AddAction.OnAmountChange(it)) },
+                        )
+
+                        OutlinedTextField(
+                            value = state.merchant,
+                            onValueChange = { viewModel.onAction(AddAction.OnMerchantChange(it)) },
+                            label = { Text("Merchant / description") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        // Category chips
+                        if (state.categories.isNotEmpty()) {
+                            Text("Category", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                state.categories.forEach { cat ->
+                                    val selected = cat.id == state.selectedCategoryId
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(if (selected) TrackerColors.Ink else TrackerColors.PaperWhite, RoundedCornerShape(999.dp))
+                                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                            .clickable { viewModel.onAction(AddAction.OnCategorySelect(cat.id)) }
+                                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = TrackerIcons.fromKey(cat.icon),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp),
+                                                tint = if (selected) TrackerColors.Paper else TrackerColors.Ink,
+                                            )
+                                            Spacer(Modifier.width(6.dp))
+                                            Text(cat.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (selected) TrackerColors.Paper else TrackerColors.Ink)
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        Column {
-                            Text(card.merchant, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink, lineHeight = 28.sp)
-                            Text("−${"$"}${card.amount}", fontSize = 52.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink, lineHeight = 50.sp)
-                            Text(card.hint, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.7f), letterSpacing = 0.5.sp)
-                        }
-                        Box(
-                            modifier = Modifier.fillMaxWidth()
-                                .height(1.dp)
-                                .background(TrackerColors.Ink.copy(alpha = 0.2f)),
+
+                        OutlinedTextField(
+                            value = state.notes,
+                            onValueChange = { viewModel.onAction(AddAction.OnNotesChange(it)) },
+                            label = { Text("Notes (optional)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
 
-                    // Intent stamp overlay
-                    if (intent != null) {
-                        val stampLabel = cats.find { it.dir == intent }?.label ?: ""
-                        Box(
-                            modifier = Modifier
-                                .align(
-                                    when (intent) {
-                                        'l' -> Alignment.CenterStart
-                                        'r' -> Alignment.CenterEnd
-                                        'u' -> Alignment.TopCenter
-                                        else -> Alignment.BottomCenter
-                                    }
-                                )
-                                .padding(18.dp)
-                                .graphicsLayer { alpha = stampAlpha }
-                                .rotate(-12f)
-                                .border(2.5.dp, TrackerColors.Tangerine, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 14.dp, vertical = 6.dp),
-                        ) {
-                            Text(stampLabel.uppercase(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Tangerine, letterSpacing = 2.sp)
-                        }
+                    AddType.Goal -> {
+                        OutlinedTextField(
+                            value = state.goalName,
+                            onValueChange = { viewModel.onAction(AddAction.OnGoalNameChange(it)) },
+                            label = { Text("Goal name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        AmountField(
+                            value = state.goalTarget,
+                            onValueChange = { viewModel.onAction(AddAction.OnGoalTargetChange(it)) },
+                            label = "Target amount",
+                        )
+                    }
+
+                    AddType.Debt -> {
+                        OutlinedTextField(
+                            value = state.debtCreditor,
+                            onValueChange = { viewModel.onAction(AddAction.OnDebtCreditorChange(it)) },
+                            label = { Text("Creditor name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = state.debtType,
+                            onValueChange = { viewModel.onAction(AddAction.OnDebtTypeChange(it)) },
+                            label = { Text("Type (LOAN, CARD, STUDENT…)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        AmountField(
+                            value = state.debtBalance,
+                            onValueChange = { viewModel.onAction(AddAction.OnDebtBalanceChange(it)) },
+                            label = "Current balance",
+                        )
+                        OutlinedTextField(
+                            value = state.debtApr,
+                            onValueChange = { viewModel.onAction(AddAction.OnDebtAprChange(it)) },
+                            label = { Text("APR %") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = state.debtMinPayment,
+                            onValueChange = { viewModel.onAction(AddAction.OnDebtMinPayChange(it)) },
+                            label = { Text("Min monthly payment $") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
-            }
 
-            // Legend
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "← need · → want · ↑ save · ↓ skip",
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.5.sp,
-                    color = TrackerColors.Ink2.copy(alpha = 0.6f),
-                )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                        .border(1.5.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                // Error
+                if (state.error != null) {
+                    Text(state.error!!, fontSize = 13.sp, color = TrackerColors.Cherry, fontFamily = FontFamily.Monospace)
+                }
+
+                // Save button
+                Spacer(Modifier.height(4.dp))
+                StickerCard(
+                    bgColor = TrackerColors.Tangerine,
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 16.dp,
+                    borderWidth = 2.dp,
+                    shadowX = 4.dp,
+                    shadowY = 4.dp,
                 ) {
-                    Text("+ Manual", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !state.isLoading) { viewModel.onAction(AddAction.OnSave) }
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(TrackerIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                if (state.isLoading) "Saving…" else "Save",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TrackerColors.Ink,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -289,26 +299,18 @@ fun AddScreen(
 }
 
 @Composable
-private fun CatLabel(
-    label: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    lit: Boolean = false,
-    hint: String = "",
+private fun AmountField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String = "Amount",
 ) {
-    val scale by animateFloatAsState(if (lit) 1.1f else 1f, animationSpec = tween(150))
-    Box(
-        modifier = modifier
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .popShadow(cornerRadius = 14.dp, offsetX = 2.dp, offsetY = 2.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (lit) color else TrackerColors.Paper2, RoundedCornerShape(14.dp))
-            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(14.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-            Text(hint, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.65f), letterSpacing = 0.4.sp)
-        }
-    }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        leadingIcon = { Text("$", fontSize = 16.sp, color = TrackerColors.Ink2) },
+        modifier = Modifier.fillMaxWidth(),
+    )
 }

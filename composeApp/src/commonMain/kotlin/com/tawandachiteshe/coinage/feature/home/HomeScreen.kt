@@ -22,9 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,8 +46,6 @@ import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
-private enum class Zoom { Year, Month, Week }
-
 private data class Jar(
     val label: String,
     val spent: Int,
@@ -61,18 +59,17 @@ private data class Jar(
 fun HomeScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
+    viewModel: HomeViewModel = koinViewModel(),
 ) {
-    var zoom by remember { mutableStateOf(Zoom.Month) }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val zoom = state.zoom
 
-    val balance = when (zoom) {
-        Zoom.Year  -> "24,180"
-        Zoom.Month -> "2,847"
-        Zoom.Week  -> "612"
-    }
+    val balanceWhole = state.balance.formatWhole()
+    val balanceCents = state.balance.formatCents()
     val period = when (zoom) {
-        Zoom.Year  -> "2026 so far"
-        Zoom.Month -> "left this month"
-        Zoom.Week  -> "left this week"
+        Zoom.Year  -> "this year"
+        Zoom.Month -> "this month"
+        Zoom.Week  -> "this week"
     }
 
     val jars = remember {
@@ -145,8 +142,8 @@ fun HomeScreen(
                         Spacer(Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text("$", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
-                            Text(balance, fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 54.sp, color = TrackerColors.Paper)
-                            Text(".50", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
+                            Text(balanceWhole, fontSize = 60.sp, fontWeight = FontWeight.Bold, lineHeight = 54.sp, color = TrackerColors.Paper)
+                            Text(".$balanceCents", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
                         }
                         Text(period, fontSize = 16.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Paper.copy(alpha = 0.78f))
 
@@ -164,7 +161,7 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(999.dp))
                                         .background(if (zoom == z) TrackerColors.Butter else Color.Transparent, RoundedCornerShape(999.dp))
-                                        .clickable { zoom = z }
+                                        .clickable { viewModel.onAction(HomeAction.OnZoomChange(z)) }
                                         .padding(horizontal = 10.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
@@ -191,7 +188,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("↤  pinch to zoom  ↦", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
-                            Text("+\$3,420 in · −\$572 out", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
+                            Text("+\$${state.income.formatWhole()} in · −\$${state.expenses.formatWhole()} out", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
                         }
                     }
                 }
@@ -268,19 +265,39 @@ fun HomeScreen(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Row {
-                    Text("Today's ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                    Text("Recent ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                     Text("receipts", fontSize = 22.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Grape)
                 }
-                Text("3 NEW", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                if (state.transactions.isNotEmpty()) {
+                    Text("${state.transactions.size}", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                }
             }
             Spacer(Modifier.height(12.dp))
             Column(
                 modifier = Modifier.padding(horizontal = 22.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                ReceiptRow("Sunny Café", "6.40", "Food", "9:12am", TrackerIcons.Coffee, TrackerColors.Tangerine, tilt = -0.6f)
-                ReceiptRow("Bandcamp · Nilüfer Y.", "9.99", "Fun", "11:30am", TrackerIcons.Music, TrackerColors.Butter, tilt = 0.8f)
-                ReceiptRow("MTA · weekly pass", "34.00", "Transit", "yesterday", TrackerIcons.ArrowUpRight, TrackerColors.Sky, tilt = -0.4f)
+                if (state.transactions.isEmpty() && !state.isLoading) {
+                    Text(
+                        text = "No transactions yet — tap + to add one.",
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                        modifier = Modifier.padding(vertical = 8.dp),
+                    )
+                }
+                val tilts = listOf(-0.6f, 0.8f, -0.4f, 0.5f, -0.3f)
+                state.transactions.take(5).forEachIndexed { i, tx ->
+                    ReceiptRow(
+                        merchant = tx.merchant,
+                        amount = tx.amount.formatWhole(),
+                        category = tx.categoryName,
+                        time = if (tx.type == "INCOME") "income" else "expense",
+                        icon = TrackerIcons.fromKey(tx.categoryIcon),
+                        iconColor = if (tx.type == "INCOME") TrackerColors.Mint else TrackerColors.Tangerine,
+                        tilt = tilts[i % tilts.size],
+                    )
+                }
             }
         }
 
@@ -292,3 +309,11 @@ fun HomeScreen(
         )
     }
 }
+
+private fun Double.formatWhole(): String {
+    val l = kotlin.math.abs(toLong())
+    return if (l >= 1000) "${l / 1000},${(l % 1000).toString().padStart(3, '0')}" else l.toString()
+}
+
+private fun Double.formatCents(): String =
+    ((kotlin.math.abs(this) % 1.0) * 100).toInt().toString().padStart(2, '0')

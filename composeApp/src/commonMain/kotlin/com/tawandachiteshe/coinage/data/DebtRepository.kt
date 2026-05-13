@@ -22,6 +22,12 @@ class DebtRepository(db: ExpensifyDatabase) {
     fun getAvalancheOrder(): Flow<List<Debt>> =
         q.avalancheOrder().asFlow().mapToList(Dispatchers.IO)
 
+    suspend fun getSnowballList(): List<Debt> =
+        withContext(Dispatchers.IO) { q.snowballOrder().executeAsList() }
+
+    suspend fun getAvalancheList(): List<Debt> =
+        withContext(Dispatchers.IO) { q.avalancheOrder().executeAsList() }
+
     suspend fun getTotalOwed(): Double =
         withContext(Dispatchers.IO) {
             q.totalOwed().executeAsOne()

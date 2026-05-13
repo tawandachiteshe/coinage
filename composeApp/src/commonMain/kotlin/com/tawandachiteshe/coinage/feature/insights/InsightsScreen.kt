@@ -2,6 +2,7 @@ package com.tawandachiteshe.coinage.feature.insights
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,30 +31,25 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tawandachiteshe.coinage.feature.home.Zoom
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.TrackerTabBar
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
-
-private data class Category(val name: String, val value: Int, val color: Color)
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun InsightsScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
+    viewModel: InsightsViewModel = koinViewModel(),
 ) {
-    val cats = remember {
-        listOf(
-            Category("Food",    540,  TrackerColors.Tangerine),
-            Category("Rent",    1200, TrackerColors.Grape),
-            Category("Fun",     189,  TrackerColors.Butter),
-            Category("Transit", 92,   TrackerColors.Sky),
-            Category("Misc",    38,   TrackerColors.Coral),
-        )
-    }
-    val total = cats.sumOf { it.value }
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val cats = state.categoryTotals
+    val total = state.totalSpent
 
     Box(
         modifier = Modifier
@@ -68,14 +64,23 @@ fun InsightsScreen(
         ) {
             // Header
             Column(modifier = Modifier.padding(horizontal = 22.dp)) {
-                Text("April · in review".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                val periodLabel = when (state.zoom) {
+                    Zoom.Week  -> "This week · in review"
+                    Zoom.Month -> "This month · in review"
+                    Zoom.Year  -> "This year · in review"
+                }
+                Text(periodLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
                 Spacer(Modifier.height(4.dp))
                 Row {
-                    Text("A pretty ", fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp, color = TrackerColors.Ink)
-                    Text("good month.", fontSize = 36.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, lineHeight = 34.sp, color = TrackerColors.Tangerine)
+                    Text("Where did it ", fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp, color = TrackerColors.Ink)
+                    Text("all go?", fontSize = 36.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, lineHeight = 34.sp, color = TrackerColors.Tangerine)
                 }
                 Spacer(Modifier.height(6.dp))
-                Text("You spent \$134 less than March. Kept three weeks under budget. The receipts tell a story.", fontSize = 13.5.sp, lineHeight = 19.sp, color = TrackerColors.Ink2)
+                Text(
+                    if (cats.isEmpty()) "No transactions yet for this period."
+                    else "${cats.size} categor${if (cats.size == 1) "y" else "ies"} · the receipts tell a story.",
+                    fontSize = 13.5.sp, lineHeight = 19.sp, color = TrackerColors.Ink2,
+                )
             }
 
             // Big spend number
@@ -90,12 +95,29 @@ fun InsightsScreen(
                         Text("Total spent".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = TrackerColors.Ink.copy(alpha = 0.8f))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text("$", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink.copy(alpha = 0.85f))
-                            Text(total.toLocaleString(), fontSize = 54.sp, fontWeight = FontWeight.Bold, lineHeight = 50.sp, color = TrackerColors.Ink)
+                            Text(total.fmtWhole(), fontSize = 54.sp, fontWeight = FontWeight.Bold, lineHeight = 50.sp, color = TrackerColors.Ink)
                         }
                         Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Tag("↓ \$134 vs March", TrackerColors.Ink, TrackerColors.Butter)
-                            IconTag("3-wk streak", TrackerIcons.Flame, TrackerColors.Ink, TrackerColors.Paper)
+                        // Zoom toggle
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(TrackerColors.Ink.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
+                                .border(1.dp, TrackerColors.Ink.copy(alpha = 0.18f), RoundedCornerShape(999.dp))
+                                .padding(3.dp),
+                        ) {
+                            listOf(Zoom.Year to "Y", Zoom.Month to "M", Zoom.Week to "W").forEach { (z, label) ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(if (state.zoom == z) TrackerColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
+                                        .clickable { viewModel.onAction(InsightsAction.OnZoomChange(z)) }
+                                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(label, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = if (state.zoom == z) TrackerColors.Paper else TrackerColors.Ink)
+                                }
+                            }
                         }
                     }
                     // Star decoration
@@ -108,45 +130,53 @@ fun InsightsScreen(
             Column(modifier = Modifier.padding(horizontal = 22.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                     Text("Where it went", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                    Text("5 categories".uppercase(), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                    Text("${cats.size} categor${if (cats.size == 1) "y" else "ies"}".uppercase(), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
                 }
-                Spacer(Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(28.dp)
-                        .popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp)),
-                ) {
-                    cats.forEachIndexed { i, cat ->
-                        Box(
-                            modifier = Modifier
-                                .weight(cat.value.toFloat())
-                                .height(28.dp)
-                                .background(cat.color)
-                                .then(
-                                    if (i < cats.lastIndex) Modifier.border(width = 0.dp, color = Color.Transparent).padding(end = 1.dp)
-                                    else Modifier
-                                ),
-                        )
+                if (cats.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(28.dp)
+                            .popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp)),
+                    ) {
+                        cats.forEachIndexed { i, cat ->
+                            val catColor = parseHexColor(cat.colorHex)
+                            Box(
+                                modifier = Modifier
+                                    .weight(cat.total.toFloat().coerceAtLeast(0.01f))
+                                    .height(28.dp)
+                                    .background(catColor)
+                                    .then(
+                                        if (i < cats.lastIndex) Modifier.border(width = 0.dp, color = Color.Transparent).padding(end = 1.dp)
+                                        else Modifier
+                                    ),
+                            )
+                        }
                     }
-                }
-                Spacer(Modifier.height(10.dp))
-                // Legend
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    cats.chunked(2).forEach { row ->
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            row.forEach { cat ->
-                                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(cat.color).border(1.2.dp, TrackerColors.Ink, RoundedCornerShape(3.dp)))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(cat.name, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink, modifier = Modifier.weight(1f))
-                                    Text("\$${cat.value}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                    Spacer(Modifier.height(10.dp))
+                    // Legend
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        cats.chunked(2).forEach { row ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                row.forEach { cat ->
+                                    val catColor = parseHexColor(cat.colorHex)
+                                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(catColor).border(1.2.dp, TrackerColors.Ink, RoundedCornerShape(3.dp)))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(cat.categoryName, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink, modifier = Modifier.weight(1f))
+                                        Text("\$${cat.total.fmtWhole()}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                                    }
                                 }
+                                if (row.size < 2) Spacer(Modifier.weight(1f))
                             }
                         }
                     }
+                } else if (!state.isLoading) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("No spending data yet for this period.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.55f))
                 }
             }
 
@@ -232,7 +262,7 @@ fun InsightsScreen(
                         .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("✦", fontSize = 22.sp, color = TrackerColors.Butter)
+                    Icon(TrackerIcons.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = TrackerColors.Butter)
                     Spacer(Modifier.width(12.dp))
                     Text(
                         "\"Spending less, hugging tighter.\" — May's mantra, picked just for you.",
@@ -305,5 +335,20 @@ private fun IconTag(
     }
 }
 
-private fun Int.toLocaleString(): String =
-    if (this >= 1000) "${this / 1000},${(this % 1000).toString().padStart(3, '0')}" else this.toString()
+private fun Double.fmtWhole(): String {
+    val l = kotlin.math.abs(toLong())
+    return if (l >= 1000) "${l / 1000},${(l % 1000).toString().padStart(3, '0')}" else l.toString()
+}
+
+private fun parseHexColor(hex: String): Color {
+    val clean = hex.trimStart('#').padStart(6, '0')
+    return try {
+        Color(
+            red   = clean.substring(0, 2).toInt(16) / 255f,
+            green = clean.substring(2, 4).toInt(16) / 255f,
+            blue  = clean.substring(4, 6).toInt(16) / 255f,
+        )
+    } catch (_: Exception) {
+        TrackerColors.Grape
+    }
+}

@@ -64,6 +64,7 @@ fun AppNavHost(
             AddScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
                 onAddClick = {},
+                onSaved = { navController.popBackStack() },
             )
         }
 
