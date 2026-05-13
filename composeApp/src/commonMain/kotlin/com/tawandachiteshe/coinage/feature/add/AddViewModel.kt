@@ -76,6 +76,8 @@ sealed interface AddAction {
     data class OnDebtTypeChange(val v: String) : AddAction
     // save
     data object OnSave : AddAction
+    // lifecycle
+    data class OnReset(val type: AddType) : AddAction
 }
 
 sealed interface AddEvent {
@@ -130,6 +132,17 @@ class AddViewModel(
     @OptIn(ExperimentalUuidApi::class)
     fun onAction(action: AddAction) {
         when (action) {
+            is AddAction.OnReset -> _state.update { cur ->
+                AddState(
+                    addType = action.type,
+                    expenseCategories = cur.expenseCategories,
+                    incomeSources = cur.incomeSources,
+                    currencies = cur.currencies,
+                    selectedCurrencyCode = cur.selectedCurrencyCode,
+                    selectedCategoryId = cur.selectedCategoryId,
+                    selectedSourceId = cur.selectedSourceId,
+                )
+            }
             is AddAction.OnAddTypeChange  -> _state.update { it.copy(addType = action.type, error = null) }
             is AddAction.OnMerchantChange -> _state.update { it.copy(merchant = action.v, error = null) }
             is AddAction.OnAmountChange   -> _state.update { it.copy(amount = action.v, error = null) }

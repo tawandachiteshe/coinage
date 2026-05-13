@@ -1,11 +1,17 @@
 package com.tawandachiteshe.coinage.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.tawandachiteshe.coinage.feature.add.AddScreen
 import com.tawandachiteshe.coinage.feature.add.AddType
 import com.tawandachiteshe.coinage.feature.debt.DebtScreen
@@ -23,73 +29,76 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     startDestination: Route = Route.Onboarding,
 ) {
-    NavHost(navController = navController, startDestination = startDestination) {
+    var addType by remember { mutableStateOf<AddType?>(null) }
 
-        composable<Route.Onboarding> {
-            OnboardingScreen(
-                onFinish = {
-                    navController.navigate(Route.Home) {
-                        popUpTo(Route.Onboarding) { inclusive = true }
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavHost(navController = navController, startDestination = startDestination) {
+
+            composable<Route.Onboarding> {
+                OnboardingScreen(
+                    onFinish = {
+                        navController.navigate(Route.Home) {
+                            popUpTo(Route.Onboarding) { inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
+
+            composable<Route.Home> {
+                HomeScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Transaction },
+                    onManageJars = { navController.navigate(Route.JarsManager) },
+                )
+            }
+
+            composable<Route.Goals> {
+                GoalsScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Goal },
+                )
+            }
+
+            composable<Route.Debt> {
+                DebtScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Debt },
+                )
+            }
+
+            composable<Route.Insights> {
+                InsightsScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Transaction },
+                )
+            }
+
+            composable<Route.Profile> {
+                ProfileScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Transaction },
+                    onOpenSettings = { navController.navigate(Route.Settings) },
+                )
+            }
+
+            composable<Route.Settings> {
+                SettingsScreen(
+                    onTabClick = { tab -> navController.navigateToTab(tab) },
+                    onAddClick = { addType = AddType.Transaction },
+                )
+            }
+
+            composable<Route.JarsManager> {
+                JarsManagerScreen(onBack = { navController.popBackStack() })
+            }
         }
 
-        composable<Route.Home> {
-            HomeScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Transaction")) },
-                onManageJars = { navController.navigate(Route.JarsManager) },
-            )
-        }
-
-        composable<Route.Goals> {
-            GoalsScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Goal")) },
-            )
-        }
-
-        composable<Route.Debt> {
-            DebtScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Debt")) },
-            )
-        }
-
-        composable<Route.Insights> {
-            InsightsScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Transaction")) },
-            )
-        }
-
-        composable<Route.Add> { backStackEntry ->
-            val route = backStackEntry.toRoute<Route.Add>()
-            val initialType = AddType.entries.firstOrNull { it.name == route.type } ?: AddType.Transaction
+        // In-place overlay — shown above the current screen without navigation
+        if (addType != null) {
             AddScreen(
-                initialType = initialType,
-                onDismiss = { navController.popBackStack() },
+                initialType = addType!!,
+                onDismiss = { addType = null },
             )
-        }
-
-        composable<Route.Profile> {
-            ProfileScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Transaction")) },
-                onOpenSettings = { navController.navigate(Route.Settings) },
-            )
-        }
-
-        composable<Route.Settings> {
-            SettingsScreen(
-                onTabClick = { tab -> navController.navigateToTab(tab) },
-                onAddClick = { navController.navigate(Route.Add("Transaction")) },
-            )
-        }
-
-        composable<Route.JarsManager> {
-            JarsManagerScreen(onBack = { navController.popBackStack() })
         }
     }
 }

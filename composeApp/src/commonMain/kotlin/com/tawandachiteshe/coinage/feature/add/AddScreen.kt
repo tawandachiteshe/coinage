@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -30,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -52,8 +55,10 @@ fun AddScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    BackHandler(onBack = onDismiss)
+
     LaunchedEffect(initialType) {
-        viewModel.onAction(AddAction.OnAddTypeChange(initialType))
+        viewModel.onAction(AddAction.OnReset(initialType))
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -70,19 +75,22 @@ fun AddScreen(
                 .clickable(onClick = onDismiss),
         )
 
-        // Sheet card
+        // Sheet card — fillMaxHeight caps the height so verticalScroll works
         val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.92f)
                 .align(Alignment.BottomCenter)
                 .clip(sheetShape)
                 .background(TrackerColors.Paper, sheetShape)
                 .border(2.dp, TrackerColors.Ink, sheetShape)
-                .pointerInput(Unit) {}  // consume touches so they don't reach the scrim
+                .pointerInput(Unit) {}
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp)
-                .padding(top = 12.dp, bottom = 40.dp),
+                .padding(top = 12.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Drag handle

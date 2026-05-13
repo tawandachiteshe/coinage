@@ -8,7 +8,7 @@ sealed interface Route {
     @Serializable data object Goals : Route
     @Serializable data object Debt : Route
     @Serializable data object Insights : Route
-    @Serializable data class Add(val type: String = "Transaction") : Route
+
     @Serializable data object Profile : Route
     @Serializable data object Settings : Route
     @Serializable data object JarsManager : Route
