@@ -436,8 +436,7 @@ fun TrackerScaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(innerPadding)
-                .padding(top = if (onBack == null) 56.dp else 0.dp, bottom = 16.dp),
+                .padding(innerPadding),
             content = content,
         )
     }
