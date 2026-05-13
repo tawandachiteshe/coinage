@@ -1,4 +1,4 @@
-# Expensify — Tracker1.0
+# Coinage — Tracker1.0
 
 ## Product Vision
 

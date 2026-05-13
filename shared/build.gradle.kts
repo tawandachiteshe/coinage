@@ -39,7 +39,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.tawandachiteshe.expensify.shared"
+    namespace = "com.tawandachiteshe.coinage.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

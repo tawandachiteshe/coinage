@@ -1,4 +1,4 @@
-rootProject.name = "Expensify"
+rootProject.name = "Coinage"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

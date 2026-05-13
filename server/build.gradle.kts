@@ -4,10 +4,10 @@ plugins {
     application
 }
 
-group = "com.tawandachiteshe.expensify"
+group = "com.tawandachiteshe.coinage"
 version = "1.0.0"
 application {
-    mainClass.set("com.tawandachiteshe.expensify.ApplicationKt")
+    mainClass.set("com.tawandachiteshe.coinage.ApplicationKt")
     
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")

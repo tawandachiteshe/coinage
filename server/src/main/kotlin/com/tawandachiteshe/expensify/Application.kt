@@ -1,4 +1,4 @@
-package com.tawandachiteshe.expensify
+package com.tawandachiteshe.coinage
 
 import io.ktor.server.application.*
 import io.ktor.server.engine.*

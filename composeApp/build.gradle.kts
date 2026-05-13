@@ -14,7 +14,7 @@ plugins {
 sqldelight {
     databases {
         create("ExpensifyDatabase") {
-            packageName.set("com.tawandachiteshe.expensify.db")
+            packageName.set("com.tawandachiteshe.coinage.db")
         }
     }
 }
@@ -97,11 +97,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.tawandachiteshe.expensify"
+    namespace = "com.tawandachiteshe.coinage"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.tawandachiteshe.expensify"
+        applicationId = "com.tawandachiteshe.coinage"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -129,11 +129,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "com.tawandachiteshe.expensify.MainKt"
+        mainClass = "com.tawandachiteshe.coinage.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.tawandachiteshe.expensify"
+            packageName = "com.tawandachiteshe.coinage"
             packageVersion = "1.0.0"
         }
     }
