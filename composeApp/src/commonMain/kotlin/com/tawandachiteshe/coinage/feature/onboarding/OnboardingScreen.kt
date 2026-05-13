@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -51,11 +52,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 private data class Step(
     val eyebrow: String,
@@ -66,7 +69,10 @@ private data class Step(
 )
 
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit) {
+fun OnboardingScreen(
+    onFinish: () -> Unit,
+    viewModel: OnboardingViewModel = koinViewModel(),
+) {
     val steps = remember {
         listOf(
             Step("welcome", "Money,", "but fun.", TrackerColors.Tangerine,
@@ -91,7 +97,8 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TrackerColors.Paper),
+            .background(TrackerColors.Paper)
+            .imePadding(),
     ) {
         Column(
             modifier = Modifier
@@ -193,6 +200,17 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                             lineHeight = 22.sp,
                             color = TrackerColors.Ink2,
                         )
+                        // Name input — only shown on the last step
+                        if (currentStep == steps.lastIndex) {
+                            Spacer(Modifier.height(22.dp))
+                            TrackerTextField(
+                                value = viewModel.name,
+                                onValueChange = viewModel::onNameChange,
+                                label = "What should we call you?",
+                                placeholder = "e.g. Maya",
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 }
             }
@@ -259,7 +277,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     .clip(RoundedCornerShape(28.dp))
                     .background(TrackerColors.Ink, RoundedCornerShape(28.dp))
                     .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(28.dp))
-                    .clickable { if (isLast) onFinish() else step++ },
+                    .clickable { if (isLast) viewModel.finish(onFinish) else step++ },
                 contentAlignment = Alignment.Center,
             ) {
                 AnimatedContent(

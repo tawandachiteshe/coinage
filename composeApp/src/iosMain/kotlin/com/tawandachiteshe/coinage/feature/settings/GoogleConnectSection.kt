@@ -10,7 +10,7 @@ import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 @Composable
 actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
     Text(
-        "Google Sheets sync — coming to iOS soon.",
+        "Google Drive sync — coming to iOS soon.",
         fontSize = 12.sp,
         fontFamily = FontFamily.Monospace,
         color = TrackerColors.Ink2.copy(alpha = 0.5f),

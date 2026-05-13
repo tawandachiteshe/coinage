@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -49,6 +50,7 @@ fun HomeScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
     onManageJars: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -64,28 +66,35 @@ fun HomeScreen(
 
     TrackerScaffold(activeTab = TrackerTab.Home, onTabClick = onTabClick, onAddClick = onAddClick) {
             // Header
-            Column(modifier = Modifier.padding(horizontal = 22.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Tue · May 12",
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 1.4.sp,
-                        color = TrackerColors.Ink2.copy(alpha = 0.7f),
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(6.dp).background(TrackerColors.Mint, RoundedCornerShape(3.dp)))
                         Spacer(Modifier.width(6.dp))
                         Text("on track", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
                     }
+                    Spacer(Modifier.height(6.dp))
+                    Text("Hey, ${state.userName}.", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                    Text("Small wins are still wins.", fontSize = 18.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
                 }
-                Spacer(Modifier.height(14.dp))
-                Text("Hey, Maya.", fontSize = 22.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
-                Text("Small wins are still wins.", fontSize = 18.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
+                // Avatar — taps to Profile
+                val initial = state.userName.firstOrNull()?.uppercaseChar()?.toString() ?: "?"
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp)
+                        .clip(CircleShape)
+                        .background(TrackerColors.Tangerine, CircleShape)
+                        .border(1.8.dp, TrackerColors.Ink, CircleShape)
+                        .clickable { onProfileClick() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(initial, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper)
+                }
             }
 
             // Balance card

@@ -2,45 +2,55 @@ package com.tawandachiteshe.coinage.feature.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
     onOpenSettings: () -> Unit,
+    viewModel: ProfileViewModel = koinViewModel(),
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     TrackerScaffold(activeTab = null, onTabClick = onTabClick, onAddClick = onAddClick) {
             Text(
                 text = "Profile".uppercase(),
@@ -79,11 +89,11 @@ fun ProfileScreen(
                                 .border(2.dp, TrackerColors.Ink, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("M", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Paper)
+                            Text(state.initial, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Paper)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Maya", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                            Text(state.name, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                             Text("steady saver · joined feb '26", fontSize = 16.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
                         }
                         Text("★", fontSize = 28.sp, color = TrackerColors.Coral, modifier = Modifier.rotate(14f))
@@ -127,7 +137,10 @@ fun ProfileScreen(
                     Text("earned", fontSize = 20.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Grape)
                 }
                 Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                     listOf(
                         Triple("❄", "first save",     TrackerColors.Sky),
                         Triple("★", "on a roll",      TrackerColors.Butter),
@@ -158,44 +171,50 @@ fun ProfileScreen(
 
             // Link rows
             Spacer(Modifier.height(24.dp))
+            data class ProfileLink(val label: String, val hint: String, val icon: ImageVector, val isCta: Boolean = false, val onClick: () -> Unit = {})
+            val links = listOf(
+                ProfileLink("Account · ${state.name}", "Face ID linked",       TrackerIcons.User),
+                ProfileLink("Categories & jars",       "6 active",             TrackerIcons.Layers),
+                ProfileLink("Export your data",        "JSON or CSV",          TrackerIcons.Download),
+                ProfileLink("Open Settings",           "theme, currency, sync", TrackerIcons.Settings, isCta = true, onClick = onOpenSettings),
+            )
             Column(
                 modifier = Modifier.padding(horizontal = 22.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                listOf(
-                    Triple("Account · Maya Rivera",   "Face ID linked",      "◐" to false),
-                    Triple("Categories & jars",       "6 active",            "◇" to false),
-                    Triple("Export your data",        "JSON or CSV",         "↧" to false),
-                    Triple("Open Settings",           "theme, currency, sync","▸" to true),
-                ).forEachIndexed { i, (label, hint, glyphCta) ->
-                    val (glyph, isCta) = glyphCta
+                links.forEachIndexed { i, link ->
                     StickerCard(
                         bgColor = TrackerColors.PaperWhite,
                         modifier = Modifier.fillMaxWidth().rotate(if (i % 2 == 0) -0.4f else 0.6f),
                         cornerRadius = 14.dp, borderWidth = 1.6.dp, shadowX = 2.5.dp, shadowY = 3.dp,
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { link.onClick() }
+                                .padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                modifier = Modifier.size(34.dp)
+                                modifier = Modifier
+                                    .size(34.dp)
                                     .clip(RoundedCornerShape(9.dp))
-                                    .background(if (isCta) TrackerColors.Tangerine else TrackerColors.Paper2)
+                                    .background(if (link.isCta) TrackerColors.Tangerine else TrackerColors.Paper2)
                                     .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(9.dp)),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(glyph, fontSize = 16.sp, color = TrackerColors.Ink)
+                                Icon(link.icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Ink)
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
-                                Text(hint, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                                Text(link.label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                Text(link.hint, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f))
                             }
-                            Text("›", fontSize = 16.sp, color = TrackerColors.Ink2.copy(alpha = 0.5f))
+                            Icon(TrackerIcons.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Ink2.copy(alpha = 0.5f))
                         }
                     }
                 }
             }
+            Spacer(Modifier.height(16.dp))
     }
 }

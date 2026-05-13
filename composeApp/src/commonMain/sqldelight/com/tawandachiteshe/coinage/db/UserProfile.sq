@@ -1,0 +1,11 @@
+CREATE TABLE UserProfile (
+    id        INTEGER NOT NULL PRIMARY KEY DEFAULT 1,
+    name      TEXT    NOT NULL DEFAULT '',
+    joined_at INTEGER NOT NULL DEFAULT 0
+);
+
+upsertName:
+INSERT OR REPLACE INTO UserProfile(id, name, joined_at) VALUES(1, :name, :joinedAt);
+
+getName:
+SELECT name FROM UserProfile WHERE id = 1;

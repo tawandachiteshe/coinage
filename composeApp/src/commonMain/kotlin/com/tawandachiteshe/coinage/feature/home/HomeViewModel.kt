@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tawandachiteshe.coinage.data.CategoryRepository
 import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
+import com.tawandachiteshe.coinage.data.UserProfileRepository
 import com.tawandachiteshe.coinage.db.SelectAll
 import com.tawandachiteshe.coinage.feature.jars.JarUi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +65,7 @@ data class HomeState(
     val baseCurrencySymbol: String = "$",
     val baseCurrencyCode: String = "USD",
     val isLoading: Boolean = true,
+    val userName: String = "",
 )
 
 sealed interface HomeAction {
@@ -75,12 +77,17 @@ class HomeViewModel(
     private val txRepo: TransactionRepository,
     private val catRepo: CategoryRepository,
     private val curRepo: CurrencyRepository,
+    private val profileRepo: UserProfileRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            val name = profileRepo.getName()?.ifBlank { null } ?: "there"
+            _state.update { it.copy(userName = name) }
+        }
         viewModelScope.launch {
             curRepo.getBase().collect { base ->
                 if (base != null) {
