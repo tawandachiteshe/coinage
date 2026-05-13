@@ -75,7 +75,7 @@ fun AddScreen(
                 .clickable(onClick = onDismiss),
         )
 
-        // Sheet card — fillMaxHeight caps the height so verticalScroll works
+        // Sheet card — outer Column: no scroll; inner Column: scrollable form; save button: always pinned at bottom
         val sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         Column(
             modifier = Modifier
@@ -85,90 +85,102 @@ fun AddScreen(
                 .clip(sheetShape)
                 .background(TrackerColors.Paper, sheetShape)
                 .border(2.dp, TrackerColors.Ink, sheetShape)
-                .pointerInput(Unit) {}
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp)
-                .padding(top = 12.dp)
-                .navigationBarsPadding()
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .pointerInput(Unit) {},
         ) {
-            // Drag handle
-            Box(
+            // Scrollable form content
+            Column(
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .size(36.dp, 3.dp)
-                    .background(TrackerColors.Ink.copy(alpha = 0.2f), RoundedCornerShape(999.dp)),
-            )
-
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 22.dp)
+                    .padding(top = 12.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("New ", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                // Drag handle
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .size(36.dp, 3.dp)
+                        .background(TrackerColors.Ink.copy(alpha = 0.2f), RoundedCornerShape(999.dp)),
+                )
+
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text("New ", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                        Text(
+                            text = state.addType.name.lowercase() + ".",
+                            fontSize = 26.sp,
+                            fontStyle = FontStyle.Italic,
+                            fontFamily = FontFamily.Serif,
+                            color = TrackerColors.Tangerine,
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .clickable(onClick = onDismiss),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(TrackerIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
+                    }
+                }
+
+                // Type picker
+                TypePicker(selected = state.addType, onSelect = { viewModel.onAction(AddAction.OnAddTypeChange(it)) })
+
+                // Context-aware form
+                when (state.addType) {
+                    AddType.Transaction -> TransactionSheetContent(state = state, onAction = viewModel::onAction)
+                    AddType.Goal        -> GoalSheetContent(state = state, onAction = viewModel::onAction)
+                    AddType.Debt        -> DebtSheetContent(state = state, onAction = viewModel::onAction)
+                }
+
+                if (state.error != null) {
                     Text(
-                        text = state.addType.name.lowercase() + ".",
-                        fontSize = 26.sp,
-                        fontStyle = FontStyle.Italic,
-                        fontFamily = FontFamily.Serif,
-                        color = TrackerColors.Tangerine,
+                        text = state.error!!,
+                        fontSize = 13.sp,
+                        color = TrackerColors.Cherry,
+                        fontFamily = FontFamily.Monospace,
                     )
                 }
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                        .clickable(onClick = onDismiss),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(TrackerIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
-                }
             }
 
-            // Type picker
-            TypePicker(selected = state.addType, onSelect = { viewModel.onAction(AddAction.OnAddTypeChange(it)) })
-
-            // Context-aware form sheet
-            when (state.addType) {
-                AddType.Transaction -> TransactionSheetContent(state = state, onAction = viewModel::onAction)
-                AddType.Goal        -> GoalSheetContent(state = state, onAction = viewModel::onAction)
-                AddType.Debt        -> DebtSheetContent(state = state, onAction = viewModel::onAction)
-            }
-
-            if (state.error != null) {
-                Text(
-                    text = state.error!!,
-                    fontSize = 13.sp,
-                    color = TrackerColors.Cherry,
-                    fontFamily = FontFamily.Monospace,
-                )
-            }
-
-            // Save button
-            StickerCard(
-                bgColor = TrackerColors.Tangerine,
-                modifier = Modifier.fillMaxWidth(),
-                cornerRadius = 16.dp,
-                borderWidth = 2.dp,
-                shadowX = 4.dp,
-                shadowY = 4.dp,
+            // Save button — pinned, never scrolls away
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(TrackerColors.Paper)
+                    .padding(horizontal = 22.dp, vertical = 12.dp)
+                    .navigationBarsPadding(),
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !state.isLoading) { viewModel.onAction(AddAction.OnSave) }
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center,
+                StickerCard(
+                    bgColor = TrackerColors.Tangerine,
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 16.dp,
+                    borderWidth = 2.dp,
+                    shadowX = 4.dp,
+                    shadowY = 4.dp,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(TrackerIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink)
-                        Spacer(Modifier.width(8.dp))
-                        Text(if (state.isLoading) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !state.isLoading) { viewModel.onAction(AddAction.OnSave) }
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(TrackerIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (state.isLoading) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                        }
                     }
                 }
             }

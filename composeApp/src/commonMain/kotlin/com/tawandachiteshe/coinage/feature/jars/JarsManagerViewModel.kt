@@ -24,6 +24,7 @@ data class JarUi(
     val budgetLimit: Double,
     val spent: Double,
     val isDefault: Boolean,
+    val isActive: Boolean,
     val tilt: Float,
 )
 
@@ -36,6 +37,7 @@ sealed interface JarsAction {
     data class OnUpdateBudget(val jarId: String, val budget: Double) : JarsAction
     data class OnCreateJar(val name: String, val icon: String, val colorHex: String, val budget: Double) : JarsAction
     data class OnDeleteJar(val id: String) : JarsAction
+    data class OnToggleActive(val id: String, val active: Boolean) : JarsAction
 }
 
 sealed interface JarsEvent {
@@ -73,6 +75,7 @@ class JarsManagerViewModel(
                         budgetLimit = cat.budget_limit,
                         spent = spending[cat.id] ?: 0.0,
                         isDefault = cat.is_default == 1L,
+                        isActive = cat.is_active == 1L,
                         tilt = TILTS[index % TILTS.size],
                     )
                 }
@@ -111,6 +114,13 @@ class JarsManagerViewModel(
                     catRepo.delete(action.id)
                 } catch (e: Exception) {
                     _events.send(JarsEvent.ShowError("Failed to delete jar: ${e.message}"))
+                }
+            }
+            is JarsAction.OnToggleActive -> viewModelScope.launch {
+                try {
+                    catRepo.setActive(action.id, action.active)
+                } catch (e: Exception) {
+                    _events.send(JarsEvent.ShowError("Failed to update jar: ${e.message}"))
                 }
             }
         }

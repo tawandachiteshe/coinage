@@ -5,7 +5,8 @@ CREATE TABLE Category (
     color_hex    TEXT    NOT NULL DEFAULT '#1a1230',
     type         TEXT    NOT NULL DEFAULT 'BOTH',
     budget_limit REAL    NOT NULL DEFAULT 0.0,
-    is_default   INTEGER NOT NULL DEFAULT 0
+    is_default   INTEGER NOT NULL DEFAULT 0,
+    is_active    INTEGER NOT NULL DEFAULT 1
 );
 
 selectAll:
@@ -18,7 +19,7 @@ selectByType:
 SELECT * FROM Category WHERE type = ? OR type = 'BOTH' ORDER BY name ASC;
 
 insert:
-INSERT OR IGNORE INTO Category VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR IGNORE INTO Category VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE Category SET name = ?, icon = ?, color_hex = ?, budget_limit = ?
@@ -30,8 +31,14 @@ DELETE FROM Category WHERE id = ? AND is_default = 0;
 selectExpenseJars:
 SELECT * FROM Category WHERE type = 'EXPENSE' OR type = 'BOTH' ORDER BY is_default DESC, name ASC;
 
+selectActiveExpenseJars:
+SELECT * FROM Category WHERE (type = 'EXPENSE' OR type = 'BOTH') AND is_active = 1 ORDER BY is_default DESC, name ASC;
+
 updateBudget:
 UPDATE Category SET budget_limit = ? WHERE id = ?;
+
+updateActive:
+UPDATE Category SET is_active = ? WHERE id = ?;
 
 seedBudget:
 UPDATE Category SET budget_limit = ? WHERE id = ? AND budget_limit = 0.0;

@@ -26,8 +26,14 @@ class CategoryRepository(db: ExpensifyDatabase) {
     fun getExpenseJars(): Flow<List<Category>> =
         q.selectExpenseJars().asFlow().mapToList(Dispatchers.IO)
 
+    fun getActiveExpenseJars(): Flow<List<Category>> =
+        q.selectActiveExpenseJars().asFlow().mapToList(Dispatchers.IO)
+
     suspend fun updateBudget(id: String, budget: Double) =
         withContext(Dispatchers.IO) { q.updateBudget(budget, id) }
+
+    suspend fun setActive(id: String, active: Boolean) =
+        withContext(Dispatchers.IO) { q.updateActive(if (active) 1L else 0L, id) }
 
     suspend fun insert(
         id: String,
@@ -37,8 +43,9 @@ class CategoryRepository(db: ExpensifyDatabase) {
         type: String,
         budgetLimit: Double,
         isDefault: Long,
+        isActive: Long = 1L,
     ) = withContext(Dispatchers.IO) {
-        q.insert(id, name, icon, colorHex, type, budgetLimit, isDefault)
+        q.insert(id, name, icon, colorHex, type, budgetLimit, isDefault, isActive)
     }
 
     suspend fun update(
@@ -55,7 +62,7 @@ class CategoryRepository(db: ExpensifyDatabase) {
 
     fun seedDefaults() {
         DEFAULT_CATEGORIES.forEach { c ->
-            q.insert(c.id, c.name, c.icon, c.colorHex, c.type, 0.0, 1L)
+            q.insert(c.id, c.name, c.icon, c.colorHex, c.type, 0.0, 1L, 1L)
         }
         DEFAULT_BUDGETS.forEach { (id, budget) ->
             q.seedBudget(budget, id)

@@ -104,7 +104,7 @@ class HomeViewModel(
                 }
         }
         viewModelScope.launch {
-            catRepo.getExpenseJars().collect { categories ->
+            catRepo.getActiveExpenseJars().collect { categories ->
                 val zoom = _state.value.zoom
                 val (start, end) = zoom.dateRange()
                 val spending = try {
@@ -121,6 +121,7 @@ class HomeViewModel(
                         budgetLimit = cat.budget_limit,
                         spent = spending[cat.id] ?: 0.0,
                         isDefault = cat.is_default == 1L,
+                        isActive = true,
                         tilt = JAR_TILTS[index % JAR_TILTS.size],
                     )
                 }

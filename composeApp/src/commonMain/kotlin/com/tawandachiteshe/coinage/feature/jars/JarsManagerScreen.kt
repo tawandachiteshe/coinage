@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -103,6 +104,7 @@ fun JarsManagerScreen(
                         jar = jar,
                         onEditBudget = { editBudgetJar = jar },
                         onDelete = { viewModel.onAction(JarsAction.OnDeleteJar(jar.id)) },
+                        onToggleActive = { viewModel.onAction(JarsAction.OnToggleActive(jar.id, !jar.isActive)) },
                     )
                 }
             }
@@ -173,19 +175,22 @@ private fun JarCard(
     jar: JarUi,
     onEditBudget: () -> Unit,
     onDelete: () -> Unit,
+    onToggleActive: () -> Unit,
 ) {
     val jarColor = parseHexColor(jar.colorHex)
     val isOverspent = jar.budgetLimit > 0 && jar.spent > jar.budgetLimit
     val barColor = if (isOverspent) TrackerColors.Cherry else jarColor
     val pct = if (jar.budgetLimit > 0) (jar.spent / jar.budgetLimit * 100f).toFloat().coerceIn(0f, 100f) else 0f
+    val cardAlpha = if (jar.isActive) 1f else 0.45f
 
     StickerCard(
-        bgColor = TrackerColors.PaperWhite,
+        bgColor = if (jar.isActive) TrackerColors.PaperWhite else TrackerColors.Paper2,
         tilt = jar.tilt,
         cornerRadius = 16.dp,
         borderWidth = 1.8.dp,
         shadowX = 3.dp,
         shadowY = 4.dp,
+        modifier = Modifier.graphicsLayer { alpha = cardAlpha },
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             // Left color bar
@@ -303,6 +308,25 @@ private fun JarCard(
                                 tint = TrackerColors.Cherry,
                             )
                         }
+                    }
+
+                    // Light / dim toggle
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (jar.isActive) TrackerColors.Butter else TrackerColors.Paper3)
+                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .clickable { onToggleActive() }
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = if (jar.isActive) "lit" else "dim",
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.5.sp,
+                            color = TrackerColors.Ink,
+                        )
                     }
                 }
             }
