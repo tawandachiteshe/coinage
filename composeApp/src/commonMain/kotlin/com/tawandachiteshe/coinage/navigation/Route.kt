@@ -11,4 +11,5 @@ sealed interface Route {
     @Serializable data object Add : Route
     @Serializable data object Profile : Route
     @Serializable data object Settings : Route
+    @Serializable data object JarsManager : Route
 }

@@ -26,3 +26,12 @@ WHERE id = ? AND is_default = 0;
 
 delete:
 DELETE FROM Category WHERE id = ? AND is_default = 0;
+
+selectExpenseJars:
+SELECT * FROM Category WHERE type = 'EXPENSE' OR type = 'BOTH' ORDER BY is_default DESC, name ASC;
+
+updateBudget:
+UPDATE Category SET budget_limit = ? WHERE id = ?;
+
+seedBudget:
+UPDATE Category SET budget_limit = ? WHERE id = ? AND budget_limit = 0.0;

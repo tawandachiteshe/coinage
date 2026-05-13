@@ -35,6 +35,13 @@ class TransactionRepository(db: ExpensifyDatabase) {
             q.totalByCategoryAndDateRange(startMs, endMs).executeAsList()
         }
 
+    suspend fun getSpendingByCategory(startMs: Long, endMs: Long): Map<String, Double> =
+        withContext(Dispatchers.IO) {
+            q.totalByCategoryAndDateRange(startMs, endMs)
+                .executeAsList()
+                .associate { it.category_id to it.total }
+        }
+
     suspend fun insert(
         id: String,
         amount: Double,

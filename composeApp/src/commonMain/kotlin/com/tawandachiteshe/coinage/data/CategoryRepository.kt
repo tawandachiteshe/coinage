@@ -23,6 +23,12 @@ class CategoryRepository(db: ExpensifyDatabase) {
     fun getByType(type: String): Flow<List<Category>> =
         q.selectByType(type).asFlow().mapToList(Dispatchers.IO)
 
+    fun getExpenseJars(): Flow<List<Category>> =
+        q.selectExpenseJars().asFlow().mapToList(Dispatchers.IO)
+
+    suspend fun updateBudget(id: String, budget: Double) =
+        withContext(Dispatchers.IO) { q.updateBudget(budget, id) }
+
     suspend fun insert(
         id: String,
         name: String,
@@ -51,6 +57,9 @@ class CategoryRepository(db: ExpensifyDatabase) {
         DEFAULT_CATEGORIES.forEach { c ->
             q.insert(c.id, c.name, c.icon, c.colorHex, c.type, 0.0, 1L)
         }
+        DEFAULT_BUDGETS.forEach { (id, budget) ->
+            q.seedBudget(budget, id)
+        }
     }
 
     companion object {
@@ -60,6 +69,19 @@ class CategoryRepository(db: ExpensifyDatabase) {
             val icon: String,
             val colorHex: String,
             val type: String,
+        )
+
+        val DEFAULT_BUDGETS: Map<String, Double> = mapOf(
+            "cat_groceries"     to 500.0,
+            "cat_dining"        to 300.0,
+            "cat_transport"     to 150.0,
+            "cat_health"        to 100.0,
+            "cat_housing"       to 1500.0,
+            "cat_utilities"     to 200.0,
+            "cat_entertainment" to 100.0,
+            "cat_shopping"      to 200.0,
+            "cat_savings"       to 500.0,
+            "cat_other"         to 100.0,
         )
 
         val DEFAULT_CATEGORIES = listOf(

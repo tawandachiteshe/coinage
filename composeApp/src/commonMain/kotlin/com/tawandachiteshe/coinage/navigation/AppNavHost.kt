@@ -10,6 +10,7 @@ import com.tawandachiteshe.coinage.feature.debt.DebtScreen
 import com.tawandachiteshe.coinage.feature.goals.GoalsScreen
 import com.tawandachiteshe.coinage.feature.home.HomeScreen
 import com.tawandachiteshe.coinage.feature.insights.InsightsScreen
+import com.tawandachiteshe.coinage.feature.jars.JarsManagerScreen
 import com.tawandachiteshe.coinage.feature.onboarding.OnboardingScreen
 import com.tawandachiteshe.coinage.feature.profile.ProfileScreen
 import com.tawandachiteshe.coinage.feature.settings.SettingsScreen
@@ -36,6 +37,7 @@ fun AppNavHost(
             HomeScreen(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
                 onAddClick = { navController.navigate(Route.Add) },
+                onManageJars = { navController.navigate(Route.JarsManager) },
             )
         }
 
@@ -81,6 +83,10 @@ fun AppNavHost(
                 onTabClick = { tab -> navController.navigateToTab(tab) },
                 onAddClick = { navController.navigate(Route.Add) },
             )
+        }
+
+        composable<Route.JarsManager> {
+            JarsManagerScreen(onBack = { navController.popBackStack() })
         }
     }
 }

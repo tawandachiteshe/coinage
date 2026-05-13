@@ -2,8 +2,10 @@ package com.tawandachiteshe.coinage.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tawandachiteshe.coinage.data.CategoryRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.db.SelectAll
+import com.tawandachiteshe.coinage.feature.jars.JarUi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,12 +50,15 @@ fun Zoom.dateRange(): Pair<Long, Long> {
     return startInstant.toEpochMilliseconds() to now.toEpochMilliseconds()
 }
 
+private val JAR_TILTS = listOf(-1.5f, 1.0f, -0.8f, 1.5f, -1.0f, 0.8f)
+
 data class HomeState(
     val balance: Double = 0.0,
     val income: Double = 0.0,
     val expenses: Double = 0.0,
     val zoom: Zoom = Zoom.Month,
     val transactions: List<TransactionUi> = emptyList(),
+    val jars: List<JarUi> = emptyList(),
     val isLoading: Boolean = true,
 )
 
@@ -62,7 +67,10 @@ sealed interface HomeAction {
     data class OnDeleteTransaction(val id: String) : HomeAction
 }
 
-class HomeViewModel(private val txRepo: TransactionRepository) : ViewModel() {
+class HomeViewModel(
+    private val txRepo: TransactionRepository,
+    private val catRepo: CategoryRepository,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
@@ -82,6 +90,30 @@ class HomeViewModel(private val txRepo: TransactionRepository) : ViewModel() {
                     val expenses = txRepo.getTotalByTypeAndDateRange("EXPENSE", start, end)
                     _state.update { it.copy(income = income, expenses = expenses, balance = income - expenses) }
                 }
+        }
+        viewModelScope.launch {
+            catRepo.getExpenseJars().collect { categories ->
+                val zoom = _state.value.zoom
+                val (start, end) = zoom.dateRange()
+                val spending = try {
+                    txRepo.getSpendingByCategory(start, end)
+                } catch (_: Exception) {
+                    emptyMap()
+                }
+                val jars = categories.mapIndexed { index, cat ->
+                    JarUi(
+                        id = cat.id,
+                        name = cat.name,
+                        icon = cat.icon,
+                        colorHex = cat.color_hex,
+                        budgetLimit = cat.budget_limit,
+                        spent = spending[cat.id] ?: 0.0,
+                        isDefault = cat.is_default == 1L,
+                        tilt = JAR_TILTS[index % JAR_TILTS.size],
+                    )
+                }
+                _state.update { it.copy(jars = jars) }
+            }
         }
     }
 

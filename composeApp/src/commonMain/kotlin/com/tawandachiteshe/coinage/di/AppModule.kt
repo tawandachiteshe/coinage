@@ -10,6 +10,7 @@ import com.tawandachiteshe.coinage.feature.debt.DebtViewModel
 import com.tawandachiteshe.coinage.feature.goals.GoalsViewModel
 import com.tawandachiteshe.coinage.feature.home.HomeViewModel
 import com.tawandachiteshe.coinage.feature.insights.InsightsViewModel
+import com.tawandachiteshe.coinage.feature.jars.JarsManagerViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -20,9 +21,10 @@ val appModule = module {
     single { DebtRepository(get()) }
     single { GoalRepository(get()) }
 
-    viewModel { HomeViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
     viewModel { GoalsViewModel(get()) }
     viewModel { DebtViewModel(get()) }
     viewModel { InsightsViewModel(get(), get()) }
     viewModel { AddViewModel(get(), get(), get(), get()) }
+    viewModel { JarsManagerViewModel(get(), get()) }
 }

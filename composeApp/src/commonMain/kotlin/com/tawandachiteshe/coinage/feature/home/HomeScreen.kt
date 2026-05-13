@@ -22,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.ui.Alignment
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -46,19 +44,11 @@ import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
-private data class Jar(
-    val label: String,
-    val spent: Int,
-    val of: Int,
-    val color: Color,
-    val icon: ImageVector,
-    val tilt: Float,
-)
-
 @Composable
 fun HomeScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
+    onManageJars: () -> Unit = {},
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -70,17 +60,6 @@ fun HomeScreen(
         Zoom.Year  -> "this year"
         Zoom.Month -> "this month"
         Zoom.Week  -> "this week"
-    }
-
-    val jars = remember {
-        listOf(
-            Jar("Food",    340, 500,  TrackerColors.Tangerine, TrackerIcons.Utensils,     -1.5f),
-            Jar("Rent",    1200, 1200, TrackerColors.Grape,   TrackerIcons.Home,          1.0f),
-            Jar("Fun",     89,  200,  TrackerColors.Butter,   TrackerIcons.Music,        -0.8f),
-            Jar("Subs",    42,  80,   TrackerColors.Sky,      TrackerIcons.Play,          1.5f),
-            Jar("Saving",  250, 300,  TrackerColors.Mint,     TrackerIcons.PiggyBank,    -1.0f),
-            Jar("Misc",    38,  100,  TrackerColors.Coral,    TrackerIcons.Gem,           0.8f),
-        )
     }
 
     Box(
@@ -216,19 +195,29 @@ fun HomeScreen(
                     Text("Your ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                     Text("jars", fontSize = 22.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Tangerine)
                 }
-                Text("TAP TO REFILL", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                Text("MANAGE", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f), modifier = Modifier.clickable { onManageJars() })
             }
             Spacer(Modifier.height(12.dp))
 
             // 3-column jars grid
-            val rows = jars.chunked(3)
-            rows.forEach { rowJars ->
+            val jarRows = state.jars.chunked(3)
+            if (state.jars.isEmpty() && !state.isLoading) {
+                Text(
+                    text = "No spending jars yet.",
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp),
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                )
+            }
+            jarRows.forEach { rowJars ->
                 Row(
                     modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     rowJars.forEach { jar ->
-                        val pct = (jar.spent.toFloat() / jar.of) * 100f
+                        val jarColor = parseHexColor(jar.colorHex)
+                        val pct = if (jar.budgetLimit > 0) (jar.spent / jar.budgetLimit * 100f).toFloat().coerceIn(0f, 100f) else 0f
                         StickerCard(
                             bgColor = TrackerColors.PaperWhite,
                             modifier = Modifier.weight(1f),
@@ -239,12 +228,12 @@ fun HomeScreen(
                             shadowY = 3.dp,
                         ) {
                             Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.Top) {
-                                ProgressJar(pct = pct, color = jar.color, height = 56.dp, width = 22.dp)
+                                ProgressJar(pct = pct, color = jarColor, height = 56.dp, width = 22.dp)
                                 Spacer(Modifier.width(8.dp))
                                 Column {
-                                    Text(jar.label, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
-                                    Text("\$${jar.spent}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                    Text("of \$${jar.of}", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                                    Text(jar.name, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                    Text("\$${jar.spent.formatWhole()}", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                                    Text("of \$${jar.budgetLimit.formatWhole()}", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.6f))
                                 }
                             }
                         }
@@ -317,3 +306,16 @@ private fun Double.formatWhole(): String {
 
 private fun Double.formatCents(): String =
     ((kotlin.math.abs(this) % 1.0) * 100).toInt().toString().padStart(2, '0')
+
+private fun parseHexColor(hex: String): Color {
+    val clean = hex.trimStart('#').padStart(6, '0')
+    return try {
+        Color(
+            red   = clean.substring(0, 2).toInt(16) / 255f,
+            green = clean.substring(2, 4).toInt(16) / 255f,
+            blue  = clean.substring(4, 6).toInt(16) / 255f,
+        )
+    } catch (_: Exception) {
+        TrackerColors.Grape
+    }
+}
