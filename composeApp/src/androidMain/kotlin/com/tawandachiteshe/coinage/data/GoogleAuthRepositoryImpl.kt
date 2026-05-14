@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import co.touchlab.kermit.Logger
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.AuthorizationResult
 import com.google.android.gms.auth.api.identity.Identity
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
+private val log = Logger.withTag("GoogleAuth")
+
 class GoogleAuthRepositoryImpl(
     private val context: Context,
     private val dataStore: DataStore<Preferences>,
@@ -25,7 +28,9 @@ class GoogleAuthRepositoryImpl(
     private val authClient = Identity.getAuthorizationClient(context)
 
     override fun isConnected(): Boolean = runBlocking {
-        dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull() != null
+        val token = dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull()
+        log.d { "isConnected check → token ${if (token != null) "present (${token.take(10)}…)" else "null"}" }
+        token != null
     }
 
     override suspend fun getConnectedEmail(): String? =
@@ -34,46 +39,73 @@ class GoogleAuthRepositoryImpl(
     override suspend fun getValidAccessToken(): String? =
         dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull()
 
-    // Requests Drive + Sheets scopes. Returns a result the caller inspects:
-    //   hasResolution() → launch the PendingIntent (consent screen)
-    //   accessToken != null → token already available, no UI needed
     suspend fun requestAuthorization(): AuthorizationResult {
+        log.d { "requestAuthorization: building request with DRIVE + SHEETS scopes" }
         val request = AuthorizationRequest.builder()
             .setRequestedScopes(listOf(Scope(SHEETS_SCOPE), Scope(DRIVE_SCOPE)))
             .build()
-        return authClient.authorize(request).await()
+        return try {
+            val result = authClient.authorize(request).await()
+            log.d {
+                "requestAuthorization result → " +
+                "hasResolution=${result.hasResolution()} " +
+                "accessToken=${result.accessToken?.take(10)?.plus("…") ?: "null"} " +
+                "pendingIntent=${result.pendingIntent}"
+            }
+            result
+        } catch (e: Exception) {
+            log.e(e) { "requestAuthorization THREW: ${e.message}" }
+            throw e
+        }
     }
 
-    // Called after the consent-screen Activity returns (any result code).
-    // GIS does not guarantee accessToken in the result on first authorization —
-    // after the user grants consent, a silent re-auth call returns it immediately.
     suspend fun handleAuthorizationResult(data: Intent?) {
-        // Try the intent result first
+        log.d { "handleAuthorizationResult: data=${data?.extras?.keySet()?.joinToString()}" }
         if (data != null) {
             try {
-                val token = authClient.getAuthorizationResultFromIntent(data).accessToken
+                val authResult = authClient.getAuthorizationResultFromIntent(data)
+                val token = authResult.accessToken
+                log.d { "getAuthorizationResultFromIntent → token=${token?.take(10)?.plus("…") ?: "null"}" }
                 if (token != null) {
                     dataStore.edit { prefs -> prefs[ACCESS_TOKEN_KEY] = token }
+                    log.i { "token saved from intent result ✓" }
                     return
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                log.w(e) { "getAuthorizationResultFromIntent threw: ${e.message}" }
+            }
+        } else {
+            log.d { "handleAuthorizationResult: data intent is null, skipping intent parse" }
         }
-        // Consent was just recorded — silent re-auth should now succeed without UI
+        log.d { "falling through to trySilentAuth" }
         trySilentAuth()
     }
 
-    // Attempts a no-UI authorization. Call after consent has already been granted.
     suspend fun trySilentAuth() {
+        log.d { "trySilentAuth: calling authorize() silently" }
         try {
             val request = AuthorizationRequest.builder()
                 .setRequestedScopes(listOf(Scope(SHEETS_SCOPE), Scope(DRIVE_SCOPE)))
                 .build()
-            val token = authClient.authorize(request).await().accessToken ?: return
+            val result = authClient.authorize(request).await()
+            log.d {
+                "trySilentAuth result → " +
+                "hasResolution=${result.hasResolution()} " +
+                "accessToken=${result.accessToken?.take(10)?.plus("…") ?: "null"}"
+            }
+            val token = result.accessToken ?: run {
+                log.w { "trySilentAuth: accessToken still null — consent may not have been recorded yet" }
+                return
+            }
             dataStore.edit { prefs -> prefs[ACCESS_TOKEN_KEY] = token }
-        } catch (_: Exception) {}
+            log.i { "trySilentAuth: token saved ✓" }
+        } catch (e: Exception) {
+            log.e(e) { "trySilentAuth THREW: ${e.message}" }
+        }
     }
 
     suspend fun saveToken(token: String, email: String?) {
+        log.d { "saveToken: email=$email token=${token.take(10)}…" }
         dataStore.edit { prefs ->
             prefs[ACCESS_TOKEN_KEY] = token
             if (email != null) prefs[EMAIL_KEY] = email
@@ -81,6 +113,7 @@ class GoogleAuthRepositoryImpl(
     }
 
     override suspend fun signOut() {
+        log.d { "signOut: clearing token and email from DataStore" }
         dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
             prefs.remove(EMAIL_KEY)

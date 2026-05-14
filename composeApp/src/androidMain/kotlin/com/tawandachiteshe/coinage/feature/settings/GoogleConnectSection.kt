@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.touchlab.kermit.Logger
 import com.tawandachiteshe.coinage.GOOGLE_AUTH_REQUEST_CODE
 import com.tawandachiteshe.coinage.MainActivity
 import com.tawandachiteshe.coinage.data.GoogleAuthRepositoryImpl
@@ -42,6 +43,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+
+private val log = Logger.withTag("GoogleConnect")
 
 @Composable
 actual fun GoogleConnectSection(
@@ -59,7 +62,10 @@ actual fun GoogleConnectSection(
     // Collect the result forwarded by MainActivity.onActivityResult
     LaunchedEffect(activity) {
         activity?.googleAuthResult?.collect { data ->
+            log.d { "onActivityResult received: data=${data?.extras?.keySet()?.joinToString()}" }
             impl.handleAuthorizationResult(data)
+            val connected = impl.isConnected()
+            log.i { "after handleAuthorizationResult: isConnected=$connected" }
             onAction(SettingsAction.RefreshGoogleState)
         }
     }
@@ -211,9 +217,11 @@ actual fun GoogleConnectSection(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     scope.launch {
+                        log.d { "Connect tapped — calling requestAuthorization" }
                         val result = impl.requestAuthorization()
                         when {
                             result.hasResolution() -> {
+                                log.d { "hasResolution=true → launching consent UI via startIntentSenderForResult" }
                                 @Suppress("DEPRECATION")
                                 activity?.startIntentSenderForResult(
                                     result.pendingIntent!!.intentSender,
@@ -222,9 +230,11 @@ actual fun GoogleConnectSection(
                                 )
                             }
                             result.accessToken != null -> {
+                                log.i { "accessToken already available (no UI needed) → saving token" }
                                 impl.saveToken(result.accessToken!!, null)
                                 onAction(SettingsAction.RefreshGoogleState)
                             }
+                            else -> log.w { "requestAuthorization returned no resolution and no token — unexpected state" }
                         }
                     }
                 }
