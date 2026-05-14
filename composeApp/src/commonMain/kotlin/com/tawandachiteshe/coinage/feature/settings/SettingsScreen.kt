@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -196,7 +198,7 @@ fun SettingsScreen(
         // Google Drive
         Spacer(Modifier.height(20.dp))
         SectionLabel("Google Drive")
-        GoogleConnectSection(googleAuthRepository)
+        GoogleConnectSection(googleAuthRepository, state, viewModel::onAction)
 
         // Danger zone
         Spacer(Modifier.height(22.dp))
@@ -227,6 +229,20 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        // Sheet URL dialog
+        state.sheetUrl?.let { url ->
+            AlertDialog(
+                onDismissRequest = { viewModel.onAction(SettingsAction.DismissSheetUrl) },
+                title = { Text("Synced to Sheets", fontWeight = FontWeight.Bold) },
+                text  = { Text(url, fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.onAction(SettingsAction.DismissSheetUrl) }) {
+                        Text("OK")
+                    }
+                }
+            )
         }
 
         // Footer

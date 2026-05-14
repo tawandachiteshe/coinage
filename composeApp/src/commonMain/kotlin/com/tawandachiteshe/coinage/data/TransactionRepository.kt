@@ -78,4 +78,10 @@ class TransactionRepository(
     }
 
     suspend fun delete(id: String) = withContext(ioDispatcher) { q.delete(id) }
+
+    suspend fun getAllOnce(): List<SelectAll> = withContext(ioDispatcher) {
+        q.selectAll().executeAsList()
+    }
+
+    suspend fun deleteAll() = withContext(ioDispatcher) { q.deleteAll() }
 }

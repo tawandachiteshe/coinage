@@ -33,6 +33,18 @@ class CurrencyRepository(db: ExpensifyDatabase) {
         q.updateRate(rateToUsd, code)
     }
 
+    suspend fun getAllOnce(): List<Currency> = withContext(Dispatchers.IO) {
+        q.selectAll().executeAsList()
+    }
+
+    suspend fun deleteAll() = withContext(Dispatchers.IO) { q.deleteAll() }
+
+    suspend fun insert(
+        code: String, name: String, symbol: String, rateToUsd: Double, isBase: Long,
+    ) = withContext(Dispatchers.IO) {
+        q.insert(code, name, symbol, rateToUsd, isBase)
+    }
+
     private fun seedDefaults() {
         DEFAULT_CURRENCIES.forEach { c ->
             q.insert(c.code, c.name, c.symbol, c.rateToUsd, c.isBase)

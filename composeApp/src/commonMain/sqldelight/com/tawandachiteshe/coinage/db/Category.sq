@@ -42,3 +42,6 @@ UPDATE Category SET is_active = ? WHERE id = ?;
 
 seedBudget:
 UPDATE Category SET budget_limit = ? WHERE id = ? AND budget_limit = 0.0;
+
+deleteAll:
+DELETE FROM Category;

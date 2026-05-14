@@ -8,7 +8,11 @@ import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 
 @Composable
-actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
+actual fun GoogleConnectSection(
+    repository: GoogleAuthRepository,
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+) {
     Text(
         "Google Drive sync — Android only.",
         fontSize = 12.sp,

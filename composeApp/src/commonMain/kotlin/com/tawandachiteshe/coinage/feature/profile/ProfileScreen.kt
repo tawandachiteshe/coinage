@@ -162,38 +162,50 @@ fun ProfileScreen(
                 Text("earned", fontSize = 20.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Grape)
             }
             Spacer(Modifier.height(10.dp))
-            data class Badge(val icon: ImageVector, val label: String, val color: Color, val unlocked: Boolean)
-            val badges = listOf(
-                Badge(TrackerIcons.Snowflake, "first save",      TrackerColors.Sky,    state.hasFirstSave),
-                Badge(TrackerIcons.Star,      "on a roll",       TrackerColors.Butter, state.hasOnARoll),
-                Badge(TrackerIcons.Mountain,  "mountain\nmover", TrackerColors.Coral,  state.hasMountainMover),
-                Badge(TrackerIcons.PiggyBank, "half full",       TrackerColors.Mint,   state.hasHalfFull),
-                Badge(TrackerIcons.Flame,     "streak\nkeeper",  TrackerColors.Grape,  state.hasStreakKeeper),
-                Badge(TrackerIcons.TrendingUp,"big spender",     TrackerColors.Coral,  state.hasBigSpender),
-                Badge(TrackerIcons.Calendar,  "long hauler",     TrackerColors.Sky,    state.hasLongHauler),
-                Badge(TrackerIcons.Layers,    "jar master",      TrackerColors.Tangerine, state.hasJarMaster),
-                Badge(TrackerIcons.Lock,      "locked",          TrackerColors.Paper2, false),
+            data class Badge(
+                val icon: ImageVector, val label: String,
+                val color: Color, val tint: Color, val unlocked: Boolean,
             )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                badges.forEachIndexed { i, badge ->
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp, 80.dp)
-                            .rotate(if (i % 2 == 0) -2f else 2f)
-                            .then(if (badge.unlocked) Modifier.popShadow(cornerRadius = 12.dp, offsetX = 2.5.dp, offsetY = 3.dp) else Modifier)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(badge.color, RoundedCornerShape(12.dp))
-                            .border(1.6.dp, TrackerColors.Ink.copy(alpha = if (badge.unlocked) 1f else 0.35f), RoundedCornerShape(12.dp))
-                            .alpha(if (badge.unlocked) 1f else 0.38f),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Icon(badge.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = TrackerColors.Ink)
-                            Spacer(Modifier.height(4.dp))
-                            Text(badge.label, fontSize = 9.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink, lineHeight = 11.sp, modifier = Modifier.padding(horizontal = 4.dp))
+            val allBadges = listOf(
+                Badge(TrackerIcons.Snowflake, "first save",      TrackerColors.Sky,       TrackerColors.Ink,   state.hasFirstSave),
+                Badge(TrackerIcons.Star,      "on a roll",       TrackerColors.Butter,    TrackerColors.Ink,   state.hasOnARoll),
+                Badge(TrackerIcons.Mountain,  "mountain\nmover", TrackerColors.Coral,     TrackerColors.Ink,   state.hasMountainMover),
+                Badge(TrackerIcons.PiggyBank, "half full",       TrackerColors.Mint,      TrackerColors.Ink,   state.hasHalfFull),
+                Badge(TrackerIcons.Flame,     "streak\nkeeper",  TrackerColors.Grape,     TrackerColors.Paper, state.hasStreakKeeper),
+                Badge(TrackerIcons.TrendingUp,"big spender",     TrackerColors.Coral,     TrackerColors.Ink,   state.hasBigSpender),
+                Badge(TrackerIcons.Calendar,  "long hauler",     TrackerColors.Sky,       TrackerColors.Ink,   state.hasLongHauler),
+                Badge(TrackerIcons.Layers,    "jar master",      TrackerColors.Tangerine, TrackerColors.Ink,   state.hasJarMaster),
+            )
+            val earnedBadges = allBadges.filter { it.unlocked }
+            if (earnedBadges.isEmpty()) {
+                Text(
+                    "Track your first expense to earn stickers.",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Ink2.copy(alpha = 0.5f),
+                )
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    earnedBadges.forEachIndexed { i, badge ->
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp, 80.dp)
+                                .rotate(if (i % 2 == 0) -2f else 2f)
+                                .popShadow(cornerRadius = 12.dp, offsetX = 2.5.dp, offsetY = 3.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(badge.color, RoundedCornerShape(12.dp))
+                                .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Icon(badge.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = badge.tint)
+                                Spacer(Modifier.height(4.dp))
+                                Text(badge.label, fontSize = 9.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = badge.tint, lineHeight = 11.sp, modifier = Modifier.padding(horizontal = 4.dp))
+                            }
                         }
                     }
                 }

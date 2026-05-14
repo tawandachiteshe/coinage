@@ -23,3 +23,6 @@ UPDATE Currency SET is_base = 1 WHERE code = ?;
 
 updateRate:
 UPDATE Currency SET rate_to_usd = ? WHERE code = ?;
+
+deleteAll:
+DELETE FROM Currency;

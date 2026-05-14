@@ -36,3 +36,6 @@ UPDATE Debt SET due_date = ? WHERE id = ?;
 
 delete:
 DELETE FROM Debt WHERE id = ?;
+
+deleteAll:
+DELETE FROM Debt;

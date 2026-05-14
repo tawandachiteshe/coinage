@@ -34,3 +34,6 @@ WHERE id = :id;
 
 delete:
 DELETE FROM Goal WHERE id = ?;
+
+deleteAll:
+DELETE FROM Goal;

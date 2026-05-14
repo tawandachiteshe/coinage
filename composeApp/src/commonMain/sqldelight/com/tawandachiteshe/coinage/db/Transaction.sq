@@ -71,3 +71,6 @@ INSERT INTO `Transaction` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM `Transaction` WHERE id = ?;
+
+deleteAll:
+DELETE FROM `Transaction`;

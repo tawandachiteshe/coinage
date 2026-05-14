@@ -25,4 +25,8 @@ class UserProfileRepository(
     suspend fun getJoinedAt(): Long? = withContext(ioDispatcher) {
         q.getJoinedAt().executeAsOneOrNull()
     }
+
+    suspend fun restoreProfile(name: String, joinedAt: Long) = withContext(ioDispatcher) {
+        q.upsertName(name, joinedAt)
+    }
 }

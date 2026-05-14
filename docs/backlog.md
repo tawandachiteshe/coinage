@@ -33,11 +33,15 @@ Items are roughly priority-ordered within each section. "Done" means merged to t
 - [ ] Biometric gate on cold launch (Face ID / fingerprint) — toggle in Settings is UI-only
 - [ ] Onboarding skip check — `UserProfile.getName()` on app start → navigate to Home if set
 
-### Google Sheets sync
-- [ ] OAuth2 flow (Android: Google Identity; iOS: ASWebAuthenticationSession)
-- [ ] Sheets API v4 write — `POST /spreadsheets` on first sync, `batchUpdate` subsequently
-- [ ] Store spreadsheet ID in DataStore after first create
-- [ ] "Sync to Sheets" button in Settings → GoogleConnectSection
+### Google Drive backup / Sheets export (see `docs/google-drive-sync.md`)
+- [ ] **Token exchange + refresh** — `handleAuthorizationResult` currently reads `accessToken` which is `null` when offline access is requested; exchange auth code → access + refresh tokens; add `TOKEN_EXPIRY_KEY` + `REFRESH_TOKEN_KEY` to DataStore; add proactive refresh in `getValidAccessToken`
+- [ ] **`BackupData` model** — `@Serializable` data classes for all 6 tables (commonMain)
+- [ ] **`getAllOnce()` on each repo** — single-shot suspend reads needed by the orchestrator
+- [ ] **`DriveRepository` interface + androidMain impl** — backup (multipart PATCH) + restore (GET `?alt=media`) + `lastBackupInfo`; cache file ID in DataStore
+- [ ] **`BackupOrchestrator`** — reads all repos → builds `BackupData` → calls `DriveRepository`; restore does full wipe + re-insert
+- [ ] **`SettingsViewModel` additions** — `isSyncing`, `lastBackupLabel`, `backupError` state; `OnBackupNow`, `OnRestoreFromDrive`, `OnConfirmRestore`, `OnSyncToSheets` actions
+- [ ] **Restore confirmation dialog** in `GoogleConnectSection.kt` (destructive — Cherry-colored confirm button)
+- [ ] **`SheetsRepository`** — one-way export; 4 tabs: Transactions, Debts, Goals, Summary; `POST /spreadsheets` on first sync, `batchUpdate` subsequently; store sheet ID in DataStore
 
 ### AI assistant
 - [ ] Auto-categorize endpoint — Settings toggle is UI-only, no backend wired

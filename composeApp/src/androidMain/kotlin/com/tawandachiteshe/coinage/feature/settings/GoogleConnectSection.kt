@@ -19,11 +19,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -41,16 +43,22 @@ import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
-actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
+actual fun GoogleConnectSection(
+    repository: GoogleAuthRepository,
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+) {
     val impl = repository as GoogleAuthRepositoryImpl
     val scope = rememberCoroutineScope()
 
-    var isConnected by remember { mutableStateOf(impl.isConnected()) }
-    val email by produceState<String?>(null, isConnected) {
-        value = if (isConnected) impl.getConnectedEmail() else null
-    }
+    // Local connected state — seeded from VM state; updated immediately after connect/disconnect
+    var isConnected by remember(state.isGoogleConnected) { mutableStateOf(state.isGoogleConnected) }
+    val email = if (isConnected) state.googleEmail else null
 
     val launcher = rememberLauncherForActivityResult(StartIntentSenderForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -61,28 +69,48 @@ actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
         }
     }
 
+    // Restore confirm dialog
+    if (state.showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { onAction(SettingsAction.DismissRestoreConfirm) },
+            title = { Text("Replace all data?", fontWeight = FontWeight.Bold) },
+            text  = {
+                Text(
+                    "This will delete everything on this device and replace it with your Drive backup. This cannot be undone.",
+                    fontSize = 13.sp,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onAction(SettingsAction.OnConfirmRestore) }) {
+                    Text("Replace", color = TrackerColors.Cherry, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onAction(SettingsAction.DismissRestoreConfirm) }) {
+                    Text("Cancel", color = TrackerColors.Ink2)
+                }
+            },
+        )
+    }
+
     StickerCard(
         bgColor = TrackerColors.PaperWhite,
         modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
         cornerRadius = 16.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header row — Drive logo placeholder + title
+            // Header row
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Google Drive colour dot cluster
                 Box(modifier = Modifier.size(32.dp), contentAlignment = Alignment.Center) {
-                    Box(modifier = Modifier.size(32.dp).clip(CircleShape)
-                        .background(TrackerColors.Butter).border(1.4.dp, TrackerColors.Ink, CircleShape))
+                    Box(
+                        modifier = Modifier.size(32.dp).clip(CircleShape)
+                            .background(TrackerColors.Butter).border(1.4.dp, TrackerColors.Ink, CircleShape)
+                    )
                     Text("G", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink)
                 }
                 Spacer(Modifier.width(10.dp))
                 Column {
-                    Text(
-                        "Google Drive",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TrackerColors.Ink,
-                    )
+                    Text("Google Drive", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                     Text(
                         if (isConnected) "backup & spreadsheet sync" else "back up your data to Drive",
                         fontSize = 10.5.sp,
@@ -92,12 +120,15 @@ actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                // Connection status badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
                         .background(if (isConnected) TrackerColors.Mint.copy(alpha = 0.25f) else TrackerColors.Paper2)
-                        .border(1.2.dp, if (isConnected) TrackerColors.Mint else TrackerColors.Ink.copy(alpha = 0.3f), RoundedCornerShape(999.dp))
+                        .border(
+                            1.2.dp,
+                            if (isConnected) TrackerColors.Mint else TrackerColors.Ink.copy(alpha = 0.3f),
+                            RoundedCornerShape(999.dp),
+                        )
                         .padding(horizontal = 8.dp, vertical = 3.dp),
                 ) {
                     Text(
@@ -111,9 +142,9 @@ actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
             }
 
             if (isConnected && email != null) {
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
-                    email!!,
+                    email,
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     fontStyle = FontStyle.Italic,
@@ -122,12 +153,54 @@ actual fun GoogleConnectSection(repository: GoogleAuthRepository) {
                 )
             }
 
+            // Last backup label
+            state.lastBackupInfo?.let { info ->
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Last backup: ${info.modifiedAt.toBackupLabel()} · ${info.sizeBytes.toSizeLabel()}",
+                    fontSize = 9.5.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Ink2.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(start = 42.dp),
+                )
+            }
+
+            // Error label
+            state.backupError?.let { err ->
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    err,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Cherry,
+                    modifier = Modifier.padding(start = 42.dp)
+                        .clickable { onAction(SettingsAction.DismissBackupError) },
+                )
+            }
+
             Spacer(Modifier.height(14.dp))
 
-            if (isConnected) {
+            if (state.isSyncing) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = TrackerColors.Grape,
+                        strokeWidth = 2.5.dp,
+                    )
+                }
+            } else if (isConnected) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DriveActionChip("Sync now", TrackerColors.Grape, modifier = Modifier.weight(1f)) {
-                        // SheetsSyncRepository.sync() — wired when ready
+                    DriveActionChip("Backup", TrackerColors.Grape, modifier = Modifier.weight(1f)) {
+                        onAction(SettingsAction.OnBackupNow)
+                    }
+                    DriveActionChip("Restore", TrackerColors.Sky, modifier = Modifier.weight(1f)) {
+                        onAction(SettingsAction.OnRestoreFromDrive)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DriveActionChip("Sheets", TrackerColors.Mint, modifier = Modifier.weight(1f)) {
+                        onAction(SettingsAction.OnSyncToSheets)
                     }
                     DriveActionChip("Disconnect", TrackerColors.Paper2) {
                         scope.launch {
@@ -179,4 +252,17 @@ private fun DriveActionChip(
     ) {
         Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
     }
+}
+
+private fun Long.toBackupLabel(): String {
+    val dt = Instant.fromEpochMilliseconds(this)
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+    val month = listOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[dt.monthNumber - 1]
+    return "$month ${dt.dayOfMonth}"
+}
+
+private fun Long.toSizeLabel(): String = when {
+    this >= 1_048_576 -> "${this / 1_048_576} MB"
+    this >= 1_024     -> "${this / 1_024} KB"
+    else              -> "$this B"
 }

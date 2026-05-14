@@ -4,4 +4,8 @@ import androidx.compose.runtime.Composable
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 
 @Composable
-expect fun GoogleConnectSection(repository: GoogleAuthRepository)
+expect fun GoogleConnectSection(
+    repository: GoogleAuthRepository,
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+)

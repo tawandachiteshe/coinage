@@ -64,6 +64,12 @@ class CategoryRepository(
 
     suspend fun delete(id: String) = withContext(ioDispatcher) { q.delete(id) }
 
+    suspend fun getAllOnce(): List<Category> = withContext(ioDispatcher) {
+        q.selectAll().executeAsList()
+    }
+
+    suspend fun deleteAll() = withContext(ioDispatcher) { q.deleteAll() }
+
     fun seedDefaults() {
         DEFAULT_CATEGORIES.forEach { c ->
             q.insert(c.id, c.name, c.icon, c.colorHex, c.type, 0.0, 1L, 1L)

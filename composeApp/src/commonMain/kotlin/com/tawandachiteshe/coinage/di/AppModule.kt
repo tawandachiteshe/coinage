@@ -36,5 +36,5 @@ val appModule = module {
     viewModel { JarsManagerViewModel(get(), get()) }
     viewModel { OnboardingViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(currencyRepo = get(), googleAuthRepo = getOrNull(), backupOrchestrator = getOrNull()) }
 }
