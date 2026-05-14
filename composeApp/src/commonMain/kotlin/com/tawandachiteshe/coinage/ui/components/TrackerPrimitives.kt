@@ -53,6 +53,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.window.Dialog
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 
@@ -524,5 +526,74 @@ fun TrackerTextField(
                 }
             },
         )
+    }
+}
+
+// Design-system dialog — StickerCard popup matching the sticker-book aesthetic
+@Composable
+fun TrackerDialog(
+    title: String,
+    onDismissRequest: () -> Unit,
+    confirmLabel: String,
+    confirmColor: Color = TrackerColors.Butter,
+    onConfirm: () -> Unit,
+    dismissLabel: String? = "Cancel",
+    onDismiss: (() -> Unit)? = null,
+    content: (@Composable ColumnScope.() -> Unit)? = null,
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        StickerCard(
+            bgColor = TrackerColors.PaperWhite,
+            modifier = Modifier.fillMaxWidth(),
+            cornerRadius = 18.dp,
+            shadowX = 5.dp,
+            shadowY = 6.dp,
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = title,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TrackerColors.Ink,
+                )
+                if (content != null) {
+                    Spacer(Modifier.height(10.dp))
+                    content()
+                }
+                Spacer(Modifier.height(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (dismissLabel != null) {
+                        DialogChip(
+                            label = dismissLabel,
+                            color = TrackerColors.Paper2,
+                            modifier = Modifier.weight(1f),
+                            onClick = onDismiss ?: onDismissRequest,
+                        )
+                    }
+                    DialogChip(
+                        label = confirmLabel,
+                        color = confirmColor,
+                        modifier = if (dismissLabel != null) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                        onClick = onConfirm,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogChip(label: String, color: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier = modifier
+            .popShadow(cornerRadius = 10.dp, offsetX = 2.dp, offsetY = 2.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(color, RoundedCornerShape(10.dp))
+            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
     }
 }

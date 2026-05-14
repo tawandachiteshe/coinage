@@ -18,10 +18,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +40,7 @@ import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.ProgressJar
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
+import com.tawandachiteshe.coinage.ui.components.TrackerDialog
 import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
@@ -328,49 +327,33 @@ private fun EditBudgetDialog(
 ) {
     var budgetText by remember { mutableStateOf(if (jar.budgetLimit > 0) jar.budgetLimit.toInt().toString() else "") }
 
-    AlertDialog(
+    TrackerDialog(
+        title = "Edit budget · ${jar.name}",
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Edit budget for ${jar.name}",
-                fontWeight = FontWeight.Bold,
-                color = TrackerColors.Ink,
-            )
+        confirmLabel = "Save",
+        confirmColor = TrackerColors.Butter,
+        onConfirm = {
+            val amount = budgetText.toDoubleOrNull() ?: 0.0
+            onConfirm(amount)
         },
-        text = {
-            Column {
-                Text(
-                    text = "Set a monthly spending limit (0 = no limit)",
-                    fontSize = 13.sp,
-                    color = TrackerColors.Ink2,
-                )
-                Spacer(Modifier.height(12.dp))
-                TrackerTextField(
-                    value = budgetText,
-                    onValueChange = { budgetText = it },
-                    label = "Budget",
-                    leadingText = "$",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val amount = budgetText.toDoubleOrNull() ?: 0.0
-                    onConfirm(amount)
-                },
-            ) {
-                Text("Save", fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
+        dismissLabel = "Cancel",
+        onDismiss = onDismiss,
+    ) {
+        Text(
+            text = "Set a monthly spending limit (0 = no limit)",
+            fontSize = 13.sp,
+            color = TrackerColors.Ink2,
+        )
+        Spacer(Modifier.height(12.dp))
+        TrackerTextField(
+            value = budgetText,
+            onValueChange = { budgetText = it },
+            label = "Budget",
+            leadingText = "$",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
@@ -383,64 +366,50 @@ private fun AddJarDialog(
     var colorHex by remember { mutableStateOf("#ff7a2b") }
     var budgetText by remember { mutableStateOf("") }
 
-    AlertDialog(
+    TrackerDialog(
+        title = "New jar",
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "New jar",
-                fontWeight = FontWeight.Bold,
-                color = TrackerColors.Ink,
+        confirmLabel = "Create",
+        confirmColor = TrackerColors.Mint,
+        onConfirm = {
+            if (name.isNotBlank()) {
+                val budget = budgetText.toDoubleOrNull() ?: 0.0
+                val hex = colorHex.takeIf { it.startsWith("#") } ?: "#ff7a2b"
+                onConfirm(name.trim(), iconKey.trim().ifBlank { "other" }, hex, budget)
+            }
+        },
+        dismissLabel = "Cancel",
+        onDismiss = onDismiss,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            TrackerTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = "Name",
+                modifier = Modifier.fillMaxWidth(),
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                TrackerTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = "Name",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TrackerTextField(
-                    value = iconKey,
-                    onValueChange = { iconKey = it },
-                    label = "Icon key (e.g. coffee, car)",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TrackerTextField(
-                    value = colorHex,
-                    onValueChange = { colorHex = it },
-                    label = "Color (#hex)",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TrackerTextField(
-                    value = budgetText,
-                    onValueChange = { budgetText = it },
-                    label = "Monthly budget",
-                    leadingText = "$",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (name.isNotBlank()) {
-                        val budget = budgetText.toDoubleOrNull() ?: 0.0
-                        val hex = colorHex.takeIf { it.startsWith("#") } ?: "#ff7a2b"
-                        onConfirm(name.trim(), iconKey.trim().ifBlank { "other" }, hex, budget)
-                    }
-                },
-            ) {
-                Text("Create", fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-    )
+            TrackerTextField(
+                value = iconKey,
+                onValueChange = { iconKey = it },
+                label = "Icon key (e.g. coffee, car)",
+                modifier = Modifier.fillMaxWidth(),
+            )
+            TrackerTextField(
+                value = colorHex,
+                onValueChange = { colorHex = it },
+                label = "Color (#hex)",
+                modifier = Modifier.fillMaxWidth(),
+            )
+            TrackerTextField(
+                value = budgetText,
+                onValueChange = { budgetText = it },
+                label = "Monthly budget",
+                leadingText = "$",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
 private fun Double.formatWhole(): String {

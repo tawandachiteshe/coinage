@@ -22,9 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,8 +40,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerDialog
 import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
@@ -233,16 +234,27 @@ fun SettingsScreen(
 
         // Sheet URL dialog
         state.sheetUrl?.let { url ->
-            AlertDialog(
+            val clipboard = LocalClipboardManager.current
+            TrackerDialog(
+                title = "Synced to Sheets",
                 onDismissRequest = { viewModel.onAction(SettingsAction.DismissSheetUrl) },
-                title = { Text("Synced to Sheets", fontWeight = FontWeight.Bold) },
-                text  = { Text(url, fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
-                confirmButton = {
-                    TextButton(onClick = { viewModel.onAction(SettingsAction.DismissSheetUrl) }) {
-                        Text("OK")
-                    }
-                }
-            )
+                confirmLabel = "Copy link",
+                confirmColor = TrackerColors.Mint,
+                onConfirm = {
+                    clipboard.setText(AnnotatedString(url))
+                    viewModel.onAction(SettingsAction.DismissSheetUrl)
+                },
+                dismissLabel = "Done",
+                onDismiss = { viewModel.onAction(SettingsAction.DismissSheetUrl) },
+            ) {
+                Text(
+                    text = url,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Ink2,
+                    lineHeight = 16.sp,
+                )
+            }
         }
 
         // Footer

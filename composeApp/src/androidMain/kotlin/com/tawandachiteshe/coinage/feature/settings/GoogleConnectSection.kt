@@ -15,10 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,6 +35,7 @@ import com.tawandachiteshe.coinage.MainActivity
 import com.tawandachiteshe.coinage.data.GoogleAuthRepositoryImpl
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerDialog
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import kotlinx.coroutines.launch
@@ -72,26 +71,21 @@ actual fun GoogleConnectSection(
 
     // Restore confirm dialog
     if (state.showRestoreConfirm) {
-        AlertDialog(
+        TrackerDialog(
+            title = "Replace all data?",
             onDismissRequest = { onAction(SettingsAction.DismissRestoreConfirm) },
-            title = { Text("Replace all data?", fontWeight = FontWeight.Bold) },
-            text  = {
-                Text(
-                    "This will delete everything on this device and replace it with your Drive backup. This cannot be undone.",
-                    fontSize = 13.sp,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { onAction(SettingsAction.OnConfirmRestore) }) {
-                    Text("Replace", color = TrackerColors.Cherry, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { onAction(SettingsAction.DismissRestoreConfirm) }) {
-                    Text("Cancel", color = TrackerColors.Ink2)
-                }
-            },
-        )
+            confirmLabel = "Replace",
+            confirmColor = TrackerColors.Cherry,
+            onConfirm = { onAction(SettingsAction.OnConfirmRestore) },
+            dismissLabel = "Cancel",
+            onDismiss = { onAction(SettingsAction.DismissRestoreConfirm) },
+        ) {
+            Text(
+                "This will delete everything on this device and replace it with your Drive backup. This cannot be undone.",
+                fontSize = 13.sp,
+                color = TrackerColors.Ink2,
+            )
+        }
     }
 
     StickerCard(
