@@ -3,6 +3,7 @@ package com.tawandachiteshe.coinage.feature.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tawandachiteshe.coinage.data.CategoryRepository
+import com.tawandachiteshe.coinage.feature.scan.ScannedReceipt
 import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.DebtRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
@@ -35,6 +36,7 @@ data class AddState(
     val selectedCategoryId: String? = null,   // expense category
     val selectedSourceId: String? = null,      // income source
     val notes: String = "",
+    val scannedDateMs: Long? = null,     // null = use current time on save
     // --- goal ---
     val goalName: String = "",
     val goalTarget: String = "",
@@ -74,6 +76,7 @@ sealed interface AddAction {
     data class OnDebtAprChange(val v: String) : AddAction
     data class OnDebtMinPayChange(val v: String) : AddAction
     data class OnDebtTypeChange(val v: String) : AddAction
+    data class OnScanResult(val receipt: ScannedReceipt) : AddAction
     // save
     data object OnSave : AddAction
     // lifecycle
@@ -141,6 +144,7 @@ class AddViewModel(
                     selectedCurrencyCode = cur.selectedCurrencyCode,
                     selectedCategoryId = cur.selectedCategoryId,
                     selectedSourceId = cur.selectedSourceId,
+                    scannedDateMs = null,
                 )
             }
             is AddAction.OnAddTypeChange  -> _state.update { it.copy(addType = action.type, error = null) }
@@ -169,6 +173,18 @@ class AddViewModel(
             is AddAction.OnDebtAprChange      -> _state.update { it.copy(debtApr = action.v) }
             is AddAction.OnDebtMinPayChange   -> _state.update { it.copy(debtMinPayment = action.v) }
             is AddAction.OnDebtTypeChange     -> _state.update { it.copy(debtType = action.v) }
+            is AddAction.OnScanResult -> {
+                val r = action.receipt
+                _state.update { s ->
+                    s.copy(
+                        merchant = r.merchant ?: s.merchant,
+                        amount = r.amount?.let { "%.2f".format(it) } ?: s.amount,
+                        txType = TxType.EXPENSE,
+                        selectedCategoryId = r.suggestedCategoryId ?: s.selectedCategoryId,
+                        scannedDateMs = r.date ?: s.scannedDateMs,
+                    )
+                }
+            }
             is AddAction.OnSave -> save()
         }
     }
@@ -207,7 +223,7 @@ class AddViewModel(
             merchant = s.merchant.trim().ifBlank { "Unknown" },
             notes = s.notes.trim().ifBlank { null },
             currencyCode = s.selectedCurrencyCode,
-            date = now,
+            date = s.scannedDateMs ?: now,
             createdAt = now,
         )
         _events.send(AddEvent.Saved)

@@ -42,9 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.feature.scan.ScanReceiptButton
 import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -120,16 +124,28 @@ fun AddScreen(
                             color = TrackerColors.Tangerine,
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                            .clickable(onClick = onDismiss),
-                        contentAlignment = Alignment.Center,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(TrackerIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
+                        if (state.addType == AddType.Transaction) {
+                            ScanReceiptButton(
+                                onScanned = { receipt ->
+                                    receipt?.let { viewModel.onAction(AddAction.OnScanResult(it)) }
+                                },
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                .clickable(onClick = onDismiss),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(TrackerIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
+                        }
                     }
                 }
 
@@ -138,7 +154,7 @@ fun AddScreen(
 
                 // Context-aware form
                 when (state.addType) {
-                    AddType.Transaction -> TransactionSheetContent(state = state, onAction = viewModel::onAction)
+                    AddType.Transaction -> TransactionSheetContent(state = state, onAction = viewModel::onAction, scannedDateMs = state.scannedDateMs)
                     AddType.Goal        -> GoalSheetContent(state = state, onAction = viewModel::onAction)
                     AddType.Debt        -> DebtSheetContent(state = state, onAction = viewModel::onAction)
                 }
@@ -225,7 +241,7 @@ private fun TypePicker(selected: AddType, onSelect: (AddType) -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Unit) {
+private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Unit, scannedDateMs: Long? = null) {
     // Expense / Income toggle
     Row(
         modifier = Modifier
@@ -320,6 +336,35 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
         label = "Notes (optional)",
         modifier = Modifier.fillMaxWidth(),
     )
+
+    if (scannedDateMs != null) {
+        val local = Instant.fromEpochMilliseconds(scannedDateMs)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+        val label = "%02d %s %04d".format(
+            local.dayOfMonth,
+            local.month.name.take(3).lowercase().replaceFirstChar { it.uppercaseChar() },
+            local.year,
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(TrackerColors.Mint.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
+                    .border(1.dp, TrackerColors.Mint, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = "Receipt date: $label",
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Ink2,
+                )
+            }
+        }
+    }
 }
 
 // ── Goal sheet ────────────────────────────────────────────────────────────────

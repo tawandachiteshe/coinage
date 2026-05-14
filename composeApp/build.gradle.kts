@@ -48,6 +48,7 @@ kotlin {
             implementation(libs.play.services.auth)
             implementation(libs.kotlinx.coroutines.play.services)
             implementation(libs.sqldelight.android.driver)
+            implementation(libs.mlkit.text.recognition)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
