@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import co.touchlab.kermit.Logger
 import com.tawandachiteshe.coinage.data.backup.BackupData
 import com.tawandachiteshe.coinage.domain.DataError
 import com.tawandachiteshe.coinage.domain.Result
@@ -18,6 +19,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -30,6 +32,8 @@ class SheetsRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
 ) : SheetsRepository {
 
+    private val log = Logger.withTag("SheetsSync")
+
     private val client = HttpClient(Android) {
         install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
     }
@@ -39,18 +43,56 @@ class SheetsRepositoryImpl(
     override suspend fun sync(data: BackupData): Result<String, DataError.Network> {
         val token = authRepo.getValidAccessToken() ?: return Result.Error(DataError.Network.UNAUTHORIZED)
         return try {
-            val sheetId = getCachedSheetId() ?: createSheet(token)
+            val sheetId = resolveSheetId(token)
                 ?: return Result.Error(DataError.Network.SERVER_ERROR)
             val updates = buildBatchUpdateBody(data)
-            client.post("https://sheets.googleapis.com/v4/spreadsheets/$sheetId/values:batchUpdate") {
+            log.d { "Syncing ${data.transactions.size} transactions to sheet $sheetId" }
+            val response = client.post("https://sheets.googleapis.com/v4/spreadsheets/$sheetId/values:batchUpdate") {
                 header("Authorization", "Bearer $token")
                 contentType(ContentType.Application.Json)
                 setBody(updates)
             }
+            val body = response.body<String>()
+            log.d { "batchUpdate status=${response.status.value}" }
+            if (!response.status.isSuccess()) {
+                log.e { "batchUpdate failed: $body" }
+                return when (response.status.value) {
+                    401, 403 -> Result.Error(DataError.Network.UNAUTHORIZED)
+                    404 -> {
+                        dataStore.edit { it.remove(SHEET_ID_KEY) }
+                        Result.Error(DataError.Network.SERVER_ERROR)
+                    }
+                    else -> Result.Error(DataError.Network.SERVER_ERROR)
+                }
+            }
             Result.Success("https://docs.google.com/spreadsheets/d/$sheetId")
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.e(e) { "sync exception" }
             Result.Error(DataError.Network.UNKNOWN)
         }
+    }
+
+    // Returns cached sheet ID, or creates a new one if the cached ID no longer resolves.
+    private suspend fun resolveSheetId(token: String): String? {
+        val cached = getCachedSheetId() ?: return createSheet(token)
+        // Verify the sheet still exists with a lightweight metadata probe.
+        return try {
+            val probe = client.post(
+                "https://sheets.googleapis.com/v4/spreadsheets/$cached/values:batchClear"
+            ) {
+                header("Authorization", "Bearer $token")
+                contentType(ContentType.Application.Json)
+                setBody("""{"ranges":["Transactions!A1:Z","Debts!A1:Z","Goals!A1:Z","Summary!A1:Z"]}""")
+            }
+            probe.body<String>() // consume
+            if (probe.status.value == 404) {
+                log.w { "Cached sheet $cached not found — creating new one" }
+                dataStore.edit { it.remove(SHEET_ID_KEY) }
+                createSheet(token)
+            } else {
+                cached
+            }
+        } catch (_: Exception) { cached }
     }
 
     private suspend fun createSheet(token: String): String? {

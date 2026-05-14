@@ -36,8 +36,28 @@ class GoogleAuthRepositoryImpl(
     override suspend fun getConnectedEmail(): String? =
         dataStore.data.map { it[EMAIL_KEY] }.firstOrNull()
 
-    override suspend fun getValidAccessToken(): String? =
-        dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull()
+    override suspend fun getValidAccessToken(): String? {
+        // Always try a silent authorize() first — GIS returns a fresh token if consent
+        // was previously granted. Stored tokens expire after ~1 hour; GIS refreshes them.
+        return try {
+            val request = AuthorizationRequest.builder()
+                .setRequestedScopes(listOf(Scope(SHEETS_SCOPE), Scope(DRIVE_SCOPE)))
+                .build()
+            val result = authClient.authorize(request).await()
+            val fresh = result.accessToken
+            log.d { "getValidAccessToken: fresh=${fresh?.take(10)?.plus("…") ?: "null"} hasResolution=${result.hasResolution()}" }
+            if (fresh != null) {
+                dataStore.edit { it[ACCESS_TOKEN_KEY] = fresh }
+                fresh
+            } else {
+                // GIS needs UI re-consent — fall back to cached token (may also be expired)
+                dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull()
+            }
+        } catch (e: Exception) {
+            log.e(e) { "getValidAccessToken silent refresh failed — using cached token" }
+            dataStore.data.map { it[ACCESS_TOKEN_KEY] }.firstOrNull()
+        }
+    }
 
     suspend fun requestAuthorization(): AuthorizationResult {
         log.d { "requestAuthorization: building request with DRIVE + SHEETS scopes" }

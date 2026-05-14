@@ -57,6 +57,12 @@ class TransactionRepository(
                 .associate { it.category_id to it.total }
         }
 
+    fun getSpendingFlow(startMs: Long, endMs: Long): Flow<Map<String, Double>> =
+        q.totalByCategoryAndDateRange(startMs, endMs)
+            .asFlow()
+            .mapToList(ioDispatcher)
+            .map { rows -> rows.associate { it.category_id to it.total } }
+
     suspend fun getBiggestExpense(startMs: Long, endMs: Long): BiggestExpenseInRange? =
         withContext(ioDispatcher) {
             q.biggestExpenseInRange(startMs, endMs).executeAsOneOrNull()

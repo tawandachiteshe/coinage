@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -123,29 +124,29 @@ class HomeViewModel(
                 }
         }
         viewModelScope.launch {
-            catRepo.getActiveExpenseJars().collect { categories ->
-                val zoom = _state.value.zoom
-                val (start, end) = zoom.dateRange()
-                val spending = try {
-                    txRepo.getSpendingByCategory(start, end)
-                } catch (_: Exception) {
-                    emptyMap()
+            combine(
+                catRepo.getActiveExpenseJars(),
+                _state.map { it.zoom }.distinctUntilChanged(),
+            ) { categories, zoom -> categories to zoom }
+                .collectLatest { (categories, zoom) ->
+                    val (start, end) = zoom.dateRange()
+                    txRepo.getSpendingFlow(start, end).collect { spending ->
+                        val jars = categories.mapIndexed { index, cat ->
+                            JarUi(
+                                id = cat.id,
+                                name = cat.name,
+                                icon = cat.icon,
+                                colorHex = cat.color_hex,
+                                budgetLimit = cat.budget_limit,
+                                spent = spending[cat.id] ?: 0.0,
+                                isDefault = cat.is_default == 1L,
+                                isActive = true,
+                                tilt = JAR_TILTS[index % JAR_TILTS.size],
+                            )
+                        }
+                        _state.update { it.copy(jars = jars) }
+                    }
                 }
-                val jars = categories.mapIndexed { index, cat ->
-                    JarUi(
-                        id = cat.id,
-                        name = cat.name,
-                        icon = cat.icon,
-                        colorHex = cat.color_hex,
-                        budgetLimit = cat.budget_limit,
-                        spent = spending[cat.id] ?: 0.0,
-                        isDefault = cat.is_default == 1L,
-                        isActive = true,
-                        tilt = JAR_TILTS[index % JAR_TILTS.size],
-                    )
-                }
-                _state.update { it.copy(jars = jars) }
-            }
         }
     }
 
