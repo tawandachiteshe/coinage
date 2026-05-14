@@ -1,6 +1,5 @@
 package com.tawandachiteshe.coinage.feature.settings
 
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
@@ -56,11 +55,9 @@ actual fun GoogleConnectSection(
     val email = state.googleEmail
 
     val launcher = rememberLauncherForActivityResult(StartIntentSenderForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            scope.launch {
-                impl.handleAuthorizationResult(result.data)
-                onAction(SettingsAction.RefreshGoogleState)
-            }
+        scope.launch {
+            impl.handleAuthorizationResult(result.data)
+            onAction(SettingsAction.RefreshGoogleState)
         }
     }
 

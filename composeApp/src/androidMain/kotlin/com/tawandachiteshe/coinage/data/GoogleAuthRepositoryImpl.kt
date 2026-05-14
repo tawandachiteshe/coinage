@@ -44,14 +44,33 @@ class GoogleAuthRepositoryImpl(
         return authClient.authorize(request).await()
     }
 
-    // Called after the consent-screen Activity returns RESULT_OK.
-    // Saves the access token (and email if present in the result).
+    // Called after the consent-screen Activity returns (any result code).
+    // GIS does not guarantee accessToken in the result on first authorization —
+    // after the user grants consent, a silent re-auth call returns it immediately.
     suspend fun handleAuthorizationResult(data: Intent?) {
-        val result = authClient.getAuthorizationResultFromIntent(data)
-        val token = result.accessToken ?: return
-        dataStore.edit { prefs ->
-            prefs[ACCESS_TOKEN_KEY] = token
+        // Try the intent result first
+        if (data != null) {
+            try {
+                val token = authClient.getAuthorizationResultFromIntent(data).accessToken
+                if (token != null) {
+                    dataStore.edit { prefs -> prefs[ACCESS_TOKEN_KEY] = token }
+                    return
+                }
+            } catch (_: Exception) {}
         }
+        // Consent was just recorded — silent re-auth should now succeed without UI
+        trySilentAuth()
+    }
+
+    // Attempts a no-UI authorization. Call after consent has already been granted.
+    suspend fun trySilentAuth() {
+        try {
+            val request = AuthorizationRequest.builder()
+                .setRequestedScopes(listOf(Scope(SHEETS_SCOPE), Scope(DRIVE_SCOPE)))
+                .build()
+            val token = authClient.authorize(request).await().accessToken ?: return
+            dataStore.edit { prefs -> prefs[ACCESS_TOKEN_KEY] = token }
+        } catch (_: Exception) {}
     }
 
     suspend fun saveToken(token: String, email: String?) {
