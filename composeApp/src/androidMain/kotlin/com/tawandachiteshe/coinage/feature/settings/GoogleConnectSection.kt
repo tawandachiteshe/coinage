@@ -24,11 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,15 +52,14 @@ actual fun GoogleConnectSection(
     val impl = repository as GoogleAuthRepositoryImpl
     val scope = rememberCoroutineScope()
 
-    // Local connected state — seeded from VM state; updated immediately after connect/disconnect
-    var isConnected by remember(state.isGoogleConnected) { mutableStateOf(state.isGoogleConnected) }
-    val email = if (isConnected) state.googleEmail else null
+    val isConnected = state.isGoogleConnected
+    val email = state.googleEmail
 
     val launcher = rememberLauncherForActivityResult(StartIntentSenderForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             scope.launch {
                 impl.handleAuthorizationResult(result.data)
-                isConnected = impl.isConnected()
+                onAction(SettingsAction.RefreshGoogleState)
             }
         }
     }
@@ -205,7 +200,7 @@ actual fun GoogleConnectSection(
                     DriveActionChip("Disconnect", TrackerColors.Paper2) {
                         scope.launch {
                             impl.signOut()
-                            isConnected = false
+                            onAction(SettingsAction.RefreshGoogleState)
                         }
                     }
                 }
@@ -223,7 +218,7 @@ actual fun GoogleConnectSection(
                             )
                             result.accessToken != null -> {
                                 impl.saveToken(result.accessToken!!, null)
-                                isConnected = true
+                                onAction(SettingsAction.RefreshGoogleState)
                             }
                         }
                     }

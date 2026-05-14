@@ -34,6 +34,7 @@ sealed interface SettingsAction {
     data object OnSyncToSheets : SettingsAction
     data object DismissBackupError : SettingsAction
     data object DismissSheetUrl : SettingsAction
+    data object RefreshGoogleState : SettingsAction
 }
 
 class SettingsViewModel(
@@ -107,6 +108,8 @@ class SettingsViewModel(
 
             SettingsAction.DismissSheetUrl ->
                 _state.update { it.copy(sheetUrl = null) }
+
+            SettingsAction.RefreshGoogleState -> refreshGoogleState()
         }
     }
 
