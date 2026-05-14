@@ -1,8 +1,5 @@
 package com.tawandachiteshe.coinage.feature.settings
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,15 +20,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tawandachiteshe.coinage.GOOGLE_AUTH_REQUEST_CODE
+import com.tawandachiteshe.coinage.MainActivity
 import com.tawandachiteshe.coinage.data.GoogleAuthRepositoryImpl
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 import com.tawandachiteshe.coinage.ui.components.StickerCard
@@ -50,13 +51,15 @@ actual fun GoogleConnectSection(
 ) {
     val impl = repository as GoogleAuthRepositoryImpl
     val scope = rememberCoroutineScope()
+    val activity = LocalContext.current as? MainActivity
 
     val isConnected = state.isGoogleConnected
     val email = state.googleEmail
 
-    val launcher = rememberLauncherForActivityResult(StartIntentSenderForResult()) { result ->
-        scope.launch {
-            impl.handleAuthorizationResult(result.data)
+    // Collect the result forwarded by MainActivity.onActivityResult
+    LaunchedEffect(activity) {
+        activity?.googleAuthResult?.collect { data ->
+            impl.handleAuthorizationResult(data)
             onAction(SettingsAction.RefreshGoogleState)
         }
     }
@@ -210,9 +213,14 @@ actual fun GoogleConnectSection(
                     scope.launch {
                         val result = impl.requestAuthorization()
                         when {
-                            result.hasResolution() -> launcher.launch(
-                                IntentSenderRequest.Builder(result.pendingIntent!!.intentSender).build()
-                            )
+                            result.hasResolution() -> {
+                                @Suppress("DEPRECATION")
+                                activity?.startIntentSenderForResult(
+                                    result.pendingIntent!!.intentSender,
+                                    GOOGLE_AUTH_REQUEST_CODE,
+                                    null, 0, 0, 0
+                                )
+                            }
                             result.accessToken != null -> {
                                 impl.saveToken(result.accessToken!!, null)
                                 onAction(SettingsAction.RefreshGoogleState)
