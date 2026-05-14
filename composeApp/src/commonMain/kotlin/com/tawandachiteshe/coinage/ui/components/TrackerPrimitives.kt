@@ -322,6 +322,7 @@ fun ReceiptRow(
     iconColor: Color,
     modifier: Modifier = Modifier,
     tilt: Float = 0f,
+    isIncome: Boolean = false,
 ) {
     val shape = RoundedCornerShape(8.dp)
     StickerCard(
@@ -365,10 +366,10 @@ fun ReceiptRow(
                 )
             }
             Text(
-                text = "−\$$amount",
+                text = "${if (isIncome) "+" else "−"}\$$amount",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = TrackerColors.Ink,
+                color = if (isIncome) TrackerColors.Mint else TrackerColors.Ink,
             )
         }
     }

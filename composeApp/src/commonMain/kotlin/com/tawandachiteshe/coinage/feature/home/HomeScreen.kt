@@ -284,6 +284,7 @@ fun HomeScreen(
                         icon = TrackerIcons.fromKey(tx.categoryIcon),
                         iconColor = if (tx.type == "INCOME") TrackerColors.Mint else TrackerColors.Tangerine,
                         tilt = tilts[i % tilts.size],
+                        isIncome = tx.type == "INCOME",
                     )
                 }
             }
