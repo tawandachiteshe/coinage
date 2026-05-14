@@ -57,6 +57,7 @@ fun ProfileScreen(
     onTabClick: (TrackerTab) -> Unit,
     onAddClick: () -> Unit,
     onOpenSettings: () -> Unit,
+    onBack: () -> Unit = {},
     onManageJars: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
@@ -76,7 +77,7 @@ fun ProfileScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-    TrackerScaffold(activeTab = null, onTabClick = onTabClick, onAddClick = onAddClick) {
+    TrackerScaffold(activeTab = null, onTabClick = onTabClick, onAddClick = onAddClick, onBack = onBack) {
         Text(
             text = "Profile".uppercase(),
             modifier = Modifier.padding(horizontal = 22.dp, vertical = 6.dp),
