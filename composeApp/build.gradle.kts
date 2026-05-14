@@ -118,6 +118,9 @@ android {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    testImplementation(libs.sqldelight.sqlite.driver)
+    testImplementation(libs.kotlinx.coroutinesTest)
+    testImplementation(libs.turbine)
 }
 
 compose.desktop {

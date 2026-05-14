@@ -9,3 +9,6 @@ INSERT OR REPLACE INTO UserProfile(id, name, joined_at) VALUES(1, :name, :joined
 
 getName:
 SELECT name FROM UserProfile WHERE id = 1;
+
+getJoinedAt:
+SELECT joined_at FROM UserProfile WHERE id = 1;

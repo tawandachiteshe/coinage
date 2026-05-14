@@ -4,12 +4,16 @@ import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import com.tawandachiteshe.coinage.db.Category
 import com.tawandachiteshe.coinage.db.ExpensifyDatabase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
-class CategoryRepository(db: ExpensifyDatabase) {
+class CategoryRepository(
+    db: ExpensifyDatabase,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+) {
 
     private val q = db.categoryQueries
 
@@ -18,22 +22,22 @@ class CategoryRepository(db: ExpensifyDatabase) {
     }
 
     fun getAll(): Flow<List<Category>> =
-        q.selectAll().asFlow().mapToList(Dispatchers.IO)
+        q.selectAll().asFlow().mapToList(ioDispatcher)
 
     fun getByType(type: String): Flow<List<Category>> =
-        q.selectByType(type).asFlow().mapToList(Dispatchers.IO)
+        q.selectByType(type).asFlow().mapToList(ioDispatcher)
 
     fun getExpenseJars(): Flow<List<Category>> =
-        q.selectExpenseJars().asFlow().mapToList(Dispatchers.IO)
+        q.selectExpenseJars().asFlow().mapToList(ioDispatcher)
 
     fun getActiveExpenseJars(): Flow<List<Category>> =
-        q.selectActiveExpenseJars().asFlow().mapToList(Dispatchers.IO)
+        q.selectActiveExpenseJars().asFlow().mapToList(ioDispatcher)
 
     suspend fun updateBudget(id: String, budget: Double) =
-        withContext(Dispatchers.IO) { q.updateBudget(budget, id) }
+        withContext(ioDispatcher) { q.updateBudget(budget, id) }
 
     suspend fun setActive(id: String, active: Boolean) =
-        withContext(Dispatchers.IO) { q.updateActive(if (active) 1L else 0L, id) }
+        withContext(ioDispatcher) { q.updateActive(if (active) 1L else 0L, id) }
 
     suspend fun insert(
         id: String,
@@ -44,7 +48,7 @@ class CategoryRepository(db: ExpensifyDatabase) {
         budgetLimit: Double,
         isDefault: Long,
         isActive: Long = 1L,
-    ) = withContext(Dispatchers.IO) {
+    ) = withContext(ioDispatcher) {
         q.insert(id, name, icon, colorHex, type, budgetLimit, isDefault, isActive)
     }
 
@@ -54,11 +58,11 @@ class CategoryRepository(db: ExpensifyDatabase) {
         colorHex: String,
         budgetLimit: Double,
         id: String,
-    ) = withContext(Dispatchers.IO) {
+    ) = withContext(ioDispatcher) {
         q.update(name, icon, colorHex, budgetLimit, id)
     }
 
-    suspend fun delete(id: String) = withContext(Dispatchers.IO) { q.delete(id) }
+    suspend fun delete(id: String) = withContext(ioDispatcher) { q.delete(id) }
 
     fun seedDefaults() {
         DEFAULT_CATEGORIES.forEach { c ->

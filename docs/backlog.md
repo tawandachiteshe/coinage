@@ -23,6 +23,7 @@ Items are roughly priority-ordered within each section. "Done" means merged to t
 - [ ] Currency conversion — `CurrencyRepository` exists, rates fetch not triggered on launch
 
 ### Screens
+- [ ] **OCR receipt scanning** — camera → ML Kit (Android) / Vision (iOS) → pre-fill amount + merchant in Add screen (see `docs/ocr-receipts.md`)
 - [ ] **Add screen — Income type** — currently defaults to Expense swipe flow; Income needs a separate path
 - [ ] **Debt screen — live data** — mountain hero card and snowball plan are still hardcoded
 - [ ] **Goals screen — live data** — jar progress bars are static
@@ -50,7 +51,7 @@ Items are roughly priority-ordered within each section. "Done" means merged to t
 - [ ] **Paper dot-grid texture** — CSS spec exists in `docs/design-profile-settings.md`; needs `drawBehind` Canvas impl
 - [ ] **Home header date** — replace hardcoded "Tue · May 12" with live `kotlinx.datetime`
 - [ ] **Profile stats** — `$24k tracked`, `3 wk streak`, `6 jars` are all hardcoded; hook to real DB aggregates
-- [ ] **Badge unlock logic** — badges in ProfileScreen are hardcoded; define unlock conditions and persist state
+- [ ] **Sticker batch 3** — debt slayer, goal getter (blocked on debt/goal repos being fully wired; see `docs/stickers.md`)
 - [ ] **Toggle animation** — Settings toggle has smooth thumb animation ✅; same pattern not applied to any other toggle in AddScreen
 
 ---
@@ -74,6 +75,9 @@ Items are roughly priority-ordered within each section. "Done" means merged to t
 - [x] All screens migrated to `TrackerScaffold`
 - [x] `SettingsScreen` — dashed separator, animated toggle thumb, theme picker, pill groups, danger zone
 - [x] `ProfileScreen` — ID card, stats, FlowRow badges, link rows with Lucide icons + click handlers
+- [x] Badge v1 — first save, on a roll, mountain mover, half full (derived live)
+- [x] Badge v2 — streak keeper, big spender, long hauler, jar master (see `docs/stickers.md`)
+- [x] Badges use Lucide `Icon` composables instead of emoji/text glyphs
 - [x] `OnboardingScreen` — name input on last step, `imePadding` for keyboard
 - [x] `UserProfileRepository` + `OnboardingViewModel` + `ProfileViewModel`
 - [x] Home greeting uses real user name from DB
