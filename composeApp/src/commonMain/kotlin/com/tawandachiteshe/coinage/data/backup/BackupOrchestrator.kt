@@ -4,6 +4,7 @@ import com.tawandachiteshe.coinage.data.CategoryRepository
 import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.DebtRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
+import com.tawandachiteshe.coinage.data.IouRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.data.UserProfileRepository
 import com.tawandachiteshe.coinage.domain.DataError
@@ -17,6 +18,7 @@ class BackupOrchestrator(
     private val catRepo: CategoryRepository,
     private val debtRepo: DebtRepository,
     private val goalRepo: GoalRepository,
+    private val iouRepo: IouRepository,
     private val currencyRepo: CurrencyRepository,
     private val profileRepo: UserProfileRepository,
     private val driveRepo: DriveRepository,
@@ -44,6 +46,10 @@ class BackupOrchestrator(
                 BackupGoal(it.id, it.name, it.icon, it.target_amount,
                     it.saved_amount, it.deadline, it.is_completed, it.created_at)
             },
+            ious = iouRepo.getAllOnce().map {
+                BackupIou(it.id, it.person_name, it.amount, it.paid_amount,
+                    it.notes, it.lent_at, it.due_date, it.created_at, it.category_id)
+            },
             currencies = currencyRepo.getAllOnce().map {
                 BackupCurrency(it.code, it.name, it.symbol, it.rate_to_usd, it.is_base)
             },
@@ -56,7 +62,6 @@ class BackupOrchestrator(
         if (result is Result.Error) return result
         val data = (result as Result.Success).data
 
-        // Restore order: categories first (transactions reference them via FK)
         catRepo.deleteAll()
         data.categories.forEach { c ->
             catRepo.insert(c.id, c.name, c.icon, c.colorHex, c.type, c.budgetLimit, c.isDefault, c.isActive)
@@ -78,6 +83,12 @@ class BackupOrchestrator(
         data.goals.forEach { g ->
             goalRepo.insert(g.id, g.name, g.icon, g.targetAmount,
                 g.savedAmount, g.deadline, g.isCompleted, g.createdAt)
+        }
+
+        iouRepo.deleteAll()
+        data.ious.forEach { i ->
+            iouRepo.insert(i.id, i.personName, i.amount, i.notes, i.categoryId, i.lentAt, i.dueDate, i.createdAt)
+            if (i.paidAmount > 0) iouRepo.recordPayment(i.id, i.paidAmount)
         }
 
         currencyRepo.deleteAll()
@@ -110,6 +121,10 @@ class BackupOrchestrator(
             goals = goalRepo.getAllOnce().map {
                 BackupGoal(it.id, it.name, it.icon, it.target_amount,
                     it.saved_amount, it.deadline, it.is_completed, it.created_at)
+            },
+            ious = iouRepo.getAllOnce().map {
+                BackupIou(it.id, it.person_name, it.amount, it.paid_amount,
+                    it.notes, it.lent_at, it.due_date, it.created_at, it.category_id)
             },
             currencies = emptyList(),
         )

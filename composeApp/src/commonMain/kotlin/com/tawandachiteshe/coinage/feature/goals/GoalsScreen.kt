@@ -64,6 +64,9 @@ fun GoalsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var goalToDelete by remember { mutableStateOf<GoalUi?>(null) }
+    var pendingContribution by remember { mutableStateOf<Pair<GoalUi, Double>?>(null) }
+    var customGoalEntry by remember { mutableStateOf<GoalUi?>(null) }
+    var customGoalAmount by remember { mutableStateOf("") }
 
     TrackerScaffold(activeTab = TrackerTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick) {
             PageHeader(
@@ -101,6 +104,17 @@ fun GoalsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text("\$${state.totalSaved.fmtWhole()} of \$${state.totalTarget.fmtWhole()} saved", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
                         Text("You're a steady saver. Keep showing up.", fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Ink2)
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Available:", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                            Text(
+                                "\$${state.availableBalance.fmtWhole()}",
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = if (state.availableBalance > 0) TrackerColors.Mint else TrackerColors.Cherry,
+                            )
+                        }
                     }
                 }
             }
@@ -173,17 +187,53 @@ fun GoalsScreen(
                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
                                     if (!goal.isCompleted) {
+                                        val available = state.availableBalance
                                         listOf(10, 25, 50).forEach { amt ->
+                                            val affordable = amt.toDouble() <= available
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(999.dp))
-                                                    .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                                                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                                                    .clickable { viewModel.onAction(GoalsAction.OnAddContribution(goal.id, amt.toDouble())) }
+                                                    .background(
+                                                        if (affordable) TrackerColors.Paper2 else TrackerColors.Paper2.copy(alpha = 0.4f),
+                                                        RoundedCornerShape(999.dp),
+                                                    )
+                                                    .border(
+                                                        1.4.dp,
+                                                        if (affordable) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.25f),
+                                                        RoundedCornerShape(999.dp),
+                                                    )
+                                                    .clickable(enabled = affordable) { pendingContribution = goal to amt.toDouble() }
                                                     .padding(horizontal = 10.dp, vertical = 4.dp),
                                             ) {
-                                                Text("+ \$$amt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                                Text(
+                                                    "+ \$$amt",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (affordable) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.3f),
+                                                )
                                             }
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .background(
+                                                    if (available > 0) TrackerColors.Grape.copy(alpha = 0.12f) else TrackerColors.Paper2.copy(alpha = 0.4f),
+                                                    RoundedCornerShape(999.dp),
+                                                )
+                                                .border(
+                                                    1.4.dp,
+                                                    if (available > 0) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.25f),
+                                                    RoundedCornerShape(999.dp),
+                                                )
+                                                .clickable(enabled = available > 0) { customGoalEntry = goal; customGoalAmount = "" }
+                                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                        ) {
+                                            Text(
+                                                "Custom…",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (available > 0) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.3f),
+                                            )
                                         }
                                     } else {
                                         Text("Completed ✓", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Mint, fontWeight = FontWeight.SemiBold)
@@ -231,6 +281,49 @@ fun GoalsScreen(
                 onConfirm = { name, target ->
                     viewModel.onAction(GoalsAction.OnCreateGoal(name = name, icon = "target", targetAmount = target, deadlineMs = null))
                     showAddDialog = false
+                },
+            )
+        }
+
+        pendingContribution?.let { (goal, amt) ->
+            TrackerDialog(
+                title = "Add \$${amt.fmtWhole()} to ${goal.name}?",
+                confirmLabel = "Add \$${amt.fmtWhole()}",
+                confirmColor = TrackerColors.Grape,
+                onConfirm = {
+                    viewModel.onAction(GoalsAction.OnAddContribution(goal.id, amt))
+                    pendingContribution = null
+                },
+                onDismissRequest = { pendingContribution = null },
+                dismissLabel = "Cancel",
+                onDismiss = { pendingContribution = null },
+            )
+        }
+
+        customGoalEntry?.let { goal ->
+            val available = state.availableBalance
+            TrackerDialog(
+                title = "Custom amount for ${goal.name}",
+                confirmLabel = "Add",
+                confirmColor = TrackerColors.Grape,
+                onConfirm = {
+                    val amt = (customGoalAmount.toDoubleOrNull() ?: 0.0).coerceAtMost(available)
+                    if (amt > 0) pendingContribution = goal to amt
+                    customGoalEntry = null
+                    customGoalAmount = ""
+                },
+                onDismissRequest = { customGoalEntry = null; customGoalAmount = "" },
+                dismissLabel = "Cancel",
+                onDismiss = { customGoalEntry = null; customGoalAmount = "" },
+                content = {
+                    TrackerTextField(
+                        value = customGoalAmount,
+                        onValueChange = { customGoalAmount = it },
+                        label = "Amount (max \$${available.fmtWhole()})",
+                        leadingText = "$",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 },
             )
         }

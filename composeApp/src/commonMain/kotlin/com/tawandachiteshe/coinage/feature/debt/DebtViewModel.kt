@@ -2,7 +2,9 @@ package com.tawandachiteshe.coinage.feature.debt
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.DebtRepository
+import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.db.Debt
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +52,11 @@ sealed interface DebtEvent {
     data class ShowError(val msg: String) : DebtEvent
 }
 
-class DebtViewModel(private val debtRepo: DebtRepository) : ViewModel() {
+class DebtViewModel(
+    private val debtRepo: DebtRepository,
+    private val txRepo: TransactionRepository,
+    private val currencyRepo: CurrencyRepository,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(DebtState())
     val state: StateFlow<DebtState> = _state.asStateFlow()
@@ -58,7 +64,14 @@ class DebtViewModel(private val debtRepo: DebtRepository) : ViewModel() {
     private val _events = Channel<DebtEvent>()
     val events = _events.receiveAsFlow()
 
+    private var baseCurrencyCode = "USD"
+
     init {
+        viewModelScope.launch {
+            currencyRepo.getBase().collect { base ->
+                if (base != null) baseCurrencyCode = base.code
+            }
+        }
         viewModelScope.launch {
             debtRepo.getSnowballOrder().collect { rows ->
                 val total = rows.sumOf { it.current_balance }
@@ -78,8 +91,22 @@ class DebtViewModel(private val debtRepo: DebtRepository) : ViewModel() {
         when (action) {
             is DebtAction.OnMakePayment -> viewModelScope.launch {
                 val debt = _state.value.debts.firstOrNull { it.id == action.debtId } ?: return@launch
-                val newBalance = (debt.currentBalance - action.amount).coerceAtLeast(0.0)
+                val capped = action.amount.coerceAtMost(debt.currentBalance)
+                val newBalance = (debt.currentBalance - capped).coerceAtLeast(0.0)
                 debtRepo.updateBalance(action.debtId, newBalance)
+                val now = Clock.System.now().toEpochMilliseconds()
+                txRepo.insert(
+                    id = Uuid.random().toString(),
+                    amount = capped,
+                    type = "EXPENSE",
+                    categoryId = "cat_other",
+                    merchant = debt.creditorName,
+                    notes = "Debt payment",
+                    currencyCode = baseCurrencyCode,
+                    date = now,
+                    createdAt = now,
+                    goalId = null,
+                )
             }
 
             is DebtAction.OnDeleteDebt ->

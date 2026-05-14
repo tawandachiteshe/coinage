@@ -47,6 +47,7 @@ val androidModule = module {
             catRepo      = get(),
             debtRepo     = get(),
             goalRepo     = get(),
+            iouRepo      = get(),
             currencyRepo = get(),
             profileRepo  = get(),
             driveRepo    = get(),

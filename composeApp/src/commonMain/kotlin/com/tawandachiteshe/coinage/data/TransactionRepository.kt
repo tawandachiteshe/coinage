@@ -63,6 +63,13 @@ class TransactionRepository(
             .mapToList(ioDispatcher)
             .map { rows -> rows.associate { it.category_id to it.total } }
 
+    // Reactive: all-time net balance (income - expense). Re-emits on every transaction change.
+    fun getBalanceFlow(): Flow<Double> =
+        q.allTimeTotals()
+            .asFlow()
+            .mapToOne(ioDispatcher)
+            .map { it.income_total - it.expense_total }
+
     // Reactive: re-emits goal_id → saved_amount map whenever any goal contribution is added/deleted.
     fun getSavingsPerGoalFlow(): Flow<Map<String, Double>> =
         q.savingsPerGoal()

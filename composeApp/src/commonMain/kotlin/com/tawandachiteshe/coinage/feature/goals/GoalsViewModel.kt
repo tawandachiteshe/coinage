@@ -33,6 +33,7 @@ data class GoalsState(
     val goals: List<GoalUi> = emptyList(),
     val totalSaved: Double = 0.0,
     val totalTarget: Double = 0.0,
+    val availableBalance: Double = 0.0,
     val baseCurrencyCode: String = "USD",
     val isLoading: Boolean = true,
 )
@@ -70,20 +71,22 @@ class GoalsViewModel(
                 if (base != null) _state.update { it.copy(baseCurrencyCode = base.code) }
             }
         }
-        // Combine goal rows with their transaction-derived savings so saved amounts
-        // reflect real money moved, not arbitrary manual increments.
+        // Combine goal rows, transaction-derived savings, and live balance so the UI
+        // always reflects what the user can actually afford to contribute.
         viewModelScope.launch {
             combine(
                 goalRepo.getAll(),
                 txRepo.getSavingsPerGoalFlow(),
-            ) { rows, savingsMap -> rows to savingsMap }
-                .collect { (rows, savingsMap) ->
+                txRepo.getBalanceFlow(),
+            ) { rows, savingsMap, balance -> Triple(rows, savingsMap, balance) }
+                .collect { (rows, savingsMap, balance) ->
                     val goals = rows.map { it.toUi(savingsMap) }
                     _state.update { s ->
                         s.copy(
                             goals = goals,
                             totalSaved = goals.sumOf { it.savedAmount },
                             totalTarget = goals.sumOf { it.targetAmount },
+                            availableBalance = balance.coerceAtLeast(0.0),
                             isLoading = false,
                         )
                     }
@@ -98,7 +101,12 @@ class GoalsViewModel(
                 val goal = _state.value.goals.find { it.id == action.goalId } ?: return
                 val remaining = goal.targetAmount - goal.savedAmount
                 if (remaining <= 0) return
-                val amount = action.amount.coerceAtMost(remaining)
+                val available = _state.value.availableBalance
+                if (available <= 0) {
+                    viewModelScope.launch { _events.send(GoalsEvent.ShowError("No funds available to contribute")) }
+                    return
+                }
+                val amount = action.amount.coerceAtMost(remaining).coerceAtMost(available)
                 viewModelScope.launch {
                     val now = Clock.System.now().toEpochMilliseconds()
                     txRepo.insert(

@@ -1,0 +1,10 @@
+CREATE TABLE Iou (
+    id          TEXT    NOT NULL PRIMARY KEY,
+    person_name TEXT    NOT NULL,
+    amount      REAL    NOT NULL,
+    paid_amount REAL    NOT NULL DEFAULT 0.0,
+    notes       TEXT,
+    lent_at     INTEGER NOT NULL,
+    due_date    INTEGER,
+    created_at  INTEGER NOT NULL
+);

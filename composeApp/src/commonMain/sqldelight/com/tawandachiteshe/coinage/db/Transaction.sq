@@ -77,6 +77,13 @@ countInRange:
 SELECT COUNT(*) AS tx_count FROM `Transaction`
 WHERE date >= :startMs AND date < :endMs;
 
+-- Reactive: all-time net balance (income - expense), used for goal contribution validation.
+allTimeTotals:
+SELECT
+    COALESCE(SUM(CASE WHEN type = 'INCOME'  THEN amount ELSE 0.0 END), 0.0) AS income_total,
+    COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS expense_total
+FROM `Transaction`;
+
 -- Reactive: total saved per goal, derived from real EXPENSE transactions tagged to a goal.
 savingsPerGoal:
 SELECT goal_id, COALESCE(SUM(amount), 0.0) AS total

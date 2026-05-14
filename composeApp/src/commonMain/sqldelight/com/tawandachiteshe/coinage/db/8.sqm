@@ -1,0 +1,1 @@
+ALTER TABLE Iou ADD COLUMN category_id TEXT;

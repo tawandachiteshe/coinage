@@ -12,6 +12,7 @@ data class BackupData(
     val debts: List<BackupDebt> = emptyList(),
     val goals: List<BackupGoal> = emptyList(),
     val currencies: List<BackupCurrency> = emptyList(),
+    val ious: List<BackupIou> = emptyList(),
 )
 
 @Serializable
@@ -49,4 +50,12 @@ data class BackupGoal(
 data class BackupCurrency(
     val code: String, val name: String, val symbol: String,
     val rateToUsd: Double, val isBase: Long,
+)
+
+@Serializable
+data class BackupIou(
+    val id: String, val personName: String, val amount: Double,
+    val paidAmount: Double, val notes: String?, val lentAt: Long,
+    val dueDate: Long?, val createdAt: Long,
+    val categoryId: String? = null,
 )

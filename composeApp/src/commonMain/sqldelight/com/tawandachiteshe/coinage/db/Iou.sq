@@ -1,0 +1,35 @@
+CREATE TABLE Iou (
+    id          TEXT    NOT NULL PRIMARY KEY,
+    person_name TEXT    NOT NULL,
+    amount      REAL    NOT NULL,
+    paid_amount REAL    NOT NULL DEFAULT 0.0,
+    notes       TEXT,
+    category_id TEXT,
+    lent_at     INTEGER NOT NULL,
+    due_date    INTEGER,
+    created_at  INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM Iou
+ORDER BY (amount - paid_amount) DESC, lent_at DESC;
+
+totalOutstanding:
+SELECT COALESCE(SUM(amount - paid_amount), 0.0) AS total
+FROM Iou
+WHERE paid_amount < amount;
+
+insert:
+INSERT INTO Iou (id, person_name, amount, paid_amount, notes, category_id, lent_at, due_date, created_at)
+VALUES (?, ?, ?, 0.0, ?, ?, ?, ?, ?);
+
+recordPayment:
+UPDATE Iou
+SET paid_amount = MIN(paid_amount + :payment, amount)
+WHERE id = :id;
+
+delete:
+DELETE FROM Iou WHERE id = ?;
+
+deleteAll:
+DELETE FROM Iou;
