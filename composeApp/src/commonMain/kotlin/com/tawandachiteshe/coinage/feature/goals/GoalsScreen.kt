@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -40,11 +38,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.TrackerDialog
 import com.tawandachiteshe.coinage.ui.components.TrackerTextField
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
 import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
 import com.tawandachiteshe.coinage.ui.components.TrackerTab
-import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.TrackerColors
 import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import org.koin.compose.viewmodel.koinViewModel
@@ -65,6 +63,7 @@ fun GoalsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var goalToDelete by remember { mutableStateOf<GoalUi?>(null) }
 
     TrackerScaffold(activeTab = TrackerTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick) {
             PageHeader(
@@ -173,20 +172,36 @@ fun GoalsScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
-                                    listOf(10, 25, 50).forEach { amt ->
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
-                                                .clickable { viewModel.onAction(GoalsAction.OnAddContribution(goal.id, amt.toDouble())) }
-                                                .padding(horizontal = 10.dp, vertical = 4.dp),
-                                        ) {
-                                            Text("+ \$$amt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                    if (!goal.isCompleted) {
+                                        listOf(10, 25, 50).forEach { amt ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(999.dp))
+                                                    .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
+                                                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                                    .clickable { viewModel.onAction(GoalsAction.OnAddContribution(goal.id, amt.toDouble())) }
+                                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                            ) {
+                                                Text("+ \$$amt", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                            }
                                         }
+                                    } else {
+                                        Text("Completed ✓", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Mint, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.weight(1f))
                                     Text("${goal.pct.toInt()}%", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                                    Spacer(Modifier.width(6.dp))
+                                    // Delete button
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(TrackerColors.Cherry.copy(alpha = 0.12f))
+                                            .clickable { goalToDelete = goal },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(TrackerIcons.Trash, contentDescription = "Delete goal", modifier = Modifier.size(14.dp), tint = TrackerColors.Cherry)
+                                    }
                                 }
                             }
                         }
@@ -217,6 +232,21 @@ fun GoalsScreen(
                     viewModel.onAction(GoalsAction.OnCreateGoal(name = name, icon = "target", targetAmount = target, deadlineMs = null))
                     showAddDialog = false
                 },
+            )
+        }
+
+        goalToDelete?.let { goal ->
+            TrackerDialog(
+                title = "Delete \"${goal.name}\"?",
+                confirmLabel = "Delete",
+                confirmColor = TrackerColors.Cherry,
+                onConfirm = {
+                    viewModel.onAction(GoalsAction.OnDeleteGoal(goal.id))
+                    goalToDelete = null
+                },
+                onDismissRequest = { goalToDelete = null },
+                dismissLabel = "Cancel",
+                onDismiss = { goalToDelete = null },
             )
         }
     }

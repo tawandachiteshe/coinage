@@ -22,6 +22,7 @@ data class BackupTransaction(
     val id: String, val amount: Double, val type: String,
     val categoryId: String, val merchant: String, val notes: String?,
     val currencyCode: String, val date: Long, val createdAt: Long,
+    val goalId: String? = null,
 )
 
 @Serializable

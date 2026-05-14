@@ -29,7 +29,7 @@ val appModule = module {
     single { UserProfileRepository(get()) }
 
     viewModel { HomeViewModel(get(), get(), get(), get()) }
-    viewModel { GoalsViewModel(get()) }
+    viewModel { GoalsViewModel(get(), get(), get()) }
     viewModel { DebtViewModel(get()) }
     viewModel { InsightsViewModel(get(), get()) }
     viewModel { AddViewModel(get(), get(), get(), get(), get()) }

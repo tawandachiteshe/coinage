@@ -50,6 +50,7 @@ import com.composables.icons.lucide.Settings
 import com.composables.icons.lucide.User
 import com.composables.icons.lucide.Wallet
 import com.composables.icons.lucide.Wifi
+import com.composables.icons.lucide.Trash2
 import com.composables.icons.lucide.X
 import com.composables.icons.lucide.Zap
 
@@ -113,6 +114,7 @@ object TrackerIcons {
     val Lock: ImageVector          = Lucide.Lock
     val Hand: ImageVector          = Lucide.Hand
     val Check: ImageVector         = Lucide.Check
+    val Trash: ImageVector         = Lucide.Trash2
     val X: ImageVector             = Lucide.X
     val ChevronLeft: ImageVector   = Lucide.ChevronLeft
     val ChevronRight: ImageVector  = Lucide.ChevronRight

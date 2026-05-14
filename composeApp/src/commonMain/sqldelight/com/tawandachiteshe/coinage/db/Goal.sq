@@ -32,6 +32,9 @@ SET saved_amount = MIN(saved_amount + :amount, target_amount),
     is_completed = CASE WHEN saved_amount + :amount >= target_amount THEN 1 ELSE 0 END
 WHERE id = :id;
 
+markComplete:
+UPDATE Goal SET is_completed = 1 WHERE id = ?;
+
 delete:
 DELETE FROM Goal WHERE id = ?;
 

@@ -63,6 +63,13 @@ class TransactionRepository(
             .mapToList(ioDispatcher)
             .map { rows -> rows.associate { it.category_id to it.total } }
 
+    // Reactive: re-emits goal_id → saved_amount map whenever any goal contribution is added/deleted.
+    fun getSavingsPerGoalFlow(): Flow<Map<String, Double>> =
+        q.savingsPerGoal()
+            .asFlow()
+            .mapToList(ioDispatcher)
+            .map { rows -> rows.mapNotNull { r -> r.goal_id?.let { it to r.total } }.toMap() }
+
     suspend fun getBiggestExpense(startMs: Long, endMs: Long): BiggestExpenseInRange? =
         withContext(ioDispatcher) {
             q.biggestExpenseInRange(startMs, endMs).executeAsOneOrNull()
@@ -88,8 +95,9 @@ class TransactionRepository(
         currencyCode: String = "USD",
         date: Long,
         createdAt: Long,
+        goalId: String? = null,
     ) = withContext(ioDispatcher) {
-        q.insert(id, amount, type, categoryId, merchant, notes, currencyCode, date, createdAt)
+        q.insert(id, amount, type, categoryId, merchant, notes, currencyCode, date, createdAt, goalId)
     }
 
     suspend fun delete(id: String) = withContext(ioDispatcher) { q.delete(id) }

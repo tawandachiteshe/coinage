@@ -44,6 +44,8 @@ class GoalRepository(
     suspend fun addToSaved(id: String, amount: Double) =
         withContext(ioDispatcher) { q.addToSaved(amount, id) }
 
+    suspend fun markComplete(id: String) = withContext(ioDispatcher) { q.markComplete(id) }
+
     suspend fun delete(id: String) = withContext(ioDispatcher) { q.delete(id) }
 
     suspend fun getAllOnce(): List<Goal> = withContext(ioDispatcher) {

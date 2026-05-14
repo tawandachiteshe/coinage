@@ -2,12 +2,15 @@ package com.tawandachiteshe.coinage.feature.goals
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tawandachiteshe.coinage.data.CurrencyRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
+import com.tawandachiteshe.coinage.data.TransactionRepository
 import com.tawandachiteshe.coinage.db.Goal
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +33,7 @@ data class GoalsState(
     val goals: List<GoalUi> = emptyList(),
     val totalSaved: Double = 0.0,
     val totalTarget: Double = 0.0,
+    val baseCurrencyCode: String = "USD",
     val isLoading: Boolean = true,
 )
 
@@ -48,7 +52,11 @@ sealed interface GoalsEvent {
     data class ShowError(val msg: String) : GoalsEvent
 }
 
-class GoalsViewModel(private val goalRepo: GoalRepository) : ViewModel() {
+class GoalsViewModel(
+    private val goalRepo: GoalRepository,
+    private val txRepo: TransactionRepository,
+    private val currencyRepo: CurrencyRepository,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(GoalsState())
     val state: StateFlow<GoalsState> = _state.asStateFlow()
@@ -58,26 +66,55 @@ class GoalsViewModel(private val goalRepo: GoalRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            goalRepo.getAll().collect { rows ->
-                _state.update { s ->
-                    s.copy(
-                        goals = rows.map { it.toUi() },
-                        totalSaved = rows.sumOf { it.saved_amount },
-                        totalTarget = rows.sumOf { it.target_amount },
-                        isLoading = false,
-                    )
-                }
+            currencyRepo.getBase().collect { base ->
+                if (base != null) _state.update { it.copy(baseCurrencyCode = base.code) }
             }
+        }
+        // Combine goal rows with their transaction-derived savings so saved amounts
+        // reflect real money moved, not arbitrary manual increments.
+        viewModelScope.launch {
+            combine(
+                goalRepo.getAll(),
+                txRepo.getSavingsPerGoalFlow(),
+            ) { rows, savingsMap -> rows to savingsMap }
+                .collect { (rows, savingsMap) ->
+                    val goals = rows.map { it.toUi(savingsMap) }
+                    _state.update { s ->
+                        s.copy(
+                            goals = goals,
+                            totalSaved = goals.sumOf { it.savedAmount },
+                            totalTarget = goals.sumOf { it.targetAmount },
+                            isLoading = false,
+                        )
+                    }
+                }
         }
     }
 
     @OptIn(ExperimentalUuidApi::class)
     fun onAction(action: GoalsAction) {
         when (action) {
-            is GoalsAction.OnAddContribution ->
+            is GoalsAction.OnAddContribution -> {
+                val goal = _state.value.goals.find { it.id == action.goalId } ?: return
+                val remaining = goal.targetAmount - goal.savedAmount
+                if (remaining <= 0) return
+                val amount = action.amount.coerceAtMost(remaining)
                 viewModelScope.launch {
-                    goalRepo.addToSaved(action.goalId, action.amount)
+                    val now = Clock.System.now().toEpochMilliseconds()
+                    txRepo.insert(
+                        id = Uuid.random().toString(),
+                        amount = amount,
+                        type = "EXPENSE",
+                        categoryId = "cat_savings",
+                        merchant = goal.name,
+                        notes = null,
+                        currencyCode = _state.value.baseCurrencyCode,
+                        date = now,
+                        createdAt = now,
+                        goalId = action.goalId,
+                    )
                 }
+            }
 
             is GoalsAction.OnDeleteGoal ->
                 viewModelScope.launch { goalRepo.delete(action.id) }
@@ -108,14 +145,18 @@ class GoalsViewModel(private val goalRepo: GoalRepository) : ViewModel() {
         }
     }
 
-    private fun Goal.toUi() = GoalUi(
-        id = id,
-        name = name,
-        icon = icon,
-        savedAmount = saved_amount,
-        targetAmount = target_amount,
-        pct = if (target_amount > 0) ((saved_amount / target_amount * 100.0).coerceIn(0.0, 100.0).toFloat()) else 0f,
-        due = deadline?.toString(),
-        isCompleted = is_completed == 1L,
-    )
+    private fun Goal.toUi(savingsMap: Map<String, Double>): GoalUi {
+        val saved = savingsMap[id] ?: 0.0
+        val pct = if (target_amount > 0) (saved / target_amount * 100.0).coerceIn(0.0, 100.0).toFloat() else 0f
+        return GoalUi(
+            id = id,
+            name = name,
+            icon = icon,
+            savedAmount = saved,
+            targetAmount = target_amount,
+            pct = pct,
+            due = deadline?.toString(),
+            isCompleted = saved >= target_amount,
+        )
+    }
 }

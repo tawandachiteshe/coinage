@@ -30,7 +30,7 @@ class BackupOrchestrator(
             userProfile  = name?.let { BackupUserProfile(it, joinedAt) },
             transactions = txRepo.getAllOnce().map {
                 BackupTransaction(it.id, it.amount, it.type, it.category_id,
-                    it.merchant, it.notes, it.currency_code, it.date, it.created_at)
+                    it.merchant, it.notes, it.currency_code, it.date, it.created_at, it.goal_id)
             },
             categories = catRepo.getAllOnce().map {
                 BackupCategory(it.id, it.name, it.icon, it.color_hex,
@@ -65,7 +65,7 @@ class BackupOrchestrator(
         txRepo.deleteAll()
         data.transactions.forEach { t ->
             txRepo.insert(t.id, t.amount, t.type, t.categoryId,
-                t.merchant, t.notes, t.currencyCode, t.date, t.createdAt)
+                t.merchant, t.notes, t.currencyCode, t.date, t.createdAt, t.goalId)
         }
 
         debtRepo.deleteAll()
@@ -97,7 +97,7 @@ class BackupOrchestrator(
             userProfile  = name?.let { BackupUserProfile(it, joinedAt) },
             transactions = txRepo.getAllOnce().map {
                 BackupTransaction(it.id, it.amount, it.type, it.category_id,
-                    it.merchant, it.notes, it.currency_code, it.date, it.created_at)
+                    it.merchant, it.notes, it.currency_code, it.date, it.created_at, it.goal_id)
             },
             categories = catRepo.getAllOnce().map {
                 BackupCategory(it.id, it.name, it.icon, it.color_hex,

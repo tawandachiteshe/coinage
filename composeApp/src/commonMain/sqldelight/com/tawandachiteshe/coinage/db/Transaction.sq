@@ -7,7 +7,8 @@ CREATE TABLE `Transaction` (
     notes         TEXT,
     currency_code TEXT    NOT NULL DEFAULT 'USD',
     date          INTEGER NOT NULL,
-    created_at    INTEGER NOT NULL
+    created_at    INTEGER NOT NULL,
+    goal_id       TEXT               -- nullable; set when transaction is a goal contribution
 );
 
 CREATE INDEX idx_tx_date     ON `Transaction`(date DESC);
@@ -76,9 +77,16 @@ countInRange:
 SELECT COUNT(*) AS tx_count FROM `Transaction`
 WHERE date >= :startMs AND date < :endMs;
 
+-- Reactive: total saved per goal, derived from real EXPENSE transactions tagged to a goal.
+savingsPerGoal:
+SELECT goal_id, COALESCE(SUM(amount), 0.0) AS total
+FROM `Transaction`
+WHERE goal_id IS NOT NULL AND type = 'EXPENSE'
+GROUP BY goal_id;
+
 insert:
-INSERT INTO `Transaction` (id, amount, type, category_id, merchant, notes, currency_code, date, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO `Transaction` (id, amount, type, category_id, merchant, notes, currency_code, date, created_at, goal_id)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM `Transaction` WHERE id = ?;
