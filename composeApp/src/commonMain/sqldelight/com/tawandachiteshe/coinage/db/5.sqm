@@ -1,0 +1,12 @@
+-- Migration 1→2 added currency_code via ALTER TABLE ADD COLUMN, placing it at the
+-- end of the physical table. The positional INSERT assumed currency_code came before
+-- date and created_at, so those columns received the wrong values on migrated databases:
+--   date column received "USD" (stored as text, getLong returns 0)
+--   created_at column received the actual date timestamp
+--   currency_code column received the created_at timestamp as text
+-- Fix: for any row where date is text (i.e. "USD"), restore date from created_at
+-- and reset currency_code to 'USD'.
+UPDATE `Transaction`
+SET date = CAST(created_at AS INTEGER),
+    currency_code = 'USD'
+WHERE typeof(date) = 'text';

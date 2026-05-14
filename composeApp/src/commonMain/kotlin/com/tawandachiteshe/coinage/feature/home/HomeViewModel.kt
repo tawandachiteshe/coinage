@@ -40,17 +40,27 @@ fun Zoom.dateRange(): Pair<Long, Long> {
     val now = Clock.System.now()
     val tz = TimeZone.currentSystemDefault()
     val local = now.toLocalDateTime(tz)
-    val startInstant = when (this) {
+    val (startInstant, endInstant) = when (this) {
         Zoom.Week -> {
             val daysBack = local.dayOfWeek.ordinal // 0=Monday … 6=Sunday
-            val weekStartInstant = now.minus(daysBack.days)
-            val d = weekStartInstant.toLocalDateTime(tz)
-            LocalDateTime(d.year, d.monthNumber, d.dayOfMonth, 0, 0, 0).toInstant(tz)
+            val weekStart = now.minus(daysBack.days).toLocalDateTime(tz)
+            val start = LocalDateTime(weekStart.year, weekStart.monthNumber, weekStart.dayOfMonth, 0, 0, 0).toInstant(tz)
+            start to start.plus(7.days)
         }
-        Zoom.Month -> LocalDateTime(local.year, local.monthNumber, 1, 0, 0, 0).toInstant(tz)
-        Zoom.Year  -> LocalDateTime(local.year, 1, 1, 0, 0, 0).toInstant(tz)
+        Zoom.Month -> {
+            val start = LocalDateTime(local.year, local.monthNumber, 1, 0, 0, 0).toInstant(tz)
+            val nextMonth = if (local.monthNumber == 12)
+                LocalDateTime(local.year + 1, 1, 1, 0, 0, 0)
+            else
+                LocalDateTime(local.year, local.monthNumber + 1, 1, 0, 0, 0)
+            start to nextMonth.toInstant(tz)
+        }
+        Zoom.Year -> {
+            val start = LocalDateTime(local.year, 1, 1, 0, 0, 0).toInstant(tz)
+            start to LocalDateTime(local.year + 1, 1, 1, 0, 0, 0).toInstant(tz)
+        }
     }
-    return startInstant.toEpochMilliseconds() to now.toEpochMilliseconds()
+    return startInstant.toEpochMilliseconds() to endInstant.toEpochMilliseconds()
 }
 
 private val JAR_TILTS = listOf(-1.5f, 1.0f, -0.8f, 1.5f, -1.0f, 0.8f)
@@ -100,9 +110,8 @@ class HomeViewModel(
                 _state.update { s -> s.copy(transactions = rows.map { it.toUi() }, isLoading = false) }
             }
         }
-        // When zoom changes, restart a reactive subscription to both totals.
-        // getTotalsFlow() re-emits automatically whenever the Transaction table changes,
-        // so balance stays correct after restore without any collectLatest race condition.
+        // SQL aggregate totals — re-executes in the DB whenever the Transaction table
+        // changes, and restarts the subscription whenever the zoom period changes.
         viewModelScope.launch {
             _state.map { it.zoom }
                 .distinctUntilChanged()

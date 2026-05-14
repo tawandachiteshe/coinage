@@ -77,7 +77,8 @@ SELECT COUNT(*) AS tx_count FROM `Transaction`
 WHERE date >= :startMs AND date < :endMs;
 
 insert:
-INSERT INTO `Transaction` VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO `Transaction` (id, amount, type, category_id, merchant, notes, currency_code, date, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 delete:
 DELETE FROM `Transaction` WHERE id = ?;
