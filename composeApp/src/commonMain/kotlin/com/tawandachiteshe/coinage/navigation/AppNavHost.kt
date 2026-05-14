@@ -22,7 +22,7 @@ import com.tawandachiteshe.coinage.feature.jars.JarsManagerScreen
 import com.tawandachiteshe.coinage.feature.onboarding.OnboardingScreen
 import com.tawandachiteshe.coinage.feature.profile.ProfileScreen
 import com.tawandachiteshe.coinage.feature.settings.SettingsScreen
-import com.tawandachiteshe.coinage.ui.components.TrackerTab
+import com.tawandachiteshe.coinage.ui.components.CoinageTab
 
 @Composable
 fun AppNavHost(
@@ -103,12 +103,12 @@ fun AppNavHost(
     }
 }
 
-private fun NavHostController.navigateToTab(tab: TrackerTab) {
+private fun NavHostController.navigateToTab(tab: CoinageTab) {
     val route: Route = when (tab) {
-        TrackerTab.Home     -> Route.Home
-        TrackerTab.Goals    -> Route.Goals
-        TrackerTab.Debt     -> Route.Debt
-        TrackerTab.Insights -> Route.Insights
+        CoinageTab.Home     -> Route.Home
+        CoinageTab.Goals    -> Route.Goals
+        CoinageTab.Debt     -> Route.Debt
+        CoinageTab.Insights -> Route.Insights
     }
     navigate(route) {
         popUpTo(Route.Home) { saveState = true }

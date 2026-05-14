@@ -40,11 +40,11 @@ import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.ProgressJar
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.StripedProgressBar
-import com.tawandachiteshe.coinage.ui.components.TrackerDialog
-import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
-import com.tawandachiteshe.coinage.ui.components.TrackerTextField
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
+import com.tawandachiteshe.coinage.ui.components.CoinageScaffold
+import com.tawandachiteshe.coinage.ui.components.CoinageTextField
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -58,13 +58,13 @@ fun JarsManagerScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var editBudgetJar by remember { mutableStateOf<JarUi?>(null) }
 
-    TrackerScaffold(onBack = onBack) {
+    CoinageScaffold(onBack = onBack) {
             // Page header
             PageHeader(
                 eyebrow = "${jars.size} jars",
                 title = "Your",
                 italicWord = "jars.",
-                accent = TrackerColors.Tangerine,
+                accent = CoinageColors.Tangerine,
                 kicker = "Set a limit. Track what fills — and what spills.",
             )
 
@@ -95,7 +95,7 @@ fun JarsManagerScreen(
                     .clip(RoundedCornerShape(14.dp))
                     .border(
                         width = 2.dp,
-                        color = TrackerColors.Ink.copy(alpha = 0.35f),
+                        color = CoinageColors.Ink.copy(alpha = 0.35f),
                         shape = RoundedCornerShape(14.dp),
                     )
                     .clickable { showAddDialog = true }
@@ -104,10 +104,10 @@ fun JarsManagerScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = TrackerIcons.Add,
+                        imageVector = CoinageIcons.Add,
                         contentDescription = "Add jar",
                         modifier = Modifier.size(18.dp),
-                        tint = TrackerColors.Ink2,
+                        tint = CoinageColors.Ink2,
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -115,7 +115,7 @@ fun JarsManagerScreen(
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 0.8.sp,
-                        color = TrackerColors.Ink2,
+                        color = CoinageColors.Ink2,
                     )
                 }
             }
@@ -154,12 +154,12 @@ private fun JarCard(
 ) {
     val jarColor = parseHexColor(jar.colorHex)
     val isOverspent = jar.budgetLimit > 0 && jar.spent > jar.budgetLimit
-    val barColor = if (isOverspent) TrackerColors.Cherry else jarColor
+    val barColor = if (isOverspent) CoinageColors.Cherry else jarColor
     val pct = if (jar.budgetLimit > 0) (jar.spent / jar.budgetLimit * 100f).toFloat().coerceIn(0f, 100f) else 0f
     val cardAlpha = if (jar.isActive) 1f else 0.45f
 
     StickerCard(
-        bgColor = if (jar.isActive) TrackerColors.PaperWhite else TrackerColors.Paper2,
+        bgColor = if (jar.isActive) CoinageColors.PaperWhite else CoinageColors.Paper2,
         tilt = jar.tilt,
         cornerRadius = 16.dp,
         borderWidth = 1.8.dp,
@@ -174,7 +174,7 @@ private fun JarCard(
                     .width(8.dp)
                     .height(120.dp)
                     .background(jarColor)
-                    .border(1.dp, TrackerColors.Ink),
+                    .border(1.dp, CoinageColors.Ink),
             )
 
             Column(modifier = Modifier.padding(12.dp).weight(1f)) {
@@ -185,14 +185,14 @@ private fun JarCard(
                             .size(32.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(jarColor)
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(8.dp)),
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = TrackerIcons.fromKey(jar.icon),
+                            imageVector = CoinageIcons.fromKey(jar.icon),
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = TrackerColors.Ink,
+                            tint = CoinageColors.Ink,
                         )
                     }
                     Spacer(Modifier.width(10.dp))
@@ -201,14 +201,14 @@ private fun JarCard(
                             text = jar.name,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TrackerColors.Ink,
+                            color = CoinageColors.Ink,
                         )
                         Text(
                             text = jar.icon,
                             fontSize = 10.sp,
                             fontFamily = FontFamily.Monospace,
                             letterSpacing = 0.5.sp,
-                            color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                            color = CoinageColors.Ink2.copy(alpha = 0.55f),
                         )
                     }
                 }
@@ -221,14 +221,14 @@ private fun JarCard(
                         text = "\$${jar.spent.formatWhole()}",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isOverspent) TrackerColors.Cherry else TrackerColors.Ink,
+                        color = if (isOverspent) CoinageColors.Cherry else CoinageColors.Ink,
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = if (jar.budgetLimit > 0) "/ \$${jar.budgetLimit.formatWhole()}" else "/ no limit",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
-                        color = TrackerColors.Ink2.copy(alpha = 0.6f),
+                        color = CoinageColors.Ink2.copy(alpha = 0.6f),
                     )
                 }
 
@@ -251,8 +251,8 @@ private fun JarCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
-                            .background(TrackerColors.Butter)
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .background(CoinageColors.Butter)
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                             .clickable { onEditBudget() }
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
@@ -262,7 +262,7 @@ private fun JarCard(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 0.5.sp,
-                            color = TrackerColors.Ink,
+                            color = CoinageColors.Ink,
                         )
                     }
 
@@ -271,16 +271,16 @@ private fun JarCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(TrackerColors.Cherry.copy(alpha = 0.15f))
-                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                .background(CoinageColors.Cherry.copy(alpha = 0.15f))
+                                .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                 .clickable { onDelete() }
                                 .padding(horizontal = 10.dp, vertical = 4.dp),
                         ) {
                             Icon(
-                                imageVector = TrackerIcons.Other,
+                                imageVector = CoinageIcons.Other,
                                 contentDescription = "Delete jar",
                                 modifier = Modifier.size(14.dp),
-                                tint = TrackerColors.Cherry,
+                                tint = CoinageColors.Cherry,
                             )
                         }
                     }
@@ -289,8 +289,8 @@ private fun JarCard(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
-                            .background(if (jar.isActive) TrackerColors.Butter else TrackerColors.Paper3)
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .background(if (jar.isActive) CoinageColors.Butter else CoinageColors.Paper3)
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                             .clickable { onToggleActive() }
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
@@ -300,7 +300,7 @@ private fun JarCard(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.SemiBold,
                             letterSpacing = 0.5.sp,
-                            color = TrackerColors.Ink,
+                            color = CoinageColors.Ink,
                         )
                     }
                 }
@@ -327,11 +327,11 @@ private fun EditBudgetDialog(
 ) {
     var budgetText by remember { mutableStateOf(if (jar.budgetLimit > 0) jar.budgetLimit.toInt().toString() else "") }
 
-    TrackerDialog(
+    CoinageDialog(
         title = "Edit budget · ${jar.name}",
         onDismissRequest = onDismiss,
         confirmLabel = "Save",
-        confirmColor = TrackerColors.Butter,
+        confirmColor = CoinageColors.Butter,
         onConfirm = {
             val amount = budgetText.toDoubleOrNull() ?: 0.0
             onConfirm(amount)
@@ -342,10 +342,10 @@ private fun EditBudgetDialog(
         Text(
             text = "Set a monthly spending limit (0 = no limit)",
             fontSize = 13.sp,
-            color = TrackerColors.Ink2,
+            color = CoinageColors.Ink2,
         )
         Spacer(Modifier.height(12.dp))
-        TrackerTextField(
+        CoinageTextField(
             value = budgetText,
             onValueChange = { budgetText = it },
             label = "Budget",
@@ -366,11 +366,11 @@ private fun AddJarDialog(
     var colorHex by remember { mutableStateOf("#ff7a2b") }
     var budgetText by remember { mutableStateOf("") }
 
-    TrackerDialog(
+    CoinageDialog(
         title = "New jar",
         onDismissRequest = onDismiss,
         confirmLabel = "Create",
-        confirmColor = TrackerColors.Mint,
+        confirmColor = CoinageColors.Mint,
         onConfirm = {
             if (name.isNotBlank()) {
                 val budget = budgetText.toDoubleOrNull() ?: 0.0
@@ -382,25 +382,25 @@ private fun AddJarDialog(
         onDismiss = onDismiss,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            TrackerTextField(
+            CoinageTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = "Name",
                 modifier = Modifier.fillMaxWidth(),
             )
-            TrackerTextField(
+            CoinageTextField(
                 value = iconKey,
                 onValueChange = { iconKey = it },
                 label = "Icon key (e.g. coffee, car)",
                 modifier = Modifier.fillMaxWidth(),
             )
-            TrackerTextField(
+            CoinageTextField(
                 value = colorHex,
                 onValueChange = { colorHex = it },
                 label = "Color (#hex)",
                 modifier = Modifier.fillMaxWidth(),
             )
-            TrackerTextField(
+            CoinageTextField(
                 value = budgetText,
                 onValueChange = { budgetText = it },
                 label = "Monthly budget",
@@ -426,6 +426,6 @@ private fun parseHexColor(hex: String): Color {
             blue  = clean.substring(4, 6).toInt(16) / 255f,
         )
     } catch (_: Exception) {
-        TrackerColors.Grape
+        CoinageColors.Grape
     }
 }

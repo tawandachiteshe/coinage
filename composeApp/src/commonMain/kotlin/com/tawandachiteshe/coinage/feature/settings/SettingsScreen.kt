@@ -45,10 +45,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerDialog
-import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
+import com.tawandachiteshe.coinage.ui.components.CoinageScaffold
 import com.tawandachiteshe.coinage.ui.components.popShadow
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -73,30 +73,30 @@ fun SettingsScreen(
     var aiEnabled by remember { mutableStateOf(false) }
     var roundUpEnabled by remember { mutableStateOf(true) }
 
-    TrackerScaffold(onBack = onBack) {
+    CoinageScaffold(onBack = onBack) {
         PageHeader(
             eyebrow = "Settings",
             title = "Make it",
             italicWord = "yours.",
-            accent = TrackerColors.Grape,
+            accent = CoinageColors.Grape,
             kicker = "Small knobs. Big feels.",
         )
 
         // Theme picker
         Spacer(Modifier.height(14.dp))
         StickerCard(
-            bgColor = TrackerColors.PaperWhite,
+            bgColor = CoinageColors.PaperWhite,
             modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
             cornerRadius = 16.dp,
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text("Theme".uppercase(), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                Text("Theme".uppercase(), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.7f))
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
-                        "Tropicana"  to listOf(TrackerColors.Tangerine, TrackerColors.Grape, TrackerColors.Butter, TrackerColors.Sky),
+                        "Tropicana"  to listOf(CoinageColors.Tangerine, CoinageColors.Grape, CoinageColors.Butter, CoinageColors.Sky),
                         "Sour candy" to listOf(Color(0xFFc8ff3d), Color(0xFFff5bb0), Color(0xFF3b6dff), Color(0xFFf6f1e6)),
-                        "Soft serve" to listOf(Color(0xFFffb59c), Color(0xFF7ce0c0), Color(0xFFc9b8ff), TrackerColors.Paper),
+                        "Soft serve" to listOf(Color(0xFFffb59c), Color(0xFF7ce0c0), Color(0xFFc9b8ff), CoinageColors.Paper),
                     ).forEach { (name, cols) ->
                         val isActive = theme == name
                         Box(
@@ -104,8 +104,8 @@ fun SettingsScreen(
                                 .then(if (isActive) Modifier.popShadow(cornerRadius = 12.dp, offsetX = 3.dp, offsetY = 4.dp)
                                       else Modifier.popShadow(cornerRadius = 12.dp, offsetX = 1.5.dp, offsetY = 2.dp))
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(TrackerColors.Paper, RoundedCornerShape(12.dp))
-                                .border(if (isActive) 2.dp else 1.5.dp, TrackerColors.Ink, RoundedCornerShape(12.dp))
+                                .background(CoinageColors.Paper, RoundedCornerShape(12.dp))
+                                .border(if (isActive) 2.dp else 1.5.dp, CoinageColors.Ink, RoundedCornerShape(12.dp))
                                 .clickable { theme = name }
                                 .padding(horizontal = 8.dp, vertical = 6.dp),
                             contentAlignment = Alignment.Center,
@@ -115,12 +115,12 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .size(76.dp, 18.dp)
                                         .clip(RoundedCornerShape(4.dp))
-                                        .border(1.dp, TrackerColors.Ink, RoundedCornerShape(4.dp)),
+                                        .border(1.dp, CoinageColors.Ink, RoundedCornerShape(4.dp)),
                                 ) {
                                     cols.forEach { c -> Box(modifier = Modifier.weight(1f).height(18.dp).background(c)) }
                                 }
                                 Spacer(Modifier.height(4.dp))
-                                Text(name, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                Text(name, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
                             }
                         }
                     }
@@ -132,7 +132,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(20.dp))
         SectionLabel("Default currency")
         StickerCard(
-            bgColor = TrackerColors.PaperWhite,
+            bgColor = CoinageColors.PaperWhite,
             modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
             cornerRadius = 16.dp,
         ) {
@@ -142,7 +142,7 @@ fun SettingsScreen(
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 0.3.sp,
-                    color = TrackerColors.Ink2.copy(alpha = 0.6f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.6f),
                 )
                 Spacer(Modifier.height(12.dp))
                 FlowRow(
@@ -155,14 +155,14 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .then(if (isSelected) Modifier.popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp) else Modifier)
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(if (isSelected) TrackerColors.Butter else TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                                .border(if (isSelected) 1.8.dp else 1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                .background(if (isSelected) CoinageColors.Butter else CoinageColors.Paper2, RoundedCornerShape(999.dp))
+                                .border(if (isSelected) 1.8.dp else 1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                 .clickable { viewModel.onAction(SettingsAction.OnCurrencyChange(code)) }
                                 .padding(horizontal = 12.dp, vertical = 6.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(symbol, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                Text(code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink)
+                                Text(symbol, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                                Text(code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink)
                             }
                         }
                     }
@@ -181,10 +181,10 @@ fun SettingsScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
                         .background(
-                            if (state.isRefreshingRates) TrackerColors.Paper2 else TrackerColors.Mint.copy(alpha = 0.2f),
+                            if (state.isRefreshingRates) CoinageColors.Paper2 else CoinageColors.Mint.copy(alpha = 0.2f),
                             RoundedCornerShape(999.dp),
                         )
-                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                        .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                         .clickable(enabled = !state.isRefreshingRates) {
                             viewModel.onAction(SettingsAction.OnRefreshRates)
                         }
@@ -194,10 +194,10 @@ fun SettingsScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(12.dp),
                             strokeWidth = 1.5.dp,
-                            color = TrackerColors.Ink,
+                            color = CoinageColors.Ink,
                         )
                     } else {
-                        Text("Refresh", fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                        Text("Refresh", fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
                     }
                 }
             }
@@ -206,7 +206,7 @@ fun SettingsScreen(
                     text = state.ratesError!!,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Cherry,
+                    color = CoinageColors.Cherry,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                 )
             }
@@ -217,13 +217,13 @@ fun SettingsScreen(
         SectionLabel("General")
         Column(modifier = Modifier.padding(horizontal = 22.dp)) {
             SettingsRow(label = "Week starts on") {
-                PillGroup(selected = "Mon", options = listOf("Sun", "Mon"), color = TrackerColors.Sky) {}
+                PillGroup(selected = "Mon", options = listOf("Sun", "Mon"), color = CoinageColors.Sky) {}
             }
             SettingsRow(label = "Round-up saves", hint = "dump extra cents into your top goal") {
-                TrackerToggle(on = roundUpEnabled, color = TrackerColors.Tangerine) { roundUpEnabled = !roundUpEnabled }
+                CoinageToggle(on = roundUpEnabled, color = CoinageColors.Tangerine) { roundUpEnabled = !roundUpEnabled }
             }
-            SettingsRow(label = "Voice", hint = "how Tracker talks to you") {
-                PillGroup(selected = voice, options = listOf("Hype", "Wise sibling", "Deadpan"), color = TrackerColors.Coral) { voice = it }
+            SettingsRow(label = "Voice", hint = "how Coinage talks to you") {
+                PillGroup(selected = voice, options = listOf("Hype", "Wise sibling", "Deadpan"), color = CoinageColors.Coral) { voice = it }
             }
         }
 
@@ -232,10 +232,10 @@ fun SettingsScreen(
         SectionLabel("Privacy & sync")
         Column(modifier = Modifier.padding(horizontal = 22.dp)) {
             SettingsRow(label = "Unlock with Face ID", hint = "required on cold launch") {
-                TrackerToggle(on = biometric, color = TrackerColors.Mint) { biometric = !biometric }
+                CoinageToggle(on = biometric, color = CoinageColors.Mint) { biometric = !biometric }
             }
             SettingsRow(label = "AI assistant", hint = "auto-categorize · monthly write-up") {
-                TrackerToggle(on = aiEnabled, color = TrackerColors.Grape) { aiEnabled = !aiEnabled }
+                CoinageToggle(on = aiEnabled, color = CoinageColors.Grape) { aiEnabled = !aiEnabled }
             }
         }
 
@@ -252,23 +252,23 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .popShadow(cornerRadius = 14.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(TrackerColors.Ink)
-                .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(14.dp))
+                .background(CoinageColors.Ink)
+                .border(1.8.dp, CoinageColors.Ink, RoundedCornerShape(14.dp))
                 .padding(14.dp),
         ) {
             Column {
-                Text("Danger zone".uppercase(), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Butter)
+                Text("Danger zone".uppercase(), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Butter)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     listOf("Export data", "Reset month", "Delete everything").forEachIndexed { i, label ->
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(if (i == 2) TrackerColors.Cherry else TrackerColors.Paper)
-                                .border(1.4.dp, TrackerColors.Paper, RoundedCornerShape(999.dp))
+                                .background(if (i == 2) CoinageColors.Cherry else CoinageColors.Paper)
+                                .border(1.4.dp, CoinageColors.Paper, RoundedCornerShape(999.dp))
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
-                            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (i == 2) TrackerColors.Paper else TrackerColors.Ink)
+                            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (i == 2) CoinageColors.Paper else CoinageColors.Ink)
                         }
                     }
                 }
@@ -278,11 +278,11 @@ fun SettingsScreen(
         // Sheet URL dialog
         state.sheetUrl?.let { url ->
             val clipboard = LocalClipboardManager.current
-            TrackerDialog(
+            CoinageDialog(
                 title = "Synced to Sheets",
                 onDismissRequest = { viewModel.onAction(SettingsAction.DismissSheetUrl) },
                 confirmLabel = "Copy link",
-                confirmColor = TrackerColors.Mint,
+                confirmColor = CoinageColors.Mint,
                 onConfirm = {
                     clipboard.setText(AnnotatedString(url))
                     viewModel.onAction(SettingsAction.DismissSheetUrl)
@@ -294,7 +294,7 @@ fun SettingsScreen(
                     text = url,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2,
+                    color = CoinageColors.Ink2,
                     lineHeight = 16.sp,
                 )
             }
@@ -303,12 +303,12 @@ fun SettingsScreen(
         // Footer
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "Tracker 1.0 · build 26.05 · made with care",
+            text = "Coinage 1.0 · build 26.05 · made with care",
             modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp),
             fontSize = 10.sp,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 1.sp,
-            color = TrackerColors.Ink2.copy(alpha = 0.5f),
+            color = CoinageColors.Ink2.copy(alpha = 0.5f),
         )
         Spacer(Modifier.height(8.dp))
     }
@@ -322,7 +322,7 @@ private fun SectionLabel(label: String) {
         fontSize = 10.5.sp,
         fontFamily = FontFamily.Monospace,
         letterSpacing = 1.4.sp,
-        color = TrackerColors.Ink2.copy(alpha = 0.65f),
+        color = CoinageColors.Ink2.copy(alpha = 0.65f),
     )
 }
 
@@ -339,13 +339,13 @@ private fun SettingsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
-            if (hint != null) Text(hint, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f), modifier = Modifier.padding(top = 1.dp))
+            Text(label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
+            if (hint != null) Text(hint, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.6f), modifier = Modifier.padding(top = 1.dp))
         }
         Spacer(Modifier.width(12.dp))
         control()
     }
-    val dashColor = TrackerColors.Ink.copy(alpha = 0.18f)
+    val dashColor = CoinageColors.Ink.copy(alpha = 0.18f)
     Canvas(modifier = Modifier.fillMaxWidth().height(1.3.dp)) {
         drawLine(
             color = dashColor,
@@ -358,16 +358,16 @@ private fun SettingsRow(
 }
 
 @Composable
-private fun TrackerToggle(on: Boolean, color: Color, onTap: () -> Unit) {
+private fun CoinageToggle(on: Boolean, color: Color, onTap: () -> Unit) {
     val thumbX by animateDpAsState(targetValue = if (on) 24.dp else 2.dp, animationSpec = tween(180), label = "thumb")
-    val bgColor by animateColorAsState(targetValue = if (on) color else TrackerColors.Paper2, animationSpec = tween(180), label = "bg")
+    val bgColor by animateColorAsState(targetValue = if (on) color else CoinageColors.Paper2, animationSpec = tween(180), label = "bg")
     Box(
         modifier = Modifier
             .size(48.dp, 28.dp)
             .popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp)
             .clip(RoundedCornerShape(999.dp))
             .background(bgColor)
-            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .clickable(onClick = onTap),
     ) {
         Box(
@@ -375,8 +375,8 @@ private fun TrackerToggle(on: Boolean, color: Color, onTap: () -> Unit) {
                 .size(20.dp)
                 .offset(x = thumbX, y = 2.dp)
                 .clip(CircleShape)
-                .background(TrackerColors.Paper, CircleShape)
-                .border(1.4.dp, TrackerColors.Ink, CircleShape),
+                .background(CoinageColors.Paper, CircleShape)
+                .border(1.4.dp, CoinageColors.Ink, CircleShape),
         )
     }
 }
@@ -390,12 +390,12 @@ private fun PillGroup(selected: String, options: List<String>, color: Color, onS
                 modifier = Modifier
                     .then(if (isSelected) Modifier.popShadow(cornerRadius = 999.dp, offsetX = 1.5.dp, offsetY = 2.dp) else Modifier)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (isSelected) color else TrackerColors.Paper)
-                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                    .background(if (isSelected) color else CoinageColors.Paper)
+                    .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                     .clickable { onSelect(opt) }
                     .padding(horizontal = 9.dp, vertical = 4.dp),
             ) {
-                Text(opt, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                Text(opt, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
             }
         }
     }

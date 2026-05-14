@@ -35,9 +35,9 @@ import com.tawandachiteshe.coinage.MainActivity
 import com.tawandachiteshe.coinage.data.GoogleAuthRepositoryImpl
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerDialog
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
 import com.tawandachiteshe.coinage.ui.components.popShadow
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -71,11 +71,11 @@ actual fun GoogleConnectSection(
 
     // Restore confirm dialog
     if (state.showRestoreConfirm) {
-        TrackerDialog(
+        CoinageDialog(
             title = "Replace all data?",
             onDismissRequest = { onAction(SettingsAction.DismissRestoreConfirm) },
             confirmLabel = "Replace",
-            confirmColor = TrackerColors.Cherry,
+            confirmColor = CoinageColors.Cherry,
             onConfirm = { onAction(SettingsAction.OnConfirmRestore) },
             dismissLabel = "Cancel",
             onDismiss = { onAction(SettingsAction.DismissRestoreConfirm) },
@@ -83,13 +83,13 @@ actual fun GoogleConnectSection(
             Text(
                 "This will delete everything on this device and replace it with your Drive backup. This cannot be undone.",
                 fontSize = 13.sp,
-                color = TrackerColors.Ink2,
+                color = CoinageColors.Ink2,
             )
         }
     }
 
     StickerCard(
-        bgColor = TrackerColors.PaperWhite,
+        bgColor = CoinageColors.PaperWhite,
         modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
         cornerRadius = 16.dp,
     ) {
@@ -99,29 +99,29 @@ actual fun GoogleConnectSection(
                 Box(modifier = Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                     Box(
                         modifier = Modifier.size(32.dp).clip(CircleShape)
-                            .background(TrackerColors.Butter).border(1.4.dp, TrackerColors.Ink, CircleShape)
+                            .background(CoinageColors.Butter).border(1.4.dp, CoinageColors.Ink, CircleShape)
                     )
-                    Text("G", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink)
+                    Text("G", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = CoinageColors.Ink)
                 }
                 Spacer(Modifier.width(10.dp))
                 Column {
-                    Text("Google Drive", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                    Text("Google Drive", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                     Text(
                         if (isConnected) "backup & spreadsheet sync" else "back up your data to Drive",
                         fontSize = 10.5.sp,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 0.3.sp,
-                        color = TrackerColors.Ink2.copy(alpha = 0.6f),
+                        color = CoinageColors.Ink2.copy(alpha = 0.6f),
                     )
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (isConnected) TrackerColors.Mint.copy(alpha = 0.25f) else TrackerColors.Paper2)
+                        .background(if (isConnected) CoinageColors.Mint.copy(alpha = 0.25f) else CoinageColors.Paper2)
                         .border(
                             1.2.dp,
-                            if (isConnected) TrackerColors.Mint else TrackerColors.Ink.copy(alpha = 0.3f),
+                            if (isConnected) CoinageColors.Mint else CoinageColors.Ink.copy(alpha = 0.3f),
                             RoundedCornerShape(999.dp),
                         )
                         .padding(horizontal = 8.dp, vertical = 3.dp),
@@ -131,7 +131,7 @@ actual fun GoogleConnectSection(
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 0.5.sp,
-                        color = if (isConnected) TrackerColors.Mint else TrackerColors.Ink2.copy(alpha = 0.5f),
+                        color = if (isConnected) CoinageColors.Mint else CoinageColors.Ink2.copy(alpha = 0.5f),
                     )
                 }
             }
@@ -143,7 +143,7 @@ actual fun GoogleConnectSection(
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     fontStyle = FontStyle.Italic,
-                    color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.55f),
                     modifier = Modifier.padding(start = 42.dp),
                 )
             }
@@ -155,7 +155,7 @@ actual fun GoogleConnectSection(
                     "Last backup: ${info.modifiedAt.toBackupLabel()} · ${info.sizeBytes.toSizeLabel()}",
                     fontSize = 9.5.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2.copy(alpha = 0.5f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.5f),
                     modifier = Modifier.padding(start = 42.dp),
                 )
             }
@@ -167,7 +167,7 @@ actual fun GoogleConnectSection(
                     err,
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Cherry,
+                    color = CoinageColors.Cherry,
                     modifier = Modifier.padding(start = 42.dp)
                         .clickable { onAction(SettingsAction.DismissBackupError) },
                 )
@@ -179,25 +179,25 @@ actual fun GoogleConnectSection(
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = TrackerColors.Grape,
+                        color = CoinageColors.Grape,
                         strokeWidth = 2.5.dp,
                     )
                 }
             } else if (isConnected) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DriveActionChip("Backup", TrackerColors.Grape, modifier = Modifier.weight(1f)) {
+                    DriveActionChip("Backup", CoinageColors.Grape, modifier = Modifier.weight(1f)) {
                         onAction(SettingsAction.OnBackupNow)
                     }
-                    DriveActionChip("Restore", TrackerColors.Sky, modifier = Modifier.weight(1f)) {
+                    DriveActionChip("Restore", CoinageColors.Sky, modifier = Modifier.weight(1f)) {
                         onAction(SettingsAction.OnRestoreFromDrive)
                     }
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DriveActionChip("Sheets", TrackerColors.Mint, modifier = Modifier.weight(1f)) {
+                    DriveActionChip("Sheets", CoinageColors.Mint, modifier = Modifier.weight(1f)) {
                         onAction(SettingsAction.OnSyncToSheets)
                     }
-                    DriveActionChip("Disconnect", TrackerColors.Paper2) {
+                    DriveActionChip("Disconnect", CoinageColors.Paper2) {
                         scope.launch {
                             impl.signOut()
                             onAction(SettingsAction.RefreshGoogleState)
@@ -207,7 +207,7 @@ actual fun GoogleConnectSection(
             } else {
                 DriveActionChip(
                     label = "Connect Google account",
-                    color = TrackerColors.Butter,
+                    color = CoinageColors.Butter,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     scope.launch {
@@ -249,12 +249,12 @@ private fun DriveActionChip(
             .popShadow(cornerRadius = 10.dp, offsetX = 2.dp, offsetY = 2.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(color, RoundedCornerShape(10.dp))
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(10.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 9.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
     }
 }
 

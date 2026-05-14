@@ -110,17 +110,23 @@ object ReceiptParser {
 
     // ─── Amount ──────────────────────────────────────────────────────────────
 
-    // Matches amounts with optional currency prefix; accepts 0–2 decimal places,
-    // comma or dot as decimal separator, and optional thousands grouping.
+    // Alt 1 (tried first — more specific): space-grouped thousands, currency symbol required.
+    //   Handles "R 8 999,00" common on SA receipts. Currency required to avoid false
+    //   positives on phone numbers like "011 555 1234".
+    // Alt 2: standard dot/comma separators, currency symbol optional.
     private val AMOUNT_REGEX = Regex(
-        """[${'$'}R£€¥₹]?\s*(\d{1,6}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)(?!\d)"""
+        """[${'$'}R£€¥₹]\s*(\d{1,3}(?:\s\d{3})+(?:[.,]\d{1,2})?)(?!\d)""" +
+        """|[${'$'}R£€¥₹]?\s*(\d{1,6}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)(?!\d)"""
     )
 
-    // Lines whose amount we should never treat as the receipt total
+    // Lines whose amount we should never treat as the receipt total.
+    // NOTE: high-confidence total lines (TOTAL_HIGH) are never skipped even if they
+    // contain these words (e.g. "TOTAL INCL VAT" contains "vat").
     private val SKIP_AMOUNT_LINES = listOf(
         "cash", "change", "tendered", "card", "visa", "mastercard",
-        "discount", "saving", "points", "loyalty", "vat", "tax",
-        "item", "qty", "price each", "per unit",
+        "discount", "saving", "points", "loyalty",
+        "vat excl", "tax excl",          // standalone VAT/tax lines, not "total incl vat"
+        "qty", "price each", "per unit",
     )
 
     // High-confidence total keywords (score 100)
@@ -143,10 +149,15 @@ object ReceiptParser {
 
         lines.forEachIndexed { idx, line ->
             val lower = line.lowercase()
-            if (SKIP_AMOUNT_LINES.any { lower.contains(it) }) return@forEachIndexed
+            val isHighConfidence = TOTAL_HIGH.any { lower.contains(it) }
+            // TOTAL_HIGH lines are never skipped — "TOTAL INCL VAT" contains "vat" but is the real total.
+            if (!isHighConfidence && SKIP_AMOUNT_LINES.any { lower.contains(it) }) return@forEachIndexed
 
             val amounts = AMOUNT_REGEX.findAll(line)
-                .mapNotNull { normalizeAmount(it.groupValues[1]) }
+                .mapNotNull { m ->
+                    // groupValues[1] = alt-1 (standard), groupValues[2] = alt-2 (space-grouped)
+                    normalizeAmount(m.groupValues[1].ifEmpty { m.groupValues[2] })
+                }
                 .filter { it > 0.0 }
                 .toList()
             if (amounts.isEmpty()) return@forEachIndexed

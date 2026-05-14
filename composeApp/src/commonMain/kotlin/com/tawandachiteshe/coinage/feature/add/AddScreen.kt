@@ -43,9 +43,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.feature.scan.ScanReceiptButton
-import com.tawandachiteshe.coinage.ui.components.TrackerTextField
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.components.CoinageTextField
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -87,8 +87,8 @@ fun AddScreen(
                 .fillMaxHeight(0.92f)
                 .align(Alignment.BottomCenter)
                 .clip(sheetShape)
-                .background(TrackerColors.Paper, sheetShape)
-                .border(2.dp, TrackerColors.Ink, sheetShape)
+                .background(CoinageColors.Paper, sheetShape)
+                .border(2.dp, CoinageColors.Ink, sheetShape)
                 .pointerInput(Unit) {},
         ) {
             // Scrollable form content
@@ -105,7 +105,7 @@ fun AddScreen(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .size(36.dp, 3.dp)
-                        .background(TrackerColors.Ink.copy(alpha = 0.2f), RoundedCornerShape(999.dp)),
+                        .background(CoinageColors.Ink.copy(alpha = 0.2f), RoundedCornerShape(999.dp)),
                 )
 
                 // Header
@@ -115,13 +115,13 @@ fun AddScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("New ", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                        Text("New ", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                         Text(
                             text = state.addType.name.lowercase() + ".",
                             fontSize = 26.sp,
                             fontStyle = FontStyle.Italic,
                             fontFamily = FontFamily.Serif,
-                            color = TrackerColors.Tangerine,
+                            color = CoinageColors.Tangerine,
                         )
                     }
                     Row(
@@ -139,12 +139,12 @@ fun AddScreen(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                .background(CoinageColors.Paper2, RoundedCornerShape(999.dp))
+                                .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                 .clickable(onClick = onDismiss),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(TrackerIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
+                            Icon(CoinageIcons.X, contentDescription = "Close", modifier = Modifier.size(14.dp), tint = CoinageColors.Ink)
                         }
                     }
                 }
@@ -163,7 +163,7 @@ fun AddScreen(
                     Text(
                         text = state.error!!,
                         fontSize = 13.sp,
-                        color = TrackerColors.Cherry,
+                        color = CoinageColors.Cherry,
                         fontFamily = FontFamily.Monospace,
                     )
                 }
@@ -173,12 +173,12 @@ fun AddScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TrackerColors.Paper)
+                    .background(CoinageColors.Paper)
                     .padding(horizontal = 22.dp, vertical = 12.dp)
                     .navigationBarsPadding(),
             ) {
                 StickerCard(
-                    bgColor = TrackerColors.Tangerine,
+                    bgColor = CoinageColors.Tangerine,
                     modifier = Modifier.fillMaxWidth(),
                     cornerRadius = 16.dp,
                     borderWidth = 2.dp,
@@ -193,9 +193,9 @@ fun AddScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(TrackerIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink)
+                            Icon(CoinageIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = CoinageColors.Ink)
                             Spacer(Modifier.width(8.dp))
-                            Text(if (state.isLoading) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                            Text(if (state.isLoading) "Saving…" else "Save", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                         }
                     }
                 }
@@ -211,8 +211,8 @@ private fun TypePicker(selected: AddType, onSelect: (AddType) -> Unit) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .background(CoinageColors.Paper2, RoundedCornerShape(999.dp))
+            .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .padding(4.dp),
     ) {
         listOf(AddType.Transaction to "transaction", AddType.Goal to "goal", AddType.Debt to "debt").forEach { (type, label) ->
@@ -220,7 +220,7 @@ private fun TypePicker(selected: AddType, onSelect: (AddType) -> Unit) {
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(if (selected == type) TrackerColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
+                    .background(if (selected == type) CoinageColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
                     .clickable { onSelect(type) }
                     .padding(horizontal = 8.dp, vertical = 7.dp),
                 contentAlignment = Alignment.Center,
@@ -230,7 +230,7 @@ private fun TypePicker(selected: AddType, onSelect: (AddType) -> Unit) {
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = FontFamily.Monospace,
-                    color = if (selected == type) TrackerColors.Paper else TrackerColors.Ink,
+                    color = if (selected == type) CoinageColors.Paper else CoinageColors.Ink,
                 )
             }
         }
@@ -246,8 +246,8 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .background(CoinageColors.Paper2, RoundedCornerShape(999.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .padding(3.dp),
     ) {
         listOf(TxType.EXPENSE to "expense", TxType.INCOME to "income").forEach { (t, label) ->
@@ -256,7 +256,7 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
                     .weight(1f)
                     .clip(RoundedCornerShape(999.dp))
                     .background(
-                        if (state.txType == t) if (t == TxType.EXPENSE) TrackerColors.Cherry else TrackerColors.Mint
+                        if (state.txType == t) if (t == TxType.EXPENSE) CoinageColors.Cherry else CoinageColors.Mint
                         else Color.Transparent,
                         RoundedCornerShape(999.dp),
                     )
@@ -264,7 +264,7 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, color = if (state.txType == t) TrackerColors.Paper else TrackerColors.Ink)
+                Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, color = if (state.txType == t) CoinageColors.Paper else CoinageColors.Ink)
             }
         }
     }
@@ -279,7 +279,7 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
     }
 
     val currencySymbol = state.currencies.find { it.code == state.selectedCurrencyCode }?.symbol ?: "$"
-    TrackerTextField(
+    CoinageTextField(
         value = state.amount,
         onValueChange = { onAction(AddAction.OnAmountChange(it)) },
         label = "Amount",
@@ -288,7 +288,7 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
         modifier = Modifier.fillMaxWidth(),
     )
 
-    TrackerTextField(
+    CoinageTextField(
         value = state.merchant,
         onValueChange = { onAction(AddAction.OnMerchantChange(it)) },
         label = if (state.txType == TxType.INCOME) "From (payer / employer)" else "Merchant / description",
@@ -302,7 +302,7 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
     val sectionLabel = if (isIncome) "Source" else "Category"
 
     if (items.isNotEmpty()) {
-        Text(sectionLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+        Text(sectionLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = CoinageColors.Ink2.copy(alpha = 0.7f))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -312,8 +312,8 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (selected) TrackerColors.Ink else TrackerColors.PaperWhite, RoundedCornerShape(999.dp))
-                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                        .background(if (selected) CoinageColors.Ink else CoinageColors.PaperWhite, RoundedCornerShape(999.dp))
+                        .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                         .clickable {
                             if (isIncome) onAction(AddAction.OnSourceSelect(cat.id))
                             else onAction(AddAction.OnCategorySelect(cat.id))
@@ -321,16 +321,16 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = TrackerIcons.fromKey(cat.icon), contentDescription = null, modifier = Modifier.size(14.dp), tint = if (selected) TrackerColors.Paper else TrackerColors.Ink)
+                        Icon(imageVector = CoinageIcons.fromKey(cat.icon), contentDescription = null, modifier = Modifier.size(14.dp), tint = if (selected) CoinageColors.Paper else CoinageColors.Ink)
                         Spacer(Modifier.width(6.dp))
-                        Text(cat.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (selected) TrackerColors.Paper else TrackerColors.Ink)
+                        Text(cat.name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (selected) CoinageColors.Paper else CoinageColors.Ink)
                     }
                 }
             }
         }
     }
 
-    TrackerTextField(
+    CoinageTextField(
         value = state.notes,
         onValueChange = { onAction(AddAction.OnNotesChange(it)) },
         label = "Notes (optional)",
@@ -352,15 +352,15 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(999.dp))
-                    .background(TrackerColors.Mint.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
-                    .border(1.dp, TrackerColors.Mint, RoundedCornerShape(999.dp))
+                    .background(CoinageColors.Mint.copy(alpha = 0.2f), RoundedCornerShape(999.dp))
+                    .border(1.dp, CoinageColors.Mint, RoundedCornerShape(999.dp))
                     .padding(horizontal = 10.dp, vertical = 4.dp),
             ) {
                 Text(
                     text = "Receipt date: $label",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2,
+                    color = CoinageColors.Ink2,
                 )
             }
         }
@@ -371,13 +371,13 @@ private fun TransactionSheetContent(state: AddState, onAction: (AddAction) -> Un
 
 @Composable
 private fun GoalSheetContent(state: AddState, onAction: (AddAction) -> Unit) {
-    TrackerTextField(
+    CoinageTextField(
         value = state.goalName,
         onValueChange = { onAction(AddAction.OnGoalNameChange(it)) },
         label = "Goal name",
         modifier = Modifier.fillMaxWidth(),
     )
-    TrackerTextField(
+    CoinageTextField(
         value = state.goalTarget,
         onValueChange = { onAction(AddAction.OnGoalTargetChange(it)) },
         label = "Target amount",
@@ -391,19 +391,19 @@ private fun GoalSheetContent(state: AddState, onAction: (AddAction) -> Unit) {
 
 @Composable
 private fun DebtSheetContent(state: AddState, onAction: (AddAction) -> Unit) {
-    TrackerTextField(
+    CoinageTextField(
         value = state.debtCreditor,
         onValueChange = { onAction(AddAction.OnDebtCreditorChange(it)) },
         label = "Creditor name",
         modifier = Modifier.fillMaxWidth(),
     )
-    TrackerTextField(
+    CoinageTextField(
         value = state.debtType,
         onValueChange = { onAction(AddAction.OnDebtTypeChange(it)) },
         label = "Type (LOAN, CARD, STUDENT)",
         modifier = Modifier.fillMaxWidth(),
     )
-    TrackerTextField(
+    CoinageTextField(
         value = state.debtBalance,
         onValueChange = { onAction(AddAction.OnDebtBalanceChange(it)) },
         label = "Current balance",
@@ -411,14 +411,14 @@ private fun DebtSheetContent(state: AddState, onAction: (AddAction) -> Unit) {
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth(),
     )
-    TrackerTextField(
+    CoinageTextField(
         value = state.debtApr,
         onValueChange = { onAction(AddAction.OnDebtAprChange(it)) },
         label = "APR %",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = Modifier.fillMaxWidth(),
     )
-    TrackerTextField(
+    CoinageTextField(
         value = state.debtMinPayment,
         onValueChange = { onAction(AddAction.OnDebtMinPayChange(it)) },
         label = "Min monthly payment",
@@ -437,7 +437,7 @@ private fun CurrencyPicker(
     onSelect: (String) -> Unit,
 ) {
     Column {
-        Text("Currency".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+        Text("Currency".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = CoinageColors.Ink2.copy(alpha = 0.7f))
         Spacer(Modifier.height(6.dp))
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -448,15 +448,15 @@ private fun CurrencyPicker(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (isSelected) TrackerColors.Ink else TrackerColors.PaperWhite, RoundedCornerShape(999.dp))
-                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                        .background(if (isSelected) CoinageColors.Ink else CoinageColors.PaperWhite, RoundedCornerShape(999.dp))
+                        .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                         .clickable { onSelect(currency.code) }
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(currency.symbol, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (isSelected) TrackerColors.Paper else TrackerColors.Ink)
+                        Text(currency.symbol, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = if (isSelected) CoinageColors.Paper else CoinageColors.Ink)
                         Spacer(Modifier.width(4.dp))
-                        Text(currency.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.5.sp, color = if (isSelected) TrackerColors.Paper.copy(alpha = 0.8f) else TrackerColors.Ink2)
+                        Text(currency.code, fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.5.sp, color = if (isSelected) CoinageColors.Paper.copy(alpha = 0.8f) else CoinageColors.Ink2)
                     }
                 }
             }

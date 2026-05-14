@@ -40,22 +40,22 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.ui.components.PageHeader
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerDialog
-import com.tawandachiteshe.coinage.ui.components.TrackerTextField
-import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
-import com.tawandachiteshe.coinage.ui.components.TrackerTab
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
+import com.tawandachiteshe.coinage.ui.components.CoinageTextField
+import com.tawandachiteshe.coinage.ui.components.CoinageScaffold
+import com.tawandachiteshe.coinage.ui.components.CoinageTab
 import com.tawandachiteshe.coinage.ui.components.popShadow
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 import org.koin.compose.viewmodel.koinViewModel
 
-private val DEBT_COLORS = listOf(TrackerColors.Cherry, TrackerColors.Grape, TrackerColors.Coral, TrackerColors.Sky)
+private val DEBT_COLORS = listOf(CoinageColors.Cherry, CoinageColors.Grape, CoinageColors.Coral, CoinageColors.Sky)
 private val DEBT_TILTS  = listOf(-0.8f, 0.6f, -1.2f, 0.4f)
-private val IOU_COLORS  = listOf(TrackerColors.Sky, TrackerColors.Mint, TrackerColors.Grape, TrackerColors.Butter)
+private val IOU_COLORS  = listOf(CoinageColors.Sky, CoinageColors.Mint, CoinageColors.Grape, CoinageColors.Butter)
 
 @Composable
 fun DebtScreen(
-    onTabClick: (TrackerTab) -> Unit,
+    onTabClick: (CoinageTab) -> Unit,
     onAddClick: () -> Unit,
     viewModel: DebtViewModel = koinViewModel(),
     iouViewModel: IouViewModel = koinViewModel(),
@@ -82,13 +82,13 @@ fun DebtScreen(
     val totalOwed = state.totalOwed
     val totalOrig = state.debts.sumOf { it.principal }
 
-    TrackerScaffold(activeTab = TrackerTab.Debt, onTabClick = onTabClick, onAddClick = onAddClick) {
+    CoinageScaffold(activeTab = CoinageTab.Debt, onTabClick = onTabClick, onAddClick = onAddClick) {
 
         PageHeader(
             eyebrow = if (showIous) "${iouState.ious.size} people owe you" else "$paidPct% climbed",
             title = if (showIous) "Owe" else "The",
             italicWord = if (showIous) "me." else "mountain.",
-            accent = if (showIous) TrackerColors.Sky else TrackerColors.Cherry,
+            accent = if (showIous) CoinageColors.Sky else CoinageColors.Cherry,
             kicker = if (showIous) "Track loans to friends and family. Mark payments as they come in."
                      else "One step at a time. Smallest first — momentum compounds.",
         )
@@ -98,8 +98,8 @@ fun DebtScreen(
         Row(
             modifier = Modifier.padding(horizontal = 22.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(TrackerColors.Paper2)
-                .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp))
+                .background(CoinageColors.Paper2)
+                .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(12.dp))
                 .padding(3.dp),
         ) {
             listOf("I Owe" to false, "Owe Me" to true).forEach { (label, isIou) ->
@@ -107,7 +107,7 @@ fun DebtScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (showIous == isIou) TrackerColors.Ink else TrackerColors.Paper2)
+                        .background(if (showIous == isIou) CoinageColors.Ink else CoinageColors.Paper2)
                         .clickable { showIous = isIou }
                         .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center,
@@ -116,7 +116,7 @@ fun DebtScreen(
                         label,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (showIous == isIou) TrackerColors.Paper else TrackerColors.Ink2,
+                        color = if (showIous == isIou) CoinageColors.Paper else CoinageColors.Ink2,
                     )
                 }
             }
@@ -131,40 +131,40 @@ fun DebtScreen(
                     .fillMaxWidth()
                     .popShadow(cornerRadius = 22.dp, offsetX = 4.dp, offsetY = 5.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(TrackerColors.Ink, RoundedCornerShape(22.dp))
+                    .background(CoinageColors.Ink, RoundedCornerShape(22.dp))
                     .padding(18.dp),
             ) {
                 Column {
-                    Text("Total left to climb", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Butter)
+                    Text("Total left to climb", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Butter)
                     Spacer(Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("$", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
-                        Text(totalOwed.fmtWhole(), fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 46.sp, color = TrackerColors.Paper)
+                        Text("$", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Paper.copy(alpha = 0.7f))
+                        Text(totalOwed.fmtWhole(), fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 46.sp, color = CoinageColors.Paper)
                     }
-                    Text("down from \$${totalOrig.fmtWhole()} · keep going.", fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Paper.copy(alpha = 0.75f))
+                    Text("down from \$${totalOrig.fmtWhole()} · keep going.", fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = CoinageColors.Paper.copy(alpha = 0.75f))
                     Spacer(Modifier.height(12.dp))
                     MountainVisual(paidPct = paidPct, modifier = Modifier.fillMaxWidth().height(100.dp))
                     Spacer(Modifier.height(6.dp))
                     Box(
                         modifier = Modifier.fillMaxWidth().height(12.dp)
                             .clip(RoundedCornerShape(999.dp))
-                            .background(TrackerColors.Paper.copy(alpha = 0.12f))
-                            .border(1.4.dp, TrackerColors.Paper, RoundedCornerShape(999.dp)),
+                            .background(CoinageColors.Paper.copy(alpha = 0.12f))
+                            .border(1.4.dp, CoinageColors.Paper, RoundedCornerShape(999.dp)),
                     ) {
-                        Box(Modifier.fillMaxWidth(fraction = paidPct / 100f).height(12.dp).background(TrackerColors.Mint))
+                        Box(Modifier.fillMaxWidth(fraction = paidPct / 100f).height(12.dp).background(CoinageColors.Mint))
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("\$0 paid", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
-                        Text("$paidPct%", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
-                        Text("\$${totalOrig.fmtWhole()}", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Paper.copy(alpha = 0.55f))
+                        Text("\$0 paid", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Paper.copy(alpha = 0.55f))
+                        Text("$paidPct%", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Paper.copy(alpha = 0.55f))
+                        Text("\$${totalOrig.fmtWhole()}", fontSize = 9.5.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Paper.copy(alpha = 0.55f))
                     }
                 }
             }
 
             Spacer(Modifier.height(20.dp))
             StickerCard(
-                bgColor = TrackerColors.Mint,
+                bgColor = CoinageColors.Mint,
                 modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth().rotate(-0.6f),
                 cornerRadius = 16.dp, borderWidth = 1.8.dp,
             ) {
@@ -172,29 +172,29 @@ fun DebtScreen(
                     Box(
                         modifier = Modifier.size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(TrackerColors.Paper, RoundedCornerShape(10.dp))
-                            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(10.dp)),
+                            .background(CoinageColors.Paper, RoundedCornerShape(10.dp))
+                            .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center,
-                    ) { Icon(TrackerIcons.Snowflake, contentDescription = null, modifier = Modifier.size(18.dp), tint = TrackerColors.Ink) }
+                    ) { Icon(CoinageIcons.Snowflake, contentDescription = null, modifier = Modifier.size(18.dp), tint = CoinageColors.Ink) }
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             if (state.isSnowball) "Snowball plan · pay smallest first" else "Avalanche plan · pay highest APR first",
-                            fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink,
+                            fontSize = 14.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink,
                         )
                         Text(
                             "${state.debts.size} debt${if (state.debts.size != 1) "s" else ""} tracked",
-                            fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f),
+                            fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.65f),
                         )
                     }
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
-                            .background(TrackerColors.Paper)
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .background(CoinageColors.Paper)
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                             .clickable { viewModel.onAction(DebtAction.OnToggleOrder) }
                             .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) { Text("toggle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink) }
+                    ) { Text("toggle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink) }
                 }
             }
 
@@ -204,33 +204,33 @@ fun DebtScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 if (state.debts.isEmpty() && !state.isLoading) {
-                    Text("No debts yet — add one below.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 8.dp))
+                    Text("No debts yet — add one below.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 8.dp))
                 }
                 state.debts.forEachIndexed { i, debt ->
                     val color = DEBT_COLORS[i % DEBT_COLORS.size]
                     val tilt = DEBT_TILTS[i % DEBT_TILTS.size]
                     val almostDone = debt.pctPaid >= 80f
-                    StickerCard(bgColor = TrackerColors.PaperWhite, modifier = Modifier.fillMaxWidth(), tilt = tilt, cornerRadius = 16.dp, borderWidth = 1.8.dp) {
+                    StickerCard(bgColor = CoinageColors.PaperWhite, modifier = Modifier.fillMaxWidth(), tilt = tilt, cornerRadius = 16.dp, borderWidth = 1.8.dp) {
                         Box(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
                             if (almostDone) {
-                                Box(modifier = Modifier.align(Alignment.TopEnd).rotate(-8f).border(1.5.dp, TrackerColors.Mint, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                    Text("almost!", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Mint, letterSpacing = 1.2.sp)
+                                Box(modifier = Modifier.align(Alignment.TopEnd).rotate(-8f).border(1.5.dp, CoinageColors.Mint, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Text("almost!", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = CoinageColors.Mint, letterSpacing = 1.2.sp)
                                 }
                             }
                             Row {
-                                Box(modifier = Modifier.width(8.dp).height(120.dp).clip(RoundedCornerShape(4.dp)).background(color).border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(4.dp)))
+                                Box(modifier = Modifier.width(8.dp).height(120.dp).clip(RoundedCornerShape(4.dp)).background(color).border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(4.dp)))
                                 Spacer(Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(debt.creditorName, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                    Text("${debt.debtType} · ${debt.interestRate}% APR", fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                                    Text(debt.creditorName, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                                    Text("${debt.debtType} · ${debt.interestRate}% APR", fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.65f))
                                     Spacer(Modifier.height(10.dp))
                                     Row(verticalAlignment = Alignment.Bottom) {
-                                        Text("\$${debt.currentBalance.fmtWhole()}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                                        Text("\$${debt.currentBalance.fmtWhole()}", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("of \$${debt.principal.fmtWhole()} left", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.55f))
+                                        Text("of \$${debt.principal.fmtWhole()} left", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.55f))
                                     }
                                     Spacer(Modifier.height(8.dp))
-                                    Box(modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(999.dp)).background(TrackerColors.Paper2).border(1.3.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))) {
+                                    Box(modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(999.dp)).background(CoinageColors.Paper2).border(1.3.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))) {
                                         Box(Modifier.fillMaxWidth(debt.pctPaid / 100f).height(10.dp).background(color))
                                     }
                                     Spacer(Modifier.height(8.dp))
@@ -240,15 +240,15 @@ fun DebtScreen(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
                                         Box(
-                                            modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(TrackerColors.Butter).border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                            modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(CoinageColors.Butter).border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                                 .clickable { pendingDebtPayment = debt to debt.minimumPayment }
                                                 .padding(horizontal = 11.dp, vertical = 5.dp),
-                                        ) { Text("Min \$${debt.minimumPayment.fmtWhole()}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink) }
+                                        ) { Text("Min \$${debt.minimumPayment.fmtWhole()}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink) }
                                         Box(
-                                            modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(TrackerColors.Paper2).border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                            modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(CoinageColors.Paper2).border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                                 .clickable { customDebtEntry = debt; customDebtAmount = "" }
                                                 .padding(horizontal = 11.dp, vertical = 5.dp),
-                                        ) { Text("Custom…", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink) }
+                                        ) { Text("Custom…", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink) }
                                     }
                                 }
                             }
@@ -256,13 +256,13 @@ fun DebtScreen(
                     }
                 }
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(64.dp).border(2.dp, TrackerColors.Ink, RoundedCornerShape(16.dp)).clickable { showAddDebtDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(64.dp).border(2.dp, CoinageColors.Ink, RoundedCornerShape(16.dp)).clickable { showAddDebtDialog = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("+", fontSize = 22.sp, lineHeight = 22.sp, color = TrackerColors.Ink2)
+                        Text("+", fontSize = 22.sp, lineHeight = 22.sp, color = CoinageColors.Ink2)
                         Spacer(Modifier.width(10.dp))
-                        Text("Add a debt", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink2)
+                        Text("Add a debt", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink2)
                     }
                 }
             }
@@ -276,19 +276,19 @@ fun DebtScreen(
                     .fillMaxWidth()
                     .popShadow(cornerRadius = 22.dp, offsetX = 4.dp, offsetY = 5.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(TrackerColors.Ink, RoundedCornerShape(22.dp))
+                    .background(CoinageColors.Ink, RoundedCornerShape(22.dp))
                     .padding(18.dp),
             ) {
                 Column {
-                    Text("Total outstanding", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Sky)
+                    Text("Total outstanding", fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Sky)
                     Spacer(Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("$", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Paper.copy(alpha = 0.7f))
-                        Text(iouState.totalOutstanding.fmtWhole(), fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 46.sp, color = TrackerColors.Paper)
+                        Text("$", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Paper.copy(alpha = 0.7f))
+                        Text(iouState.totalOutstanding.fmtWhole(), fontSize = 48.sp, fontWeight = FontWeight.Bold, lineHeight = 46.sp, color = CoinageColors.Paper)
                     }
                     Text(
                         "${iouState.ious.count { !it.isSettled }} outstanding · ${iouState.ious.count { it.isSettled }} settled",
-                        fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Paper.copy(alpha = 0.75f),
+                        fontSize = 15.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = CoinageColors.Paper.copy(alpha = 0.75f),
                     )
                 }
             }
@@ -299,13 +299,13 @@ fun DebtScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 if (iouState.ious.isEmpty() && !iouState.isLoading) {
-                    Text("Nobody owes you yet — add one below.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Nobody owes you yet — add one below.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.55f), modifier = Modifier.padding(vertical = 8.dp))
                 }
                 iouState.ious.forEachIndexed { i, iou ->
                     val color = IOU_COLORS[i % IOU_COLORS.size]
                     val tilt = DEBT_TILTS[i % DEBT_TILTS.size]
                     StickerCard(
-                        bgColor = if (iou.isSettled) TrackerColors.Paper2 else TrackerColors.PaperWhite,
+                        bgColor = if (iou.isSettled) CoinageColors.Paper2 else CoinageColors.PaperWhite,
                         modifier = Modifier.fillMaxWidth(),
                         tilt = tilt,
                         cornerRadius = 16.dp,
@@ -313,35 +313,35 @@ fun DebtScreen(
                     ) {
                         Box(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
                             if (iou.isSettled) {
-                                Box(modifier = Modifier.align(Alignment.TopEnd).rotate(-8f).border(1.5.dp, TrackerColors.Mint, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                    Text("settled ✓", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Mint, letterSpacing = 1.2.sp)
+                                Box(modifier = Modifier.align(Alignment.TopEnd).rotate(-8f).border(1.5.dp, CoinageColors.Mint, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Text("settled ✓", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = CoinageColors.Mint, letterSpacing = 1.2.sp)
                                 }
                             }
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Box(
                                         modifier = Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
-                                            .background(color).border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
+                                            .background(color).border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(12.dp)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             iou.personName.take(1).uppercase(),
-                                            fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Ink,
+                                            fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = CoinageColors.Ink,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(iou.personName, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                                        if (iou.categoryName != null) Text(iou.categoryName, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Sky.copy(alpha = 0.85f), fontWeight = FontWeight.SemiBold)
-                                        if (iou.notes != null) Text(iou.notes, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                                        Text(iou.personName, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                                        if (iou.categoryName != null) Text(iou.categoryName, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Sky.copy(alpha = 0.85f), fontWeight = FontWeight.SemiBold)
+                                        if (iou.notes != null) Text(iou.notes, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.6f))
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text("\$${iou.outstanding.fmtWhole()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (iou.isSettled) TrackerColors.Mint else TrackerColors.Ink)
-                                        Text("of \$${iou.amount.fmtWhole()}", fontSize = 10.sp, color = TrackerColors.Ink2.copy(alpha = 0.5f))
+                                        Text("\$${iou.outstanding.fmtWhole()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (iou.isSettled) CoinageColors.Mint else CoinageColors.Ink)
+                                        Text("of \$${iou.amount.fmtWhole()}", fontSize = 10.sp, color = CoinageColors.Ink2.copy(alpha = 0.5f))
                                     }
                                 }
                                 Spacer(Modifier.height(10.dp))
-                                Box(modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(999.dp)).background(TrackerColors.Paper2).border(1.3.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))) {
+                                Box(modifier = Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(999.dp)).background(CoinageColors.Paper2).border(1.3.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))) {
                                     Box(Modifier.fillMaxWidth(iou.pctRepaid / 100f).height(10.dp).background(color))
                                 }
                                 Spacer(Modifier.height(8.dp))
@@ -357,12 +357,12 @@ fun DebtScreen(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(999.dp))
                                                     .background(
-                                                        if (receivable) TrackerColors.Paper2 else TrackerColors.Paper2.copy(alpha = 0.4f),
+                                                        if (receivable) CoinageColors.Paper2 else CoinageColors.Paper2.copy(alpha = 0.4f),
                                                         RoundedCornerShape(999.dp),
                                                     )
                                                     .border(
                                                         1.4.dp,
-                                                        if (receivable) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.25f),
+                                                        if (receivable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.25f),
                                                         RoundedCornerShape(999.dp),
                                                     )
                                                     .clickable(enabled = receivable) { pendingIouPayment = iou to amt.toDouble() }
@@ -372,27 +372,27 @@ fun DebtScreen(
                                                     "\$${amt} back",
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    color = if (receivable) TrackerColors.Ink else TrackerColors.Ink.copy(alpha = 0.3f),
+                                                    color = if (receivable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.3f),
                                                 )
                                             }
                                         }
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(999.dp))
-                                                .background(TrackerColors.Sky.copy(alpha = 0.18f))
-                                                .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                                .background(CoinageColors.Sky.copy(alpha = 0.18f))
+                                                .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                                 .clickable { customIouEntry = iou; customIouAmount = "" }
                                                 .padding(horizontal = 10.dp, vertical = 4.dp),
-                                        ) { Text("Custom…", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink) }
+                                        ) { Text("Custom…", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink) }
                                     }
                                     Spacer(Modifier.weight(1f))
                                     Box(
                                         modifier = Modifier.size(28.dp).clip(RoundedCornerShape(8.dp))
-                                            .background(TrackerColors.Cherry.copy(alpha = 0.12f))
+                                            .background(CoinageColors.Cherry.copy(alpha = 0.12f))
                                             .clickable { iouToDelete = iou },
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        Icon(TrackerIcons.Trash, contentDescription = "Delete", modifier = Modifier.size(14.dp), tint = TrackerColors.Cherry)
+                                        Icon(CoinageIcons.Trash, contentDescription = "Delete", modifier = Modifier.size(14.dp), tint = CoinageColors.Cherry)
                                     }
                                 }
                             }
@@ -401,13 +401,13 @@ fun DebtScreen(
                 }
 
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(64.dp).border(2.dp, TrackerColors.Ink, RoundedCornerShape(16.dp)).clickable { showAddIouDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(64.dp).border(2.dp, CoinageColors.Ink, RoundedCornerShape(16.dp)).clickable { showAddIouDialog = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("+", fontSize = 22.sp, lineHeight = 22.sp, color = TrackerColors.Ink2)
+                        Text("+", fontSize = 22.sp, lineHeight = 22.sp, color = CoinageColors.Ink2)
                         Spacer(Modifier.width(10.dp))
-                        Text("Add someone who owes you", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink2)
+                        Text("Add someone who owes you", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink2)
                     }
                 }
             }
@@ -435,10 +435,10 @@ fun DebtScreen(
         }
 
         pendingDebtPayment?.let { (debt, amt) ->
-            TrackerDialog(
+            CoinageDialog(
                 title = "Pay \$${amt.fmtWhole()} to ${debt.creditorName}?",
                 confirmLabel = "Pay \$${amt.fmtWhole()}",
-                confirmColor = TrackerColors.Butter,
+                confirmColor = CoinageColors.Butter,
                 onConfirm = {
                     viewModel.onAction(DebtAction.OnMakePayment(debt.id, amt))
                     pendingDebtPayment = null
@@ -450,10 +450,10 @@ fun DebtScreen(
         }
 
         customDebtEntry?.let { debt ->
-            TrackerDialog(
+            CoinageDialog(
                 title = "Custom payment to ${debt.creditorName}",
                 confirmLabel = "Pay",
-                confirmColor = TrackerColors.Butter,
+                confirmColor = CoinageColors.Butter,
                 onConfirm = {
                     val amt = customDebtAmount.toDoubleOrNull() ?: 0.0
                     if (amt > 0) pendingDebtPayment = debt to amt
@@ -464,7 +464,7 @@ fun DebtScreen(
                 dismissLabel = "Cancel",
                 onDismiss = { customDebtEntry = null; customDebtAmount = "" },
                 content = {
-                    TrackerTextField(
+                    CoinageTextField(
                         value = customDebtAmount,
                         onValueChange = { customDebtAmount = it },
                         label = "Amount",
@@ -477,10 +477,10 @@ fun DebtScreen(
         }
 
         pendingIouPayment?.let { (iou, amt) ->
-            TrackerDialog(
+            CoinageDialog(
                 title = "Mark \$${amt.fmtWhole()} received from ${iou.personName}?",
                 confirmLabel = "\$${amt.fmtWhole()} received",
-                confirmColor = TrackerColors.Sky,
+                confirmColor = CoinageColors.Sky,
                 onConfirm = {
                     iouViewModel.onAction(IouAction.OnRecordPayment(iou.id, amt))
                     pendingIouPayment = null
@@ -492,10 +492,10 @@ fun DebtScreen(
         }
 
         customIouEntry?.let { iou ->
-            TrackerDialog(
+            CoinageDialog(
                 title = "Custom amount from ${iou.personName}",
                 confirmLabel = "Mark received",
-                confirmColor = TrackerColors.Sky,
+                confirmColor = CoinageColors.Sky,
                 onConfirm = {
                     val amt = (customIouAmount.toDoubleOrNull() ?: 0.0).coerceAtMost(iou.outstanding)
                     if (amt > 0) pendingIouPayment = iou to amt
@@ -506,7 +506,7 @@ fun DebtScreen(
                 dismissLabel = "Cancel",
                 onDismiss = { customIouEntry = null; customIouAmount = "" },
                 content = {
-                    TrackerTextField(
+                    CoinageTextField(
                         value = customIouAmount,
                         onValueChange = { customIouAmount = it },
                         label = "Amount (max \$${iou.outstanding.fmtWhole()})",
@@ -519,10 +519,10 @@ fun DebtScreen(
         }
 
         iouToDelete?.let { iou ->
-            TrackerDialog(
+            CoinageDialog(
                 title = "Delete IOU for ${iou.personName}?",
                 confirmLabel = "Delete",
-                confirmColor = TrackerColors.Cherry,
+                confirmColor = CoinageColors.Cherry,
                 onConfirm = {
                     iouViewModel.onAction(IouAction.OnDeleteIou(iou.id))
                     iouToDelete = null
@@ -546,22 +546,22 @@ private fun AddDebtDialog(
     var apr by remember { mutableStateOf("") }
     var minPayment by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
-        StickerCard(bgColor = TrackerColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
+        StickerCard(bgColor = CoinageColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("New debt", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                TrackerTextField(value = creditor, onValueChange = { creditor = it }, label = "Creditor name", modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = type, onValueChange = { type = it }, label = "Type (e.g. LOAN, CARD)", modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = principal, onValueChange = { principal = it }, label = "Balance", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = apr, onValueChange = { apr = it }, label = "APR %", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = minPayment, onValueChange = { minPayment = it }, label = "Min payment", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                Text("New debt", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                CoinageTextField(value = creditor, onValueChange = { creditor = it }, label = "Creditor name", modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = type, onValueChange = { type = it }, label = "Type (e.g. LOAN, CARD)", modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = principal, onValueChange = { principal = it }, label = "Balance", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = apr, onValueChange = { apr = it }, label = "APR %", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = minPayment, onValueChange = { minPayment = it }, label = "Min payment", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = TrackerColors.Ink2) }
+                    Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = CoinageColors.Ink2) }
                     Spacer(Modifier.width(8.dp))
                     Box(
-                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(TrackerColors.Ink)
+                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(CoinageColors.Ink)
                             .clickable { onConfirm(creditor, type.ifBlank { "LOAN" }, principal.toDoubleOrNull() ?: 0.0, apr.toDoubleOrNull() ?: 0.0, minPayment.toDoubleOrNull() ?: 0.0) }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) { Text("Save", color = TrackerColors.Paper, fontWeight = FontWeight.Bold) }
+                    ) { Text("Save", color = CoinageColors.Paper, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -579,39 +579,39 @@ private fun AddIouDialog(
     var notes by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf<String?>(null) }
     Dialog(onDismissRequest = onDismiss) {
-        StickerCard(bgColor = TrackerColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
+        StickerCard(bgColor = CoinageColors.Paper, cornerRadius = 20.dp, shadowX = 4.dp, shadowY = 5.dp) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Who owes you?", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                TrackerTextField(value = name, onValueChange = { name = it }, label = "Person's name", modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = amount, onValueChange = { amount = it }, label = "Amount lent", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
-                TrackerTextField(value = notes, onValueChange = { notes = it }, label = "What for? (optional)", modifier = Modifier.fillMaxWidth())
+                Text("Who owes you?", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                CoinageTextField(value = name, onValueChange = { name = it }, label = "Person's name", modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = amount, onValueChange = { amount = it }, label = "Amount lent", leadingText = "$", keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), modifier = Modifier.fillMaxWidth())
+                CoinageTextField(value = notes, onValueChange = { notes = it }, label = "What for? (optional)", modifier = Modifier.fillMaxWidth())
                 if (categories.isNotEmpty()) {
-                    Text("Income category", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.65f))
+                    Text("Income category", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.65f))
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(categories) { cat ->
                             val selected = cat.id == selectedCategoryId
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(999.dp))
-                                    .background(if (selected) TrackerColors.Sky else TrackerColors.Paper2)
-                                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                                    .background(if (selected) CoinageColors.Sky else CoinageColors.Paper2)
+                                    .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                                     .clickable { selectedCategoryId = if (selected) null else cat.id }
                                     .padding(horizontal = 10.dp, vertical = 4.dp),
                             ) {
-                                Text(cat.name, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                                Text(cat.name, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
                             }
                         }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = TrackerColors.Ink2) }
+                    Box(modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)) { Text("Cancel", color = CoinageColors.Ink2) }
                     Spacer(Modifier.width(8.dp))
                     Box(
-                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(TrackerColors.Sky)
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(12.dp))
+                        modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(CoinageColors.Sky)
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(12.dp))
                             .clickable { onConfirm(name, amount.toDoubleOrNull() ?: 0.0, notes.ifBlank { null }, selectedCategoryId) }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
-                    ) { Text("Add", color = TrackerColors.Ink, fontWeight = FontWeight.Bold) }
+                    ) { Text("Add", color = CoinageColors.Ink, fontWeight = FontWeight.Bold) }
                 }
             }
         }
@@ -626,8 +626,8 @@ private fun MountainVisual(paidPct: Int, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Icon(TrackerIcons.Mountain, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Butter)
-            Text("$paidPct% of the mountain climbed", fontSize = 14.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Butter)
+            Icon(CoinageIcons.Mountain, contentDescription = null, modifier = Modifier.size(16.dp), tint = CoinageColors.Butter)
+            Text("$paidPct% of the mountain climbed", fontSize = 14.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = CoinageColors.Butter)
         }
     }
 }

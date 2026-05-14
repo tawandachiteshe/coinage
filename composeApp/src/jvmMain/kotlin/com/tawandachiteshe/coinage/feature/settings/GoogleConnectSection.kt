@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
 
 @Composable
 actual fun GoogleConnectSection(
@@ -17,6 +17,6 @@ actual fun GoogleConnectSection(
         "Google Drive sync — Android only.",
         fontSize = 12.sp,
         fontFamily = FontFamily.Monospace,
-        color = TrackerColors.Ink2.copy(alpha = 0.5f),
+        color = CoinageColors.Ink2.copy(alpha = 0.5f),
     )
 }

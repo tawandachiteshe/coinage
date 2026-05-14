@@ -54,7 +54,7 @@ import com.composables.icons.lucide.Trash2
 import com.composables.icons.lucide.X
 import com.composables.icons.lucide.Zap
 
-object TrackerIcons {
+object CoinageIcons {
 
     // ── Finance ──────────────────────────────────────────────────────────────
     val Wallet: ImageVector      = Lucide.Wallet

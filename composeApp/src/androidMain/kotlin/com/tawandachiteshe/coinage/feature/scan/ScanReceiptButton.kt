@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.tawandachiteshe.coinage.ui.components.TrackerDialog
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -86,30 +86,30 @@ actual fun ScanReceiptButton(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(TrackerColors.Sky.copy(alpha = 0.15f), RoundedCornerShape(999.dp))
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .background(CoinageColors.Sky.copy(alpha = 0.15f), RoundedCornerShape(999.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .clickable(enabled = !isProcessing) { showSourcePicker = true }
             .padding(horizontal = 10.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center,
     ) {
         if (isProcessing) {
-            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = TrackerColors.Ink)
+            CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp, color = CoinageColors.Ink)
         } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = "Scan receipt", modifier = Modifier.size(14.dp), tint = TrackerColors.Ink)
-                Text("Scan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                Icon(Icons.Default.CameraAlt, contentDescription = "Scan receipt", modifier = Modifier.size(14.dp), tint = CoinageColors.Ink)
+                Text("Scan", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
             }
         }
     }
 
     if (showSourcePicker) {
-        TrackerDialog(
+        CoinageDialog(
             title = "Scan a receipt or ticket",
             confirmLabel = "Camera",
-            confirmColor = TrackerColors.Sky,
+            confirmColor = CoinageColors.Sky,
             onConfirm = {
                 showSourcePicker = false
                 val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED

@@ -55,12 +55,12 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.window.Dialog
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 
 // Hard pixel shadow matching CSS box-shadow: Xpx Ypx 0 ink
 fun Modifier.popShadow(
-    shadowColor: Color = TrackerColors.Ink,
+    shadowColor: Color = CoinageColors.Ink,
     cornerRadius: Dp = 14.dp,
     offsetX: Dp = 3.dp,
     offsetY: Dp = 4.dp,
@@ -120,7 +120,7 @@ fun StickerCard(
             .popShadow(cornerRadius = cornerRadius, offsetX = shadowX, offsetY = shadowY)
             .clip(shape)
             .background(bgColor, shape)
-            .border(borderWidth, TrackerColors.Ink, shape),
+            .border(borderWidth, CoinageColors.Ink, shape),
         content = content,
     )
 }
@@ -157,8 +157,8 @@ fun ProgressJar(
         modifier = modifier
             .size(width, height)
             .clip(shape)
-            .background(TrackerColors.Paper, shape)
-            .border(1.6.dp, TrackerColors.Ink, shape),
+            .background(CoinageColors.Paper, shape)
+            .border(1.6.dp, CoinageColors.Ink, shape),
     ) {
         // fill
         Box(
@@ -197,7 +197,7 @@ fun CategoryChip(
             .popShadowSm(cornerRadius = 999.dp)
             .clip(shape)
             .background(color, shape)
-            .border(1.4.dp, TrackerColors.Ink, shape)
+            .border(1.4.dp, CoinageColors.Ink, shape)
             .padding(vertical = padding.first, horizontal = padding.second),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -206,7 +206,7 @@ fun CategoryChip(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
-                tint = TrackerColors.Ink,
+                tint = CoinageColors.Ink,
             )
             Spacer(Modifier.width(6.dp))
         }
@@ -215,7 +215,7 @@ fun CategoryChip(
             fontSize = fontSize,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Default,
-            color = TrackerColors.Ink,
+            color = CoinageColors.Ink,
         )
     }
 }
@@ -234,8 +234,8 @@ fun StripedProgressBar(
         modifier = modifier
             .height(height)
             .clip(shape)
-            .background(TrackerColors.Paper2, shape)
-            .border(1.5.dp, TrackerColors.Ink, shape),
+            .background(CoinageColors.Paper2, shape)
+            .border(1.5.dp, CoinageColors.Ink, shape),
     ) {
         Box(
             modifier = Modifier
@@ -252,7 +252,7 @@ fun StripedProgressBar(
             fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
-            color = TrackerColors.Ink,
+            color = CoinageColors.Ink,
         )
     }
 }
@@ -264,7 +264,7 @@ fun PageHeader(
     modifier: Modifier = Modifier,
     eyebrow: String? = null,
     italicWord: String? = null,
-    accent: Color = TrackerColors.Tangerine,
+    accent: Color = CoinageColors.Tangerine,
     kicker: String? = null,
 ) {
     Box(modifier = modifier.padding(horizontal = 22.dp, vertical = 4.dp)) {
@@ -275,7 +275,7 @@ fun PageHeader(
                     fontSize = 11.sp,
                     letterSpacing = 1.8.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2.copy(alpha = 0.7f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.7f),
                 )
             }
             Row(modifier = Modifier.padding(top = 4.dp)) {
@@ -284,7 +284,7 @@ fun PageHeader(
                     fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 34.sp,
-                    color = TrackerColors.Ink,
+                    color = CoinageColors.Ink,
                 )
                 if (italicWord != null) {
                     Spacer(Modifier.width(6.dp))
@@ -304,7 +304,7 @@ fun PageHeader(
                     modifier = Modifier.padding(top = 6.dp),
                     fontSize = 13.5.sp,
                     lineHeight = 19.sp,
-                    color = TrackerColors.Ink2,
+                    color = CoinageColors.Ink2,
                 )
             }
         }
@@ -326,7 +326,7 @@ fun ReceiptRow(
 ) {
     val shape = RoundedCornerShape(8.dp)
     StickerCard(
-        bgColor = TrackerColors.PaperWhite,
+        bgColor = CoinageColors.PaperWhite,
         modifier = modifier,
         tilt = tilt,
         cornerRadius = 8.dp,
@@ -343,10 +343,10 @@ fun ReceiptRow(
                     .size(30.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(iconColor, RoundedCornerShape(8.dp))
-                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(8.dp)),
+                    .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = TrackerColors.Ink)
+                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = CoinageColors.Ink)
             }
             Spacer(Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -354,14 +354,14 @@ fun ReceiptRow(
                     text = merchant,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = TrackerColors.Ink,
+                    color = CoinageColors.Ink,
                     maxLines = 1,
                 )
                 Text(
                     text = "$category · $time",
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2.copy(alpha = 0.65f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.65f),
                     letterSpacing = 0.5.sp,
                 )
             }
@@ -369,47 +369,47 @@ fun ReceiptRow(
                 text = "${if (isIncome) "+" else "−"}\$$amount",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isIncome) TrackerColors.Mint else TrackerColors.Ink,
+                color = if (isIncome) CoinageColors.Mint else CoinageColors.Ink,
             )
         }
     }
 }
 
 @Composable
-fun TrackerScaffold(
+fun CoinageScaffold(
     modifier: Modifier = Modifier,
-    activeTab: TrackerTab? = null,
-    onTabClick: ((TrackerTab) -> Unit)? = null,
+    activeTab: CoinageTab? = null,
+    onTabClick: ((CoinageTab) -> Unit)? = null,
     onAddClick: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = TrackerColors.Paper,
+        containerColor = CoinageColors.Paper,
         topBar = {
             if (onBack != null) {
                 // Pinned top bar — Paper background so content scrolls cleanly underneath
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(TrackerColors.Paper)
+                        .background(CoinageColors.Paper)
                         .padding(start = 22.dp, top = 52.dp, bottom = 8.dp),
                 ) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(999.dp))
-                            .background(TrackerColors.Paper2, RoundedCornerShape(999.dp))
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                            .background(CoinageColors.Paper2, RoundedCornerShape(999.dp))
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
                             .clickable { onBack() }
                             .padding(horizontal = 12.dp, vertical = 7.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = TrackerIcons.ChevronLeft,
+                                imageVector = CoinageIcons.ChevronLeft,
                                 contentDescription = "Back",
                                 modifier = Modifier.size(14.dp),
-                                tint = TrackerColors.Ink,
+                                tint = CoinageColors.Ink,
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
@@ -417,7 +417,7 @@ fun TrackerScaffold(
                                 fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace,
                                 letterSpacing = 0.8.sp,
-                                color = TrackerColors.Ink,
+                                color = CoinageColors.Ink,
                             )
                         }
                     }
@@ -426,7 +426,7 @@ fun TrackerScaffold(
         },
         bottomBar = {
             if (onTabClick != null) {
-                TrackerTabBar(
+                CoinageTabBar(
                     active = activeTab,
                     onTabClick = onTabClick,
                     onAddClick = onAddClick ?: {},
@@ -446,7 +446,7 @@ fun TrackerScaffold(
 }
 
 @Composable
-fun TrackerTextField(
+fun CoinageTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
@@ -464,9 +464,9 @@ fun TrackerTextField(
     val isFocused by interactionSource.collectIsFocusedAsState()
     val borderColor by animateColorAsState(
         targetValue = when {
-            isError   -> TrackerColors.Cherry
-            isFocused -> TrackerColors.Tangerine
-            else      -> TrackerColors.Ink
+            isError   -> CoinageColors.Cherry
+            isFocused -> CoinageColors.Tangerine
+            else      -> CoinageColors.Ink
         },
         animationSpec = tween(150),
     )
@@ -477,7 +477,7 @@ fun TrackerTextField(
             fontSize = 10.sp,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 1.2.sp,
-            color = TrackerColors.Ink2.copy(alpha = 0.7f),
+            color = CoinageColors.Ink2.copy(alpha = 0.7f),
         )
         Spacer(Modifier.height(5.dp))
         BasicTextField(
@@ -490,17 +490,17 @@ fun TrackerTextField(
             keyboardActions = keyboardActions,
             interactionSource = interactionSource,
             textStyle = TextStyle(
-                color = TrackerColors.Ink,
+                color = CoinageColors.Ink,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
             ),
-            cursorBrush = SolidColor(TrackerColors.Tangerine),
+            cursorBrush = SolidColor(CoinageColors.Tangerine),
             decorationBox = { innerTextField ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(shape)
-                        .background(TrackerColors.PaperWhite, shape)
+                        .background(CoinageColors.PaperWhite, shape)
                         .border(1.8.dp, borderColor, shape)
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -510,7 +510,7 @@ fun TrackerTextField(
                             text = leadingText,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TrackerColors.Ink2,
+                            color = CoinageColors.Ink2,
                         )
                         Spacer(Modifier.width(6.dp))
                     }
@@ -519,7 +519,7 @@ fun TrackerTextField(
                             Text(
                                 text = placeholder,
                                 fontSize = 15.sp,
-                                color = TrackerColors.Ink2.copy(alpha = 0.45f),
+                                color = CoinageColors.Ink2.copy(alpha = 0.45f),
                             )
                         }
                         innerTextField()
@@ -532,11 +532,11 @@ fun TrackerTextField(
 
 // Design-system dialog — StickerCard popup matching the sticker-book aesthetic
 @Composable
-fun TrackerDialog(
+fun CoinageDialog(
     title: String,
     onDismissRequest: () -> Unit,
     confirmLabel: String,
-    confirmColor: Color = TrackerColors.Butter,
+    confirmColor: Color = CoinageColors.Butter,
     onConfirm: () -> Unit,
     dismissLabel: String? = "Cancel",
     onDismiss: (() -> Unit)? = null,
@@ -544,7 +544,7 @@ fun TrackerDialog(
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         StickerCard(
-            bgColor = TrackerColors.PaperWhite,
+            bgColor = CoinageColors.PaperWhite,
             modifier = Modifier.fillMaxWidth(),
             cornerRadius = 18.dp,
             shadowX = 5.dp,
@@ -555,7 +555,7 @@ fun TrackerDialog(
                     text = title,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TrackerColors.Ink,
+                    color = CoinageColors.Ink,
                 )
                 if (content != null) {
                     Spacer(Modifier.height(10.dp))
@@ -566,7 +566,7 @@ fun TrackerDialog(
                     if (dismissLabel != null) {
                         DialogChip(
                             label = dismissLabel,
-                            color = TrackerColors.Paper2,
+                            color = CoinageColors.Paper2,
                             modifier = Modifier.weight(1f),
                             onClick = onDismiss ?: onDismissRequest,
                         )
@@ -590,11 +590,11 @@ private fun DialogChip(label: String, color: Color, modifier: Modifier = Modifie
             .popShadow(cornerRadius = 10.dp, offsetX = 2.dp, offsetY = 2.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(color, RoundedCornerShape(10.dp))
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(10.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
     }
 }

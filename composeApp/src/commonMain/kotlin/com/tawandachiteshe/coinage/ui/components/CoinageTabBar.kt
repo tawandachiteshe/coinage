@@ -40,23 +40,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 
-enum class TrackerTab { Home, Goals, Debt, Insights }
+enum class CoinageTab { Home, Goals, Debt, Insights }
 
 @Composable
-fun TrackerTabBar(
-    active: TrackerTab?,
-    onTabClick: (TrackerTab) -> Unit,
+fun CoinageTabBar(
+    active: CoinageTab?,
+    onTabClick: (CoinageTab) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabs: List<Pair<TrackerTab, Pair<ImageVector, String>>> = listOf(
-        TrackerTab.Home     to (TrackerIcons.Home       to "Home"),
-        TrackerTab.Goals    to (TrackerIcons.Target     to "Goals"),
-        TrackerTab.Debt     to (TrackerIcons.CreditCard to "Debts"),
-        TrackerTab.Insights to (TrackerIcons.BarChart   to "Recap"),
+    val tabs: List<Pair<CoinageTab, Pair<ImageVector, String>>> = listOf(
+        CoinageTab.Home     to (CoinageIcons.Home       to "Home"),
+        CoinageTab.Goals    to (CoinageIcons.Target     to "Goals"),
+        CoinageTab.Debt     to (CoinageIcons.CreditCard to "Debts"),
+        CoinageTab.Insights to (CoinageIcons.BarChart   to "Recap"),
     )
 
     // FAB breathing — ring pulses outward 24dp and fades
@@ -84,21 +84,21 @@ fun TrackerTabBar(
                     val ringRadius = fabRadius + breatheRadius * 24.dp.toPx()
                     val ringAlpha  = 0.45f * (1f - breatheRadius)
                     drawCircle(
-                        color = TrackerColors.Tangerine.copy(alpha = ringAlpha),
+                        color = CoinageColors.Tangerine.copy(alpha = ringAlpha),
                         radius = ringRadius,
                     )
                 }
                 .popShadow(cornerRadius = 30.dp, offsetX = 4.dp, offsetY = 5.dp)
                 .clip(CircleShape)
-                .background(TrackerColors.Tangerine, CircleShape)
-                .border(2.dp, TrackerColors.Ink, CircleShape)
+                .background(CoinageColors.Tangerine, CircleShape)
+                .border(2.dp, CoinageColors.Ink, CircleShape)
                 .clickable(onClick = onAddClick),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = TrackerIcons.Add,
+                imageVector = CoinageIcons.Add,
                 contentDescription = "Add transaction",
-                tint = TrackerColors.Paper,
+                tint = CoinageColors.Paper,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -111,8 +111,8 @@ fun TrackerTabBar(
                 .fillMaxWidth()
                 .popShadow(cornerRadius = 22.dp)
                 .clip(RoundedCornerShape(22.dp))
-                .background(TrackerColors.Paper, RoundedCornerShape(22.dp))
-                .border(2.dp, TrackerColors.Ink, RoundedCornerShape(22.dp)),
+                .background(CoinageColors.Paper, RoundedCornerShape(22.dp))
+                .border(2.dp, CoinageColors.Ink, RoundedCornerShape(22.dp)),
         ) {
             // Tape strip centred on top edge
             Box(
@@ -169,13 +169,13 @@ fun TrackerTabBar(
                                     }
                                     .popShadowSm(cornerRadius = 9.dp)
                                     .clip(RoundedCornerShape(9.dp))
-                                    .background(TrackerColors.Butter, RoundedCornerShape(9.dp))
-                                    .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(9.dp)),
+                                    .background(CoinageColors.Butter, RoundedCornerShape(9.dp))
+                                    .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(9.dp)),
                             )
                             Icon(
                                 imageVector = icon,
                                 contentDescription = label,
-                                tint = TrackerColors.Ink2.copy(alpha = contentAlpha),
+                                tint = CoinageColors.Ink2.copy(alpha = contentAlpha),
                                 modifier = Modifier.size(18.dp),
                             )
                         }
@@ -186,7 +186,7 @@ fun TrackerTabBar(
                             fontWeight = FontWeight.SemiBold,
                             fontFamily = FontFamily.Monospace,
                             letterSpacing = 0.8.sp,
-                            color = TrackerColors.Ink2.copy(alpha = contentAlpha),
+                            color = CoinageColors.Ink2.copy(alpha = contentAlpha),
                         )
                     }
                 }

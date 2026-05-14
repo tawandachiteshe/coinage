@@ -34,16 +34,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tawandachiteshe.coinage.feature.home.Zoom
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerScaffold
-import com.tawandachiteshe.coinage.ui.components.TrackerTab
+import com.tawandachiteshe.coinage.ui.components.CoinageScaffold
+import com.tawandachiteshe.coinage.ui.components.CoinageTab
 import com.tawandachiteshe.coinage.ui.components.popShadow
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun InsightsScreen(
-    onTabClick: (TrackerTab) -> Unit,
+    onTabClick: (CoinageTab) -> Unit,
     onAddClick: () -> Unit,
     viewModel: InsightsViewModel = koinViewModel(),
 ) {
@@ -51,7 +51,7 @@ fun InsightsScreen(
     val cats = state.categoryTotals
     val total = state.totalSpent
 
-    TrackerScaffold(activeTab = TrackerTab.Insights, onTabClick = onTabClick, onAddClick = onAddClick) {
+    CoinageScaffold(activeTab = CoinageTab.Insights, onTabClick = onTabClick, onAddClick = onAddClick) {
             // Header
             Column(modifier = Modifier.padding(horizontal = 22.dp)) {
                 val periodLabel = when (state.zoom) {
@@ -59,59 +59,59 @@ fun InsightsScreen(
                     Zoom.Month -> "This month · in review"
                     Zoom.Year  -> "This year · in review"
                 }
-                Text(periodLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                Text(periodLabel.uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.7f))
                 Spacer(Modifier.height(4.dp))
                 Row {
-                    Text("Where did it ", fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp, color = TrackerColors.Ink)
-                    Text("all go?", fontSize = 36.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, lineHeight = 34.sp, color = TrackerColors.Tangerine)
+                    Text("Where did it ", fontSize = 36.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp, color = CoinageColors.Ink)
+                    Text("all go?", fontSize = 36.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, lineHeight = 34.sp, color = CoinageColors.Tangerine)
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(
                     if (cats.isEmpty()) "No transactions yet for this period."
                     else "${cats.size} categor${if (cats.size == 1) "y" else "ies"} · the receipts tell a story.",
-                    fontSize = 13.5.sp, lineHeight = 19.sp, color = TrackerColors.Ink2,
+                    fontSize = 13.5.sp, lineHeight = 19.sp, color = CoinageColors.Ink2,
                 )
             }
 
             // Big spend number
             Spacer(Modifier.height(18.dp))
             StickerCard(
-                bgColor = TrackerColors.Tangerine,
+                bgColor = CoinageColors.Tangerine,
                 modifier = Modifier.padding(horizontal = 22.dp).fillMaxWidth(),
                 cornerRadius = 22.dp, borderWidth = 2.dp, shadowX = 4.dp, shadowY = 5.dp,
             ) {
                 Box(modifier = Modifier.padding(18.dp)) {
                     Column {
-                        Text("Total spent".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = TrackerColors.Ink.copy(alpha = 0.8f))
+                        Text("Total spent".uppercase(), fontSize = 11.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = CoinageColors.Ink.copy(alpha = 0.8f))
                         Row(verticalAlignment = Alignment.Bottom) {
-                            Text("$", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink.copy(alpha = 0.85f))
-                            Text(total.fmtWhole(), fontSize = 54.sp, fontWeight = FontWeight.Bold, lineHeight = 50.sp, color = TrackerColors.Ink)
+                            Text("$", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink.copy(alpha = 0.85f))
+                            Text(total.fmtWhole(), fontSize = 54.sp, fontWeight = FontWeight.Bold, lineHeight = 50.sp, color = CoinageColors.Ink)
                         }
                         Spacer(Modifier.height(8.dp))
                         // Zoom toggle
                         Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(TrackerColors.Ink.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
-                                .border(1.dp, TrackerColors.Ink.copy(alpha = 0.18f), RoundedCornerShape(999.dp))
+                                .background(CoinageColors.Ink.copy(alpha = 0.12f), RoundedCornerShape(999.dp))
+                                .border(1.dp, CoinageColors.Ink.copy(alpha = 0.18f), RoundedCornerShape(999.dp))
                                 .padding(3.dp),
                         ) {
                             listOf(Zoom.Year to "Y", Zoom.Month to "M", Zoom.Week to "W").forEach { (z, label) ->
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(999.dp))
-                                        .background(if (state.zoom == z) TrackerColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
+                                        .background(if (state.zoom == z) CoinageColors.Ink else Color.Transparent, RoundedCornerShape(999.dp))
                                         .clickable { viewModel.onAction(InsightsAction.OnZoomChange(z)) }
                                         .padding(horizontal = 10.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text(label, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = if (state.zoom == z) TrackerColors.Paper else TrackerColors.Ink)
+                                    Text(label, fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = if (state.zoom == z) CoinageColors.Paper else CoinageColors.Ink)
                                 }
                             }
                         }
                     }
                     // Star decoration
-                    Icon(TrackerIcons.Star, contentDescription = null, modifier = Modifier.size(36.dp).align(Alignment.TopEnd).rotate(10f), tint = TrackerColors.Butter)
+                    Icon(CoinageIcons.Star, contentDescription = null, modifier = Modifier.size(36.dp).align(Alignment.TopEnd).rotate(10f), tint = CoinageColors.Butter)
                 }
             }
 
@@ -119,8 +119,8 @@ fun InsightsScreen(
             Spacer(Modifier.height(20.dp))
             Column(modifier = Modifier.padding(horizontal = 22.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                    Text("Where it went", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                    Text("${cats.size} categor${if (cats.size == 1) "y" else "ies"}".uppercase(), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = TrackerColors.Ink2.copy(alpha = 0.6f))
+                    Text("Where it went", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                    Text("${cats.size} categor${if (cats.size == 1) "y" else "ies"}".uppercase(), fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.sp, color = CoinageColors.Ink2.copy(alpha = 0.6f))
                 }
                 if (cats.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
@@ -130,7 +130,7 @@ fun InsightsScreen(
                             .height(28.dp)
                             .popShadow(cornerRadius = 999.dp, offsetX = 2.dp, offsetY = 2.dp)
                             .clip(RoundedCornerShape(999.dp))
-                            .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(999.dp)),
+                            .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(999.dp)),
                     ) {
                         cats.forEachIndexed { i, cat ->
                             val catColor = parseHexColor(cat.colorHex)
@@ -154,10 +154,10 @@ fun InsightsScreen(
                                 row.forEach { cat ->
                                     val catColor = parseHexColor(cat.colorHex)
                                     Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                        Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(catColor).border(1.2.dp, TrackerColors.Ink, RoundedCornerShape(3.dp)))
+                                        Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(catColor).border(1.2.dp, CoinageColors.Ink, RoundedCornerShape(3.dp)))
                                         Spacer(Modifier.width(8.dp))
-                                        Text(cat.categoryName, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink, modifier = Modifier.weight(1f))
-                                        Text("\$${cat.total.fmtWhole()}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+                                        Text(cat.categoryName, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink, modifier = Modifier.weight(1f))
+                                        Text("\$${cat.total.fmtWhole()}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.7f))
                                     }
                                 }
                                 if (row.size < 2) Spacer(Modifier.weight(1f))
@@ -166,7 +166,7 @@ fun InsightsScreen(
                     }
                 } else if (!state.isLoading) {
                     Spacer(Modifier.height(8.dp))
-                    Text("No spending data yet for this period.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.55f))
+                    Text("No spending data yet for this period.", fontSize = 13.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.55f))
                 }
             }
 
@@ -174,8 +174,8 @@ fun InsightsScreen(
             Spacer(Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 22.dp)) {
                 Row {
-                    Text("Moments ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                    Text("worth a sticker", fontSize = 22.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = TrackerColors.Grape)
+                    Text("Moments ", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                    Text("worth a sticker", fontSize = 22.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = CoinageColors.Grape)
                 }
 
                 if (state.txCount == 0L && !state.isLoading) {
@@ -184,7 +184,7 @@ fun InsightsScreen(
                         "No transactions yet for this period.",
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
-                        color = TrackerColors.Ink2.copy(alpha = 0.55f),
+                        color = CoinageColors.Ink2.copy(alpha = 0.55f),
                     )
                 } else {
                     Spacer(Modifier.height(12.dp))
@@ -194,7 +194,7 @@ fun InsightsScreen(
                             eyebrow = "BIGGEST SPLURGE",
                             title = state.biggestSplurgeMerchant ?: "—",
                             value = "\$${state.biggestSplurgeAmt.fmtWhole()}",
-                            bgColor = TrackerColors.Butter,
+                            bgColor = CoinageColors.Butter,
                             tilt = -1.6f,
                             modifier = Modifier.weight(1f),
                         )
@@ -202,7 +202,7 @@ fun InsightsScreen(
                             eyebrow = "INCOME",
                             title = "earned this period",
                             value = "\$${state.totalIncome.fmtWhole()}",
-                            bgColor = TrackerColors.Mint,
+                            bgColor = CoinageColors.Mint,
                             tilt = 1.4f,
                             modifier = Modifier.weight(1f),
                         )
@@ -213,7 +213,7 @@ fun InsightsScreen(
                     val net = state.totalIncome - state.totalSpent
                     val netPositive = net >= 0
                     StickerCard(
-                        bgColor = if (netPositive) TrackerColors.Sky else TrackerColors.Coral,
+                        bgColor = if (netPositive) CoinageColors.Sky else CoinageColors.Coral,
                         modifier = Modifier.fillMaxWidth().rotate(0.5f),
                         cornerRadius = 16.dp,
                     ) {
@@ -223,15 +223,15 @@ fun InsightsScreen(
                                     .size(50.dp)
                                     .rotate(-8f)
                                     .clip(RoundedCornerShape(25.dp))
-                                    .background(TrackerColors.Paper)
-                                    .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(25.dp)),
+                                    .background(CoinageColors.Paper)
+                                    .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(25.dp)),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     text = if (netPositive) "+" else "−",
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = TrackerColors.Ink,
+                                    color = CoinageColors.Ink,
                                 )
                             }
                             Spacer(Modifier.width(14.dp))
@@ -240,14 +240,14 @@ fun InsightsScreen(
                                     text = "Net \$${net.fmtAbsWhole()} ${if (netPositive) "ahead" else "over budget"}",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TrackerColors.Ink,
+                                    color = CoinageColors.Ink,
                                 )
                                 Text(
                                     text = "${state.txCount} transaction${if (state.txCount != 1L) "s" else ""} · \$${state.totalSpent.fmtWhole()} out",
                                     fontSize = 13.sp,
                                     fontStyle = FontStyle.Italic,
                                     fontFamily = FontFamily.Serif,
-                                    color = TrackerColors.Ink2,
+                                    color = CoinageColors.Ink2,
                                 )
                             }
                         }
@@ -261,7 +261,7 @@ fun InsightsScreen(
                             title = state.mostVisitedMerchant ?: "—",
                             value = "${state.mostVisitedCount} visit${if (state.mostVisitedCount != 1L) "s" else ""} · \$${state.mostVisitedTotal.fmtWhole()}",
                             isValueSmall = true,
-                            bgColor = TrackerColors.Coral,
+                            bgColor = CoinageColors.Coral,
                             tilt = -0.8f,
                             modifier = Modifier.weight(1f),
                         )
@@ -270,7 +270,7 @@ fun InsightsScreen(
                             eyebrow = "TOP CATEGORY",
                             title = topCat?.categoryName ?: "—",
                             value = if (topCat != null) "\$${topCat.total.fmtWhole()}" else "\$0",
-                            bgColor = TrackerColors.Paper,
+                            bgColor = CoinageColors.Paper,
                             tilt = 1.0f,
                             modifier = Modifier.weight(1f),
                         )
@@ -283,19 +283,19 @@ fun InsightsScreen(
                     modifier = Modifier.fillMaxWidth()
                         .popShadow(cornerRadius = 14.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(TrackerColors.Ink)
-                        .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(14.dp))
+                        .background(CoinageColors.Ink)
+                        .border(1.8.dp, CoinageColors.Ink, RoundedCornerShape(14.dp))
                         .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(TrackerIcons.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = TrackerColors.Butter)
+                    Icon(CoinageIcons.Star, contentDescription = null, modifier = Modifier.size(20.dp), tint = CoinageColors.Butter)
                     Spacer(Modifier.width(12.dp))
                     Text(
                         text = "${state.txCount} transactions · \$${state.totalSpent.fmtWhole()} spent · \$${state.totalIncome.fmtWhole()} earned",
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
                         letterSpacing = 0.4.sp,
-                        color = TrackerColors.Paper,
+                        color = CoinageColors.Paper,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -315,10 +315,10 @@ private fun MomentCard(
 ) {
     StickerCard(bgColor = bgColor, modifier = modifier.rotate(tilt), cornerRadius = 16.dp) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Text(eyebrow, fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = TrackerColors.Ink2.copy(alpha = 0.7f))
+            Text(eyebrow, fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.2.sp, color = CoinageColors.Ink2.copy(alpha = 0.7f))
             Spacer(Modifier.height(4.dp))
-            Text(title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink, lineHeight = 18.sp)
-            Text(value, fontSize = if (isValueSmall) 11.sp else 22.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink, fontFamily = if (isValueSmall) FontFamily.Monospace else FontFamily.Default)
+            Text(title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink, lineHeight = 18.sp)
+            Text(value, fontSize = if (isValueSmall) 11.sp else 22.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink, fontFamily = if (isValueSmall) FontFamily.Monospace else FontFamily.Default)
         }
     }
 }
@@ -329,7 +329,7 @@ private fun Tag(label: String, textColor: Color, bgColor: Color) {
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(bgColor)
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .padding(horizontal = 9.dp, vertical = 3.dp),
     ) {
         Text(label, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = textColor)
@@ -347,7 +347,7 @@ private fun IconTag(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(bgColor)
-            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp))
             .padding(horizontal = 9.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -373,6 +373,6 @@ private fun parseHexColor(hex: String): Color {
             blue  = clean.substring(4, 6).toInt(16) / 255f,
         )
     } catch (_: Exception) {
-        TrackerColors.Grape
+        CoinageColors.Grape
     }
 }

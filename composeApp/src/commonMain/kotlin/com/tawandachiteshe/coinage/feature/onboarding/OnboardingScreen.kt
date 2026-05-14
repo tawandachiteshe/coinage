@@ -52,10 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tawandachiteshe.coinage.ui.components.StickerCard
-import com.tawandachiteshe.coinage.ui.components.TrackerTextField
+import com.tawandachiteshe.coinage.ui.components.CoinageTextField
 import com.tawandachiteshe.coinage.ui.components.popShadow
-import com.tawandachiteshe.coinage.ui.theme.TrackerColors
-import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
+import com.tawandachiteshe.coinage.ui.theme.CoinageColors
+import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -75,11 +75,11 @@ fun OnboardingScreen(
 ) {
     val steps = remember {
         listOf(
-            Step("welcome", "Money,", "but fun.", TrackerColors.Tangerine,
-                "Tracker is a sticker book for your spending. Toss receipts into piles, watch goal jars fill, climb the debt mountain — one small step at a time."),
-            Step("how it works", "Swipe to", "sort.", TrackerColors.Grape,
+            Step("welcome", "Money,", "but fun.", CoinageColors.Tangerine,
+                "Coinage is a sticker book for your spending. Toss receipts into piles, watch goal jars fill, climb the debt mountain — one small step at a time."),
+            Step("how it works", "Swipe to", "sort.", CoinageColors.Grape,
                 "New transactions land in an inbox. Swipe each card — left for Need, right for Want, up to Save, down to Skip. That's the whole input loop."),
-            Step("private by default", "Stays on", "your phone.", TrackerColors.Mint,
+            Step("private by default", "Stays on", "your phone.", CoinageColors.Mint,
                 "Locked behind Face ID. No accounts, no email, no servers. AI assistants are opt-in later — for now, just you and the numbers."),
         )
     }
@@ -97,7 +97,7 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TrackerColors.Paper)
+            .background(CoinageColors.Paper)
             .imePadding(),
     ) {
         Column(
@@ -115,7 +115,7 @@ fun OnboardingScreen(
             ) {
                 steps.forEachIndexed { i, _ ->
                     val dotColor by animateColorAsState(
-                        targetValue = if (i <= step) s.accent else TrackerColors.Paper2,
+                        targetValue = if (i <= step) s.accent else CoinageColors.Paper2,
                         animationSpec = tween(300, easing = EaseInOut),
                         label = "dot_$i",
                     )
@@ -125,7 +125,7 @@ fun OnboardingScreen(
                             .height(8.dp)
                             .clip(RoundedCornerShape(999.dp))
                             .background(dotColor, RoundedCornerShape(999.dp))
-                            .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp)),
+                            .border(1.4.dp, CoinageColors.Ink, RoundedCornerShape(999.dp)),
                     )
                     if (i < steps.lastIndex) Spacer(Modifier.width(8.dp))
                 }
@@ -135,7 +135,7 @@ fun OnboardingScreen(
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 1.sp,
-                    color = TrackerColors.Ink2.copy(alpha = 0.6f),
+                    color = CoinageColors.Ink2.copy(alpha = 0.6f),
                 )
             }
 
@@ -172,7 +172,7 @@ fun OnboardingScreen(
                             fontSize = 11.sp,
                             letterSpacing = 1.8.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = TrackerColors.Ink2.copy(alpha = 0.7f),
+                            color = CoinageColors.Ink2.copy(alpha = 0.7f),
                         )
                         Spacer(Modifier.height(8.dp))
                         Row {
@@ -181,7 +181,7 @@ fun OnboardingScreen(
                                 fontSize = 42.sp,
                                 fontWeight = FontWeight.Bold,
                                 lineHeight = 40.sp,
-                                color = TrackerColors.Ink,
+                                color = CoinageColors.Ink,
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
@@ -198,12 +198,12 @@ fun OnboardingScreen(
                             text = cs.body,
                             fontSize = 15.5.sp,
                             lineHeight = 22.sp,
-                            color = TrackerColors.Ink2,
+                            color = CoinageColors.Ink2,
                         )
                         // Name input — only shown on the last step
                         if (currentStep == steps.lastIndex) {
                             Spacer(Modifier.height(22.dp))
-                            TrackerTextField(
+                            CoinageTextField(
                                 value = viewModel.name,
                                 onValueChange = viewModel::onNameChange,
                                 label = "What should we call you?",
@@ -226,7 +226,7 @@ fun OnboardingScreen(
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 1.sp,
-            color = TrackerColors.Ink2.copy(alpha = 0.6f),
+            color = CoinageColors.Ink2.copy(alpha = 0.6f),
         )
 
         // CTA row
@@ -250,11 +250,11 @@ fun OnboardingScreen(
                     .then(
                         if (step > 0) Modifier
                             .popShadow(cornerRadius = 26.dp)
-                            .border(1.8.dp, TrackerColors.Ink, CircleShape)
-                        else Modifier.border(1.8.dp, TrackerColors.Ink.copy(alpha = 0.3f), CircleShape)
+                            .border(1.8.dp, CoinageColors.Ink, CircleShape)
+                        else Modifier.border(1.8.dp, CoinageColors.Ink.copy(alpha = 0.3f), CircleShape)
                     )
                     .clip(CircleShape)
-                    .background(TrackerColors.Paper, CircleShape)
+                    .background(CoinageColors.Paper, CircleShape)
                     .clickable(enabled = step > 0) { if (step > 0) step-- }
                     .graphicsLayer { alpha = backAlpha },
                 contentAlignment = Alignment.Center,
@@ -263,7 +263,7 @@ fun OnboardingScreen(
                     text = "←",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TrackerColors.Ink,
+                    color = CoinageColors.Ink,
                 )
             }
 
@@ -275,8 +275,8 @@ fun OnboardingScreen(
                     .graphicsLayer { scaleX = ctaScale; scaleY = ctaScale }
                     .popShadow(cornerRadius = 28.dp, offsetX = 3.dp, offsetY = 4.dp)
                     .clip(RoundedCornerShape(28.dp))
-                    .background(TrackerColors.Ink, RoundedCornerShape(28.dp))
-                    .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(28.dp))
+                    .background(CoinageColors.Ink, RoundedCornerShape(28.dp))
+                    .border(1.8.dp, CoinageColors.Ink, RoundedCornerShape(28.dp))
                     .clickable { if (isLast) viewModel.finish(onFinish) else step++ },
                 contentAlignment = Alignment.Center,
             ) {
@@ -292,7 +292,7 @@ fun OnboardingScreen(
                             text = if (last) "Get started" else "Next",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TrackerColors.Paper,
+                            color = CoinageColors.Paper,
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
@@ -300,7 +300,7 @@ fun OnboardingScreen(
                             fontSize = 18.sp,
                             fontStyle = FontStyle.Italic,
                             fontFamily = FontFamily.Serif,
-                            color = TrackerColors.Butter,
+                            color = CoinageColors.Butter,
                         )
                     }
                 }
@@ -339,7 +339,7 @@ private fun OnboardingArt(step: Int, accent: Color) {
     when (step) {
         0 -> Box(modifier = Modifier.size(260.dp, 200.dp)) {
             StickerCard(
-                bgColor = TrackerColors.Butter,
+                bgColor = CoinageColors.Butter,
                 modifier = Modifier
                     .size(110.dp, 60.dp)
                     .rotate(-6f)
@@ -349,11 +349,11 @@ private fun OnboardingArt(step: Int, accent: Color) {
                 tilt = 0f, cornerRadius = 18.dp,
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("$42", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                    Text("$42", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                 }
             }
             StickerCard(
-                bgColor = TrackerColors.Tangerine,
+                bgColor = CoinageColors.Tangerine,
                 modifier = Modifier
                     .size(130.dp, 70.dp)
                     .align(Alignment.TopEnd)
@@ -363,12 +363,12 @@ private fun OnboardingArt(step: Int, accent: Color) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         Text("hi", fontSize = 26.sp, fontStyle = FontStyle.Italic, fontFamily = FontFamily.Serif, color = Color.White)
-                                        Icon(TrackerIcons.Hand, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
+                                        Icon(CoinageIcons.Hand, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
                                     }
                 }
             }
             StickerCard(
-                bgColor = TrackerColors.Grape,
+                bgColor = CoinageColors.Grape,
                 modifier = Modifier
                     .size(170.dp, 70.dp)
                     .align(Alignment.BottomCenter)
@@ -395,12 +395,12 @@ private fun OnboardingArt(step: Int, accent: Color) {
                     .graphicsLayer { translationY = offset1.value; alpha = alpha1.value }
                     .popShadow(cornerRadius = 18.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(TrackerColors.PaperWhite, RoundedCornerShape(18.dp))
-                    .border(1.8.dp, TrackerColors.Ink, RoundedCornerShape(18.dp)),
+                    .background(CoinageColors.PaperWhite, RoundedCornerShape(18.dp))
+                    .border(1.8.dp, CoinageColors.Ink, RoundedCornerShape(18.dp)),
             )
             // Front card
             StickerCard(
-                bgColor = TrackerColors.PaperWhite,
+                bgColor = CoinageColors.PaperWhite,
                 modifier = Modifier
                     .size(200.dp, 160.dp)
                     .align(Alignment.Center)
@@ -414,19 +414,19 @@ private fun OnboardingArt(step: Int, accent: Color) {
                         .padding(12.dp),
                     verticalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("today · 12:30pm", fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TrackerColors.Ink2.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                    Text("today · 12:30pm", fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.6f), letterSpacing = 1.sp)
                     Column {
-                        Text("Trader Joe's", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
-                        Text("−\$42.18", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TrackerColors.Ink)
+                        Text("Trader Joe's", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                        Text("−\$42.18", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
                     }
                     Box(
                         modifier = Modifier
                             .align(Alignment.End)
-                            .border(2.dp, TrackerColors.Tangerine, RoundedCornerShape(4.dp))
+                            .border(2.dp, CoinageColors.Tangerine, RoundedCornerShape(4.dp))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                             .rotate(-12f),
                     ) {
-                        Text("WANT", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = TrackerColors.Tangerine, letterSpacing = 1.sp)
+                        Text("WANT", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = CoinageColors.Tangerine, letterSpacing = 1.sp)
                     }
                 }
             }
@@ -434,7 +434,7 @@ private fun OnboardingArt(step: Int, accent: Color) {
 
         else -> {
             StickerCard(
-                bgColor = TrackerColors.Mint,
+                bgColor = CoinageColors.Mint,
                 modifier = Modifier
                     .size(130.dp, 150.dp)
                     .graphicsLayer { translationY = offset1.value; alpha = alpha1.value },
@@ -445,9 +445,9 @@ private fun OnboardingArt(step: Int, accent: Color) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Icon(TrackerIcons.Lock, contentDescription = null, modifier = Modifier.size(48.dp), tint = TrackerColors.Ink)
+                    Icon(CoinageIcons.Lock, contentDescription = null, modifier = Modifier.size(48.dp), tint = CoinageColors.Ink)
                     Spacer(Modifier.height(8.dp))
-                    Text("FACE ID", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp, color = TrackerColors.Ink)
+                    Text("FACE ID", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp, color = CoinageColors.Ink)
                 }
             }
         }

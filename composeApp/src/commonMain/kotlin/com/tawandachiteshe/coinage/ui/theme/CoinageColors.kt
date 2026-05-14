@@ -2,7 +2,7 @@ package com.tawandachiteshe.coinage.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-object TrackerColors {
+object CoinageColors {
 
     val Ink        = Color(0xFF1a1230)
     val Ink2       = Color(0xFF2c2244)
