@@ -2,6 +2,7 @@ package com.tawandachiteshe.coinage.data
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOne
 import com.tawandachiteshe.coinage.db.ExpensifyDatabase
 import com.tawandachiteshe.coinage.db.BiggestExpenseInRange
 import com.tawandachiteshe.coinage.db.SelectAll
@@ -13,6 +14,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 class TransactionRepository(
@@ -35,6 +37,13 @@ class TransactionRepository(
         withContext(ioDispatcher) {
             q.totalByTypeAndDateRange(type, startMs, endMs).executeAsOne()
         }
+
+    // Reactive: re-emits income+expense totals whenever the Transaction table changes.
+    fun getTotalsFlow(startMs: Long, endMs: Long): Flow<Pair<Double, Double>> =
+        q.totalsByDateRange(startMs, endMs)
+            .asFlow()
+            .mapToOne(ioDispatcher)
+            .map { it.income_total to it.expense_total }
 
     suspend fun getCategoryTotals(startMs: Long, endMs: Long): List<TotalByCategoryAndDateRange> =
         withContext(ioDispatcher) {

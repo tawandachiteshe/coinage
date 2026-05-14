@@ -39,6 +39,16 @@ SELECT COALESCE(SUM(amount), 0.0) AS total
 FROM `Transaction`
 WHERE type = :type AND date >= :startMs AND date < :endMs;
 
+-- Single reactive query: returns both income and expense totals together.
+-- Using asFlow() on this avoids the collectLatest cancellation race that
+-- occurs when querying each type separately with suspend calls.
+totalsByDateRange:
+SELECT
+    COALESCE(SUM(CASE WHEN type = 'INCOME'  THEN amount ELSE 0.0 END), 0.0) AS income_total,
+    COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS expense_total
+FROM `Transaction`
+WHERE date >= :startMs AND date < :endMs;
+
 totalByCategoryAndDateRange:
 SELECT category_id, COALESCE(SUM(amount), 0.0) AS total
 FROM `Transaction`

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -101,17 +100,17 @@ class HomeViewModel(
                 _state.update { s -> s.copy(transactions = rows.map { it.toUi() }, isLoading = false) }
             }
         }
-        // Recompute totals whenever zoom changes OR transactions change (e.g. after restore)
+        // When zoom changes, restart a reactive subscription to both totals.
+        // getTotalsFlow() re-emits automatically whenever the Transaction table changes,
+        // so balance stays correct after restore without any collectLatest race condition.
         viewModelScope.launch {
-            combine(
-                _state.map { it.zoom }.distinctUntilChanged(),
-                txRepo.getAll(),
-            ) { zoom, _ -> zoom }
+            _state.map { it.zoom }
+                .distinctUntilChanged()
                 .collectLatest { zoom ->
                     val (start, end) = zoom.dateRange()
-                    val income   = txRepo.getTotalByTypeAndDateRange("INCOME",  start, end)
-                    val expenses = txRepo.getTotalByTypeAndDateRange("EXPENSE", start, end)
-                    _state.update { it.copy(income = income, expenses = expenses, balance = income - expenses) }
+                    txRepo.getTotalsFlow(start, end).collect { (income, expenses) ->
+                        _state.update { it.copy(income = income, expenses = expenses, balance = income - expenses) }
+                    }
                 }
         }
         viewModelScope.launch {
