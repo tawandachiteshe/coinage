@@ -1,0 +1,15 @@
+CREATE TABLE UserPrefs (
+    id                  INTEGER NOT NULL PRIMARY KEY DEFAULT 1,
+    base_currency_code  TEXT    NOT NULL DEFAULT 'ZAR',
+    week_start_day      INTEGER NOT NULL DEFAULT 1,
+    round_up_enabled    INTEGER NOT NULL DEFAULT 1,
+    biometric_enabled   INTEGER NOT NULL DEFAULT 1,
+    monthly_budget      REAL    NOT NULL DEFAULT 0.0,
+    savings_rate_pct    INTEGER NOT NULL DEFAULT 20,
+    onboarding_done     INTEGER NOT NULL DEFAULT 0,
+    created_at          INTEGER NOT NULL DEFAULT 0
+);
+
+-- Seed the single row; inherits base currency from whichever Currency row has is_base = 1.
+INSERT OR IGNORE INTO UserPrefs (id, base_currency_code, created_at)
+SELECT 1, COALESCE((SELECT code FROM Currency WHERE is_base = 1 LIMIT 1), 'ZAR'), 0;

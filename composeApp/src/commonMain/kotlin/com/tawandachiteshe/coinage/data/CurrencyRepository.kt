@@ -61,10 +61,10 @@ class CurrencyRepository(db: ExpensifyDatabase) {
         )
 
         val DEFAULT_CURRENCIES = listOf(
-            CurrencySeed("USD", "US Dollar",          "$",   1.0,    1L),
+            CurrencySeed("ZAR", "South African Rand",  "R",   18.6,   1L),
+            CurrencySeed("USD", "US Dollar",          "$",   1.0,    0L),
             CurrencySeed("EUR", "Euro",                "€",   0.93,   0L),
             CurrencySeed("GBP", "British Pound",       "£",   0.79,   0L),
-            CurrencySeed("ZAR", "South African Rand",  "R",   18.6,   0L),
             CurrencySeed("CAD", "Canadian Dollar",     "C$",  1.36,   0L),
             CurrencySeed("AUD", "Australian Dollar",   "A$",  1.54,   0L),
             CurrencySeed("JPY", "Japanese Yen",        "¥",   149.0,  0L),

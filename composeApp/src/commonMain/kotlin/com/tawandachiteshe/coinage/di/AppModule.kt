@@ -6,6 +6,7 @@ import com.tawandachiteshe.coinage.data.DebtRepository
 import com.tawandachiteshe.coinage.data.GoalRepository
 import com.tawandachiteshe.coinage.data.IouRepository
 import com.tawandachiteshe.coinage.data.TransactionRepository
+import com.tawandachiteshe.coinage.data.UserPrefsRepository
 import com.tawandachiteshe.coinage.data.UserProfileRepository
 import com.tawandachiteshe.coinage.data.createHttpClient
 import com.tawandachiteshe.coinage.feature.add.AddViewModel
@@ -30,6 +31,7 @@ val appModule = module {
     single { GoalRepository(get()) }
     single { IouRepository(get()) }
     single { UserProfileRepository(get()) }
+    single { UserPrefsRepository(get()) }
 
     viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { GoalsViewModel(get(), get(), get()) }
@@ -40,5 +42,5 @@ val appModule = module {
     viewModel { JarsManagerViewModel(get(), get()) }
     viewModel { OnboardingViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(currencyRepo = get(), googleAuthRepo = getOrNull(), backupOrchestrator = getOrNull()) }
+    viewModel { SettingsViewModel(currencyRepo = get(), userPrefsRepo = get(), googleAuthRepo = getOrNull(), backupOrchestrator = getOrNull()) }
 }

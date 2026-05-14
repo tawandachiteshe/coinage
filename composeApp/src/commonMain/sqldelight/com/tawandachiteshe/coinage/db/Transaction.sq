@@ -35,41 +35,64 @@ JOIN Category c ON t.category_id = c.id
 WHERE t.type = :type
 ORDER BY t.date DESC;
 
-totalByTypeAndDateRange:
-SELECT COALESCE(SUM(amount), 0.0) AS total
-FROM `Transaction`
-WHERE type = :type AND date >= :startMs AND date < :endMs;
+-- Helper: converts a raw amount to the user's base currency.
+-- Formula: amount × (base.rate_to_usd / tx_currency.rate_to_usd)
+-- COALESCE(cur.rate_to_usd, 1.0) guards against unknown currency codes.
 
--- Single reactive query: returns both income and expense totals together.
--- Using asFlow() on this avoids the collectLatest cancellation race that
--- occurs when querying each type separately with suspend calls.
+totalByTypeAndDateRange:
+SELECT COALESCE(SUM(
+    t.amount
+    * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1)
+    / COALESCE(cur.rate_to_usd, 1.0)
+), 0.0) AS total
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.type = :type AND t.date >= :startMs AND t.date < :endMs;
+
+-- Single reactive query: returns both income and expense totals in base currency.
 totalsByDateRange:
 SELECT
-    COALESCE(SUM(CASE WHEN type = 'INCOME'  THEN amount ELSE 0.0 END), 0.0) AS income_total,
-    COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS expense_total
-FROM `Transaction`
-WHERE date >= :startMs AND date < :endMs;
+    COALESCE(SUM(CASE WHEN t.type = 'INCOME'
+        THEN t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+        ELSE 0.0 END), 0.0) AS income_total,
+    COALESCE(SUM(CASE WHEN t.type = 'EXPENSE'
+        THEN t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+        ELSE 0.0 END), 0.0) AS expense_total
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.date >= :startMs AND t.date < :endMs;
 
 totalByCategoryAndDateRange:
-SELECT category_id, COALESCE(SUM(amount), 0.0) AS total
-FROM `Transaction`
-WHERE date >= :startMs AND date < :endMs AND type = 'EXPENSE'
-GROUP BY category_id
+SELECT t.category_id, COALESCE(SUM(
+    t.amount
+    * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1)
+    / COALESCE(cur.rate_to_usd, 1.0)
+), 0.0) AS total
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.date >= :startMs AND t.date < :endMs AND t.type = 'EXPENSE'
+GROUP BY t.category_id
 ORDER BY total DESC;
 
 biggestExpenseInRange:
-SELECT merchant, amount FROM `Transaction`
-WHERE type = 'EXPENSE' AND date >= :startMs AND date < :endMs
+SELECT t.merchant,
+    t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0) AS amount
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.type = 'EXPENSE' AND t.date >= :startMs AND t.date < :endMs
 ORDER BY amount DESC
 LIMIT 1;
 
 topMerchantInRange:
-SELECT merchant,
-       COUNT(*) AS visit_count,
-       COALESCE(SUM(amount), 0.0) AS total_amount
-FROM `Transaction`
-WHERE type = 'EXPENSE' AND date >= :startMs AND date < :endMs
-GROUP BY merchant
+SELECT t.merchant,
+    COUNT(*) AS visit_count,
+    COALESCE(SUM(
+        t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+    ), 0.0) AS total_amount
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.type = 'EXPENSE' AND t.date >= :startMs AND t.date < :endMs
+GROUP BY t.merchant
 ORDER BY visit_count DESC
 LIMIT 1;
 
@@ -77,19 +100,27 @@ countInRange:
 SELECT COUNT(*) AS tx_count FROM `Transaction`
 WHERE date >= :startMs AND date < :endMs;
 
--- Reactive: all-time net balance (income - expense), used for goal contribution validation.
+-- Reactive: all-time net balance in base currency, used for goal contribution validation.
 allTimeTotals:
 SELECT
-    COALESCE(SUM(CASE WHEN type = 'INCOME'  THEN amount ELSE 0.0 END), 0.0) AS income_total,
-    COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amount ELSE 0.0 END), 0.0) AS expense_total
-FROM `Transaction`;
+    COALESCE(SUM(CASE WHEN t.type = 'INCOME'
+        THEN t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+        ELSE 0.0 END), 0.0) AS income_total,
+    COALESCE(SUM(CASE WHEN t.type = 'EXPENSE'
+        THEN t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+        ELSE 0.0 END), 0.0) AS expense_total
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code;
 
--- Reactive: total saved per goal, derived from real EXPENSE transactions tagged to a goal.
+-- Reactive: total saved per goal in base currency.
 savingsPerGoal:
-SELECT goal_id, COALESCE(SUM(amount), 0.0) AS total
-FROM `Transaction`
-WHERE goal_id IS NOT NULL AND type = 'EXPENSE'
-GROUP BY goal_id;
+SELECT t.goal_id, COALESCE(SUM(
+    t.amount * (SELECT c2.rate_to_usd FROM Currency c2 JOIN UserPrefs p ON c2.code = p.base_currency_code LIMIT 1) / COALESCE(cur.rate_to_usd, 1.0)
+), 0.0) AS total
+FROM `Transaction` t
+LEFT JOIN Currency cur ON t.currency_code = cur.code
+WHERE t.goal_id IS NOT NULL AND t.type = 'EXPENSE'
+GROUP BY t.goal_id;
 
 insert:
 INSERT INTO `Transaction` (id, amount, type, category_id, merchant, notes, currency_code, date, created_at, goal_id)

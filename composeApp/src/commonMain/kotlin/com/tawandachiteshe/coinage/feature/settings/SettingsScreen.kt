@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -166,6 +167,48 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+        }
+
+        // Exchange rates refresh
+        Spacer(Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(horizontal = 22.dp)) {
+            SettingsRow(
+                label = "Exchange rates",
+                hint = if (state.ratesLastUpdatedMs != null) "Updated just now" else "Tap to fetch live rates",
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(
+                            if (state.isRefreshingRates) TrackerColors.Paper2 else TrackerColors.Mint.copy(alpha = 0.2f),
+                            RoundedCornerShape(999.dp),
+                        )
+                        .border(1.4.dp, TrackerColors.Ink, RoundedCornerShape(999.dp))
+                        .clickable(enabled = !state.isRefreshingRates) {
+                            viewModel.onAction(SettingsAction.OnRefreshRates)
+                        }
+                        .padding(horizontal = 12.dp, vertical = 5.dp),
+                ) {
+                    if (state.isRefreshingRates) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            strokeWidth = 1.5.dp,
+                            color = TrackerColors.Ink,
+                        )
+                    } else {
+                        Text("Refresh", fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold, color = TrackerColors.Ink)
+                    }
+                }
+            }
+            if (state.ratesError != null) {
+                Text(
+                    text = state.ratesError!!,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = TrackerColors.Cherry,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+                )
             }
         }
 

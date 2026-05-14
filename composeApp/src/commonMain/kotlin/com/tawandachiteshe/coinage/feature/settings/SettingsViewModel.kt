@@ -3,11 +3,14 @@ package com.tawandachiteshe.coinage.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tawandachiteshe.coinage.data.CurrencyRepository
+import com.tawandachiteshe.coinage.data.CurrencyRateService
+import com.tawandachiteshe.coinage.data.UserPrefsRepository
 import com.tawandachiteshe.coinage.data.backup.BackupOrchestrator
 import com.tawandachiteshe.coinage.domain.DataError
 import com.tawandachiteshe.coinage.domain.Result
 import com.tawandachiteshe.coinage.domain.repository.BackupFileInfo
 import com.tawandachiteshe.coinage.domain.repository.GoogleAuthRepository
+import kotlinx.datetime.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +26,9 @@ data class SettingsState(
     val backupError: String? = null,
     val showRestoreConfirm: Boolean = false,
     val sheetUrl: String? = null,
+    val isRefreshingRates: Boolean = false,
+    val ratesLastUpdatedMs: Long? = null,
+    val ratesError: String? = null,
 )
 
 sealed interface SettingsAction {
@@ -35,10 +41,14 @@ sealed interface SettingsAction {
     data object DismissBackupError : SettingsAction
     data object DismissSheetUrl : SettingsAction
     data object RefreshGoogleState : SettingsAction
+    data object OnRefreshRates : SettingsAction
+    data object DismissRatesError : SettingsAction
 }
 
 class SettingsViewModel(
     private val currencyRepo: CurrencyRepository,
+    private val userPrefsRepo: UserPrefsRepository,
+    private val rateService: CurrencyRateService = CurrencyRateService(),
     private val googleAuthRepo: GoogleAuthRepository? = null,
     private val backupOrchestrator: BackupOrchestrator? = null,
 ) : ViewModel() {
@@ -59,7 +69,10 @@ class SettingsViewModel(
     fun onAction(action: SettingsAction) {
         when (action) {
             is SettingsAction.OnCurrencyChange ->
-                viewModelScope.launch { currencyRepo.setBase(action.code) }
+                viewModelScope.launch {
+                    currencyRepo.setBase(action.code)
+                    userPrefsRepo.setBaseCurrency(action.code)
+                }
 
             SettingsAction.OnBackupNow -> {
                 if (backupOrchestrator == null) return
@@ -110,6 +123,26 @@ class SettingsViewModel(
                 _state.update { it.copy(sheetUrl = null) }
 
             SettingsAction.RefreshGoogleState -> refreshGoogleState()
+
+            SettingsAction.OnRefreshRates -> {
+                _state.update { it.copy(isRefreshingRates = true, ratesError = null) }
+                viewModelScope.launch {
+                    try {
+                        val rates = rateService.fetchRatesVsUsd()
+                        rates.forEach { (code, rate) -> currencyRepo.updateRate(code, rate) }
+                        @OptIn(kotlin.time.ExperimentalTime::class)
+                        val now = Clock.System.now().toEpochMilliseconds()
+                        _state.update { it.copy(ratesLastUpdatedMs = now) }
+                    } catch (e: Exception) {
+                        _state.update { it.copy(ratesError = "Could not fetch rates: ${e.message?.take(60)}") }
+                    } finally {
+                        _state.update { it.copy(isRefreshingRates = false) }
+                    }
+                }
+            }
+
+            SettingsAction.DismissRatesError ->
+                _state.update { it.copy(ratesError = null) }
         }
     }
 

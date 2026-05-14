@@ -1,0 +1,44 @@
+-- Single-row table: id is always 1.
+-- All financial behaviour settings live here; updated via individual SET queries.
+CREATE TABLE UserPrefs (
+    id                  INTEGER NOT NULL PRIMARY KEY DEFAULT 1,
+    base_currency_code  TEXT    NOT NULL DEFAULT 'ZAR',
+    week_start_day      INTEGER NOT NULL DEFAULT 1,   -- 0 = Sunday, 1 = Monday
+    round_up_enabled    INTEGER NOT NULL DEFAULT 1,
+    biometric_enabled   INTEGER NOT NULL DEFAULT 1,
+    monthly_budget      REAL    NOT NULL DEFAULT 0.0, -- 0 = no budget set
+    savings_rate_pct    INTEGER NOT NULL DEFAULT 20,  -- target savings % of income
+    onboarding_done     INTEGER NOT NULL DEFAULT 0,
+    created_at          INTEGER NOT NULL DEFAULT 0
+);
+
+get:
+SELECT * FROM UserPrefs WHERE id = 1;
+
+setBaseCurrency:
+UPDATE UserPrefs SET base_currency_code = :code WHERE id = 1;
+
+setWeekStartDay:
+UPDATE UserPrefs SET week_start_day = :day WHERE id = 1;
+
+setRoundUp:
+UPDATE UserPrefs SET round_up_enabled = :enabled WHERE id = 1;
+
+setBiometric:
+UPDATE UserPrefs SET biometric_enabled = :enabled WHERE id = 1;
+
+setMonthlyBudget:
+UPDATE UserPrefs SET monthly_budget = :budget WHERE id = 1;
+
+setSavingsRate:
+UPDATE UserPrefs SET savings_rate_pct = :pct WHERE id = 1;
+
+setOnboardingDone:
+UPDATE UserPrefs SET onboarding_done = 1 WHERE id = 1;
+
+-- Seed the single row on fresh installs; no-op if it already exists.
+seed:
+INSERT OR IGNORE INTO UserPrefs (id, created_at) VALUES (1, :createdAt);
+
+deleteAll:
+DELETE FROM UserPrefs;
