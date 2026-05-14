@@ -11,8 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
@@ -53,7 +52,6 @@ import com.tawandachiteshe.coinage.ui.theme.TrackerIcons
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(
     onTabClick: (TrackerTab) -> Unit,
@@ -176,35 +174,48 @@ fun ProfileScreen(
                 Badge(TrackerIcons.Calendar,  "long hauler",     TrackerColors.Sky,       TrackerColors.Ink,   state.hasLongHauler),
                 Badge(TrackerIcons.Layers,    "jar master",      TrackerColors.Tangerine, TrackerColors.Ink,   state.hasJarMaster),
             )
-            val earnedBadges = allBadges.filter { it.unlocked }
-            if (earnedBadges.isEmpty()) {
-                Text(
-                    "Track your first expense to earn stickers.",
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = TrackerColors.Ink2.copy(alpha = 0.5f),
-                )
-            } else {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    earnedBadges.forEachIndexed { i, badge ->
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp, 80.dp)
-                                .rotate(if (i % 2 == 0) -2f else 2f)
-                                .popShadow(cornerRadius = 12.dp, offsetX = 2.5.dp, offsetY = 3.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(badge.color, RoundedCornerShape(12.dp))
-                                .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                Icon(badge.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = badge.tint)
-                                Spacer(Modifier.height(4.dp))
-                                Text(badge.label, fontSize = 9.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = badge.tint, lineHeight = 11.sp, modifier = Modifier.padding(horizontal = 4.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                allBadges.chunked(4).forEachIndexed { rowIdx, row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    ) {
+                        row.forEachIndexed { colIdx, badge ->
+                            val i = rowIdx * 4 + colIdx
+                            val tilt = if (i % 2 == 0) -2f else 2f
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(66.dp, 82.dp)
+                                        .rotate(tilt)
+                                        .alpha(if (badge.unlocked) 1f else 0.3f)
+                                        .popShadow(cornerRadius = 12.dp, offsetX = 2.5.dp, offsetY = 3.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(badge.color, RoundedCornerShape(12.dp))
+                                        .border(1.6.dp, TrackerColors.Ink, RoundedCornerShape(12.dp)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center,
+                                        modifier = Modifier.padding(horizontal = 5.dp),
+                                    ) {
+                                        Icon(badge.icon, contentDescription = null, modifier = Modifier.size(22.dp), tint = badge.tint)
+                                        Spacer(Modifier.height(5.dp))
+                                        Text(
+                                            text = badge.label,
+                                            fontSize = 9.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            letterSpacing = 0.3.sp,
+                                            color = badge.tint,
+                                            lineHeight = 11.sp,
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
