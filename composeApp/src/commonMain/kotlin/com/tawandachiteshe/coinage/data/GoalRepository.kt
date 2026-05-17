@@ -38,8 +38,10 @@ class GoalRepository(
         isCompleted: Long,
         createdAt: Long,
     ) = withContext(ioDispatcher) {
-        q.insert(id, name, icon, targetAmount, savedAmount, deadline, isCompleted, createdAt)
+        q.insert(id, name, icon, targetAmount, savedAmount, deadline, isCompleted, 0L, createdAt)
     }
+
+    suspend fun archive(id: String) = withContext(ioDispatcher) { q.archive(id) }
 
     suspend fun addToSaved(id: String, amount: Double) =
         withContext(ioDispatcher) { q.addToSaved(amount, id) }

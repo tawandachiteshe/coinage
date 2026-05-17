@@ -18,9 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -137,120 +141,167 @@ fun GoalsScreen(
                 state.goals.forEachIndexed { i, goal ->
                     val color = GOAL_COLORS[i % GOAL_COLORS.size]
                     val tilt = GOAL_TILTS[i % GOAL_TILTS.size]
-                    StickerCard(
-                        bgColor = CoinageColors.PaperWhite,
-                        modifier = Modifier.fillMaxWidth(),
-                        tilt = tilt,
-                        cornerRadius = 18.dp,
-                        borderWidth = 1.8.dp,
-                        shadowX = 4.dp,
-                        shadowY = 4.dp,
-                    ) {
-                        Box {
-                            // Tape strip
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 24.dp)
-                                    .size(52.dp, 16.dp)
-                                    .rotate(-5f)
-                                    .background(Color(0xB8FF8A4D))
-                                    .align(Alignment.TopStart)
-                                    .offset(y = (-8).dp),
-                            )
-                            Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(46.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(color, RoundedCornerShape(12.dp))
-                                            .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(12.dp)),
-                                        contentAlignment = Alignment.Center,
-                                    ) { Icon(imageVector = CoinageIcons.fromKey(goal.icon), contentDescription = null, modifier = Modifier.size(22.dp), tint = CoinageColors.Ink) }
-                                    Spacer(Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(goal.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
-                                        if (goal.due != null) Text(goal.due, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.65f))
+                    key(goal.id) {
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                when (value) {
+                                    SwipeToDismissBoxValue.EndToStart -> {
+                                        goalToDelete = goal
+                                        false // snap back; wait for dialog confirmation
                                     }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text("\$${goal.savedAmount.fmtWhole()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
-                                        Text("/\$${goal.targetAmount.fmtWhole()}", fontSize = 12.sp, color = CoinageColors.Ink2.copy(alpha = 0.55f))
+                                    SwipeToDismissBoxValue.StartToEnd -> {
+                                        viewModel.onAction(GoalsAction.OnArchiveGoal(goal.id))
+                                        true
                                     }
+                                    else -> false
                                 }
-
-                                Spacer(Modifier.height(12.dp))
-                                StripedProgressBar(pct = goal.pct, color = color, modifier = Modifier.fillMaxWidth())
-
-                                Spacer(Modifier.height(10.dp))
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            },
+                        )
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundContent = {
+                                val dir = dismissState.dismissDirection
+                                val isDelete = dir == SwipeToDismissBoxValue.EndToStart
+                                val bgColor = when (dir) {
+                                    SwipeToDismissBoxValue.EndToStart -> CoinageColors.Cherry.copy(alpha = 0.15f)
+                                    SwipeToDismissBoxValue.StartToEnd -> CoinageColors.Sky.copy(alpha = 0.15f)
+                                    else -> Color.Transparent
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(bgColor, RoundedCornerShape(18.dp))
+                                        .padding(horizontal = 24.dp),
+                                    contentAlignment = if (isDelete) Alignment.CenterEnd else Alignment.CenterStart,
                                 ) {
-                                    if (!goal.isCompleted) {
-                                        val available = state.availableBalance
-                                        listOf(10, 25, 50).forEach { amt ->
-                                            val affordable = amt.toDouble() <= available
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(999.dp))
-                                                    .background(
-                                                        if (affordable) CoinageColors.Paper2 else CoinageColors.Paper2.copy(alpha = 0.4f),
-                                                        RoundedCornerShape(999.dp),
-                                                    )
-                                                    .border(
-                                                        1.4.dp,
-                                                        if (affordable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.25f),
-                                                        RoundedCornerShape(999.dp),
-                                                    )
-                                                    .clickable(enabled = affordable) { pendingContribution = goal to amt.toDouble() }
-                                                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                                            ) {
-                                                Text(
-                                                    "+ \$$amt",
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = if (affordable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.3f),
-                                                )
-                                            }
-                                        }
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(999.dp))
-                                                .background(
-                                                    if (available > 0) CoinageColors.Grape.copy(alpha = 0.12f) else CoinageColors.Paper2.copy(alpha = 0.4f),
-                                                    RoundedCornerShape(999.dp),
-                                                )
-                                                .border(
-                                                    1.4.dp,
-                                                    if (available > 0) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.25f),
-                                                    RoundedCornerShape(999.dp),
-                                                )
-                                                .clickable(enabled = available > 0) { customGoalEntry = goal; customGoalAmount = "" }
-                                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    if (dir != SwipeToDismissBoxValue.Settled) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(3.dp),
                                         ) {
+                                            Icon(
+                                                imageVector = if (isDelete) CoinageIcons.Trash else CoinageIcons.Archive,
+                                                contentDescription = if (isDelete) "Delete" else "Archive",
+                                                tint = if (isDelete) CoinageColors.Cherry else CoinageColors.Sky,
+                                                modifier = Modifier.size(20.dp),
+                                            )
                                             Text(
-                                                "Custom…",
-                                                fontSize = 12.sp,
+                                                text = if (isDelete) "Delete" else "Archive",
+                                                fontSize = 10.sp,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = if (available > 0) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.3f),
+                                                fontFamily = FontFamily.Monospace,
+                                                color = if (isDelete) CoinageColors.Cherry else CoinageColors.Sky,
                                             )
                                         }
-                                    } else {
-                                        Text("Completed ✓", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Mint, fontWeight = FontWeight.SemiBold)
                                     }
-                                    Spacer(Modifier.weight(1f))
-                                    Text("${goal.pct.toInt()}%", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.65f))
-                                    Spacer(Modifier.width(6.dp))
-                                    // Delete button
+                                }
+                            },
+                        ) {
+                            StickerCard(
+                                bgColor = CoinageColors.PaperWhite,
+                                modifier = Modifier.fillMaxWidth(),
+                                tilt = tilt,
+                                cornerRadius = 18.dp,
+                                borderWidth = 1.8.dp,
+                                shadowX = 4.dp,
+                                shadowY = 4.dp,
+                            ) {
+                                Box {
+                                    // Tape strip
                                     Box(
                                         modifier = Modifier
-                                            .size(28.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(CoinageColors.Cherry.copy(alpha = 0.12f))
-                                            .clickable { goalToDelete = goal },
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(CoinageIcons.Trash, contentDescription = "Delete goal", modifier = Modifier.size(14.dp), tint = CoinageColors.Cherry)
+                                            .padding(start = 24.dp)
+                                            .size(52.dp, 16.dp)
+                                            .rotate(-5f)
+                                            .background(Color(0xB8FF8A4D))
+                                            .align(Alignment.TopStart)
+                                            .offset(y = (-8).dp),
+                                    )
+                                    Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(46.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(color, RoundedCornerShape(12.dp))
+                                                    .border(1.6.dp, CoinageColors.Ink, RoundedCornerShape(12.dp)),
+                                                contentAlignment = Alignment.Center,
+                                            ) { Icon(imageVector = CoinageIcons.fromKey(goal.icon), contentDescription = null, modifier = Modifier.size(22.dp), tint = CoinageColors.Ink) }
+                                            Spacer(Modifier.width(12.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(goal.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                                                if (goal.due != null) Text(goal.due, fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 0.4.sp, color = CoinageColors.Ink2.copy(alpha = 0.65f))
+                                            }
+                                            Column(horizontalAlignment = Alignment.End) {
+                                                Text("\$${goal.savedAmount.fmtWhole()}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CoinageColors.Ink)
+                                                Text("/\$${goal.targetAmount.fmtWhole()}", fontSize = 12.sp, color = CoinageColors.Ink2.copy(alpha = 0.55f))
+                                            }
+                                        }
+
+                                        Spacer(Modifier.height(12.dp))
+                                        StripedProgressBar(pct = goal.pct, color = color, modifier = Modifier.fillMaxWidth())
+
+                                        Spacer(Modifier.height(10.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        ) {
+                                            if (!goal.isCompleted) {
+                                                val available = state.availableBalance
+                                                listOf(10, 25, 50).forEach { amt ->
+                                                    val affordable = amt.toDouble() <= available
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(999.dp))
+                                                            .background(
+                                                                if (affordable) CoinageColors.Paper2 else CoinageColors.Paper2.copy(alpha = 0.4f),
+                                                                RoundedCornerShape(999.dp),
+                                                            )
+                                                            .border(
+                                                                1.4.dp,
+                                                                if (affordable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.25f),
+                                                                RoundedCornerShape(999.dp),
+                                                            )
+                                                            .clickable(enabled = affordable) { pendingContribution = goal to amt.toDouble() }
+                                                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                                                    ) {
+                                                        Text(
+                                                            "+ \$$amt",
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = if (affordable) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.3f),
+                                                        )
+                                                    }
+                                                }
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(999.dp))
+                                                        .background(
+                                                            if (available > 0) CoinageColors.Grape.copy(alpha = 0.12f) else CoinageColors.Paper2.copy(alpha = 0.4f),
+                                                            RoundedCornerShape(999.dp),
+                                                        )
+                                                        .border(
+                                                            1.4.dp,
+                                                            if (available > 0) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.25f),
+                                                            RoundedCornerShape(999.dp),
+                                                        )
+                                                        .clickable(enabled = available > 0) { customGoalEntry = goal; customGoalAmount = "" }
+                                                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                                                ) {
+                                                    Text(
+                                                        "Custom…",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = if (available > 0) CoinageColors.Ink else CoinageColors.Ink.copy(alpha = 0.3f),
+                                                    )
+                                                }
+                                            } else {
+                                                Text("Completed ✓", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Mint, fontWeight = FontWeight.SemiBold)
+                                            }
+                                            Spacer(Modifier.weight(1f))
+                                            Text("${goal.pct.toInt()}%", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = CoinageColors.Ink2.copy(alpha = 0.65f))
+                                        }
                                     }
                                 }
                             }

@@ -41,6 +41,7 @@ data class GoalsState(
 sealed interface GoalsAction {
     data class OnAddContribution(val goalId: String, val amount: Double) : GoalsAction
     data class OnDeleteGoal(val id: String) : GoalsAction
+    data class OnArchiveGoal(val id: String) : GoalsAction
     data class OnCreateGoal(
         val name: String,
         val icon: String,
@@ -126,6 +127,9 @@ class GoalsViewModel(
 
             is GoalsAction.OnDeleteGoal ->
                 viewModelScope.launch { goalRepo.delete(action.id) }
+
+            is GoalsAction.OnArchiveGoal ->
+                viewModelScope.launch { goalRepo.archive(action.id) }
 
             is GoalsAction.OnCreateGoal -> {
                 if (action.name.isBlank()) {

@@ -6,14 +6,15 @@ CREATE TABLE Goal (
     saved_amount   REAL    NOT NULL DEFAULT 0.0,
     deadline       INTEGER,
     is_completed   INTEGER NOT NULL DEFAULT 0,
+    is_archived    INTEGER NOT NULL DEFAULT 0,
     created_at     INTEGER NOT NULL
 );
 
 selectAll:
-SELECT * FROM Goal ORDER BY is_completed ASC, CASE WHEN deadline IS NULL THEN 1 ELSE 0 END ASC, deadline ASC;
+SELECT * FROM Goal WHERE is_archived = 0 ORDER BY is_completed ASC, CASE WHEN deadline IS NULL THEN 1 ELSE 0 END ASC, deadline ASC;
 
 selectActive:
-SELECT * FROM Goal WHERE is_completed = 0 ORDER BY CASE WHEN deadline IS NULL THEN 1 ELSE 0 END ASC, deadline ASC;
+SELECT * FROM Goal WHERE is_completed = 0 AND is_archived = 0 ORDER BY CASE WHEN deadline IS NULL THEN 1 ELSE 0 END ASC, deadline ASC;
 
 progressPercent:
 SELECT id,
@@ -23,8 +24,11 @@ SELECT id,
     END AS percent
 FROM Goal WHERE id = ?;
 
+archive:
+UPDATE Goal SET is_archived = 1 WHERE id = ?;
+
 insert:
-INSERT INTO Goal VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO Goal VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 addToSaved:
 UPDATE Goal
