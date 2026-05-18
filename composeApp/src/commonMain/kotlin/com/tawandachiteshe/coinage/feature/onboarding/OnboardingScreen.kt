@@ -80,7 +80,7 @@ fun OnboardingScreen(
             Step("how it works", "Swipe to", "sort.", CoinageColors.Grape,
                 "New transactions land in an inbox. Swipe each card — left for Need, right for Want, up to Save, down to Skip. That's the whole input loop."),
             Step("private by default", "Stays on", "your phone.", CoinageColors.Mint,
-                "Locked behind Face ID. No accounts, no email, no servers. AI assistants are opt-in later — for now, just you and the numbers."),
+                "Locked behind biometrics. No accounts, no email, no servers. AI assistants are opt-in later — for now, just you and the numbers."),
         )
     }
     var step by remember { mutableIntStateOf(0) }
@@ -447,7 +447,7 @@ private fun OnboardingArt(step: Int, accent: Color) {
                 ) {
                     Icon(CoinageIcons.Lock, contentDescription = null, modifier = Modifier.size(48.dp), tint = CoinageColors.Ink)
                     Spacer(Modifier.height(8.dp))
-                    Text("FACE ID", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp, color = CoinageColors.Ink)
+                    Text("BIOMETRICS", fontSize = 10.sp, fontFamily = FontFamily.Monospace, letterSpacing = 2.sp, color = CoinageColors.Ink)
                 }
             }
         }

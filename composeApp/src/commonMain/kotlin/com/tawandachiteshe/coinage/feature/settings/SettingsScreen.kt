@@ -231,7 +231,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(22.dp))
         SectionLabel("Privacy & sync")
         Column(modifier = Modifier.padding(horizontal = 22.dp)) {
-            SettingsRow(label = "Unlock with Face ID", hint = "required on cold launch") {
+            SettingsRow(label = "Unlock with biometrics", hint = "fingerprint or face · required on cold launch") {
                 CoinageToggle(on = biometric, color = CoinageColors.Mint) { viewModel.onAction(SettingsAction.OnBiometricToggle) }
             }
             SettingsRow(label = "AI assistant", hint = "auto-categorize · monthly write-up") {
