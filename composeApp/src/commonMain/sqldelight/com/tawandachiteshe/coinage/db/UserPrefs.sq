@@ -37,8 +37,9 @@ setOnboardingDone:
 UPDATE UserPrefs SET onboarding_done = 1 WHERE id = 1;
 
 -- Seed the single row on fresh installs; no-op if it already exists.
+-- biometric_enabled is explicitly 0 so new users start with auth disabled.
 seed:
-INSERT OR IGNORE INTO UserPrefs (id, created_at) VALUES (1, :createdAt);
+INSERT OR IGNORE INTO UserPrefs (id, biometric_enabled, created_at) VALUES (1, 0, :createdAt);
 
 deleteAll:
 DELETE FROM UserPrefs;

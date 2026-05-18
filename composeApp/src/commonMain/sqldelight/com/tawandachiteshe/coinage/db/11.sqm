@@ -1,0 +1,1 @@
+UPDATE UserPrefs SET biometric_enabled = 0;

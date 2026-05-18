@@ -69,7 +69,7 @@ fun SettingsScreen(
 
     var theme by remember { mutableStateOf("Tropicana") }
     var voice by remember { mutableStateOf("Wise sibling") }
-    var biometric by remember { mutableStateOf(true) }
+    val biometric = state.biometricEnabled
     var aiEnabled by remember { mutableStateOf(false) }
     var roundUpEnabled by remember { mutableStateOf(true) }
 
@@ -232,7 +232,7 @@ fun SettingsScreen(
         SectionLabel("Privacy & sync")
         Column(modifier = Modifier.padding(horizontal = 22.dp)) {
             SettingsRow(label = "Unlock with Face ID", hint = "required on cold launch") {
-                CoinageToggle(on = biometric, color = CoinageColors.Mint) { biometric = !biometric }
+                CoinageToggle(on = biometric, color = CoinageColors.Mint) { viewModel.onAction(SettingsAction.OnBiometricToggle) }
             }
             SettingsRow(label = "AI assistant", hint = "auto-categorize · monthly write-up") {
                 CoinageToggle(on = aiEnabled, color = CoinageColors.Grape) { aiEnabled = !aiEnabled }

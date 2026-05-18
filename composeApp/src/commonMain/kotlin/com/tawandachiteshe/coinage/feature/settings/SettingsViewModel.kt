@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsState(
     val baseCurrencyCode: String = "USD",
+    val biometricEnabled: Boolean = false,
     val isGoogleConnected: Boolean = false,
     val googleEmail: String? = null,
     val isSyncing: Boolean = false,
@@ -33,6 +34,7 @@ data class SettingsState(
 
 sealed interface SettingsAction {
     data class OnCurrencyChange(val code: String) : SettingsAction
+    data object OnBiometricToggle : SettingsAction
     data object OnBackupNow : SettingsAction
     data object OnRestoreFromDrive : SettingsAction
     data object OnConfirmRestore : SettingsAction
@@ -62,6 +64,11 @@ class SettingsViewModel(
                 if (base != null) _state.update { it.copy(baseCurrencyCode = base.code) }
             }
         }
+        viewModelScope.launch {
+            userPrefsRepo.getFlow().collect { prefs ->
+                if (prefs != null) _state.update { it.copy(biometricEnabled = prefs.biometric_enabled == 1L) }
+            }
+        }
         refreshGoogleState()
         refreshBackupInfo()
     }
@@ -72,6 +79,11 @@ class SettingsViewModel(
                 viewModelScope.launch {
                     currencyRepo.setBase(action.code)
                     userPrefsRepo.setBaseCurrency(action.code)
+                }
+
+            SettingsAction.OnBiometricToggle ->
+                viewModelScope.launch {
+                    userPrefsRepo.setBiometric(!_state.value.biometricEnabled)
                 }
 
             SettingsAction.OnBackupNow -> {
