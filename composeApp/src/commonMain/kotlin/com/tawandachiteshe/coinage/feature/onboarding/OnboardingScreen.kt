@@ -222,7 +222,7 @@ fun OnboardingScreen(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 62.dp, end = 22.dp)
-                .clickable { onFinish() },
+                .clickable { viewModel.finish(onFinish) },
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
             letterSpacing = 1.sp,

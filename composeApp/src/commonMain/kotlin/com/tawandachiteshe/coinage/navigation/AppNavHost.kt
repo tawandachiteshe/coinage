@@ -31,7 +31,8 @@ import org.koin.compose.koinInject
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
-    val prefs by koinInject<UserPrefsRepository>().getFlow().collectAsState(initial = null)
+    val prefsRepo = koinInject<UserPrefsRepository>()
+    val prefs by remember(prefsRepo) { prefsRepo.getFlow() }.collectAsState(initial = null)
     // Render nothing until the first DB row arrives (single SQLite read, imperceptible).
     val prefs_ = prefs ?: return
     val startDestination: Route = if (prefs_.onboarding_done == 1L) Route.Home else Route.Onboarding
