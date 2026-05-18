@@ -31,6 +31,8 @@ data class GoalUi(
 
 data class GoalsState(
     val goals: List<GoalUi> = emptyList(),
+    val archivedGoals: List<GoalUi> = emptyList(),
+    val showArchived: Boolean = false,
     val totalSaved: Double = 0.0,
     val totalTarget: Double = 0.0,
     val availableBalance: Double = 0.0,
@@ -42,6 +44,8 @@ sealed interface GoalsAction {
     data class OnAddContribution(val goalId: String, val amount: Double) : GoalsAction
     data class OnDeleteGoal(val id: String) : GoalsAction
     data class OnArchiveGoal(val id: String) : GoalsAction
+    data class OnUnarchiveGoal(val id: String) : GoalsAction
+    data object OnToggleShowArchived : GoalsAction
     data class OnCreateGoal(
         val name: String,
         val icon: String,
@@ -52,6 +56,7 @@ sealed interface GoalsAction {
 
 sealed interface GoalsEvent {
     data class ShowError(val msg: String) : GoalsEvent
+    data class ShowUndoArchive(val goalId: String, val goalName: String) : GoalsEvent
 }
 
 class GoalsViewModel(
@@ -77,21 +82,25 @@ class GoalsViewModel(
         viewModelScope.launch {
             combine(
                 goalRepo.getAll(),
+                goalRepo.getArchived(),
                 txRepo.getSavingsPerGoalFlow(),
                 txRepo.getBalanceFlow(),
-            ) { rows, savingsMap, balance -> Triple(rows, savingsMap, balance) }
-                .collect { (rows, savingsMap, balance) ->
-                    val goals = rows.map { it.toUi(savingsMap) }
-                    _state.update { s ->
-                        s.copy(
-                            goals = goals,
-                            totalSaved = goals.sumOf { it.savedAmount },
-                            totalTarget = goals.sumOf { it.targetAmount },
-                            availableBalance = balance.coerceAtLeast(0.0),
-                            isLoading = false,
-                        )
-                    }
+            ) { rows, archived, savingsMap, balance ->
+                object { val rows = rows; val archived = archived; val savingsMap = savingsMap; val balance = balance }
+            }.collect {
+                val goals = it.rows.map { r -> r.toUi(it.savingsMap) }
+                val archivedGoals = it.archived.map { r -> r.toUi(it.savingsMap) }
+                _state.update { s ->
+                    s.copy(
+                        goals = goals,
+                        archivedGoals = archivedGoals,
+                        totalSaved = goals.sumOf { g -> g.savedAmount },
+                        totalTarget = goals.sumOf { g -> g.targetAmount },
+                        availableBalance = it.balance.coerceAtLeast(0.0),
+                        isLoading = false,
+                    )
                 }
+            }
         }
     }
 
@@ -128,8 +137,17 @@ class GoalsViewModel(
             is GoalsAction.OnDeleteGoal ->
                 viewModelScope.launch { goalRepo.delete(action.id) }
 
-            is GoalsAction.OnArchiveGoal ->
-                viewModelScope.launch { goalRepo.archive(action.id) }
+            is GoalsAction.OnArchiveGoal -> viewModelScope.launch {
+                val goal = _state.value.goals.find { it.id == action.id } ?: return@launch
+                goalRepo.archive(action.id)
+                _events.send(GoalsEvent.ShowUndoArchive(action.id, goal.name))
+            }
+
+            is GoalsAction.OnUnarchiveGoal ->
+                viewModelScope.launch { goalRepo.unarchive(action.id) }
+
+            is GoalsAction.OnToggleShowArchived ->
+                _state.update { it.copy(showArchived = !it.showArchived) }
 
             is GoalsAction.OnCreateGoal -> {
                 if (action.name.isBlank()) {

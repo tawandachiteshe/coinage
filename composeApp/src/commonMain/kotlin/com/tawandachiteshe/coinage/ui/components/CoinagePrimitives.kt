@@ -382,11 +382,13 @@ fun CoinageScaffold(
     onTabClick: ((CoinageTab) -> Unit)? = null,
     onAddClick: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
         modifier = modifier,
         containerColor = CoinageColors.Paper,
+        snackbarHost = snackbarHost,
         topBar = {
             if (onBack != null) {
                 // Pinned top bar — Paper background so content scrolls cleanly underneath

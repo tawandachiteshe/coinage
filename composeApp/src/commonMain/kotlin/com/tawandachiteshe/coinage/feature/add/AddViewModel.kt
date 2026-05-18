@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -189,11 +189,12 @@ class AddViewModel(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     private fun save() {
         val s = _state.value
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            val now = Clock.System.now().toEpochMilliseconds()
+            val now = kotlin.time.Clock.System.now().toEpochMilliseconds()
             when (s.addType) {
                 AddType.Transaction -> saveTransaction(s, now)
                 AddType.Goal        -> saveGoal(s, now)

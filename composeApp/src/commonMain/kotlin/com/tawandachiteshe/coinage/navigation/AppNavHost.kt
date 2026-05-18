@@ -3,6 +3,7 @@ package com.tawandachiteshe.coinage.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tawandachiteshe.coinage.data.UserPrefsRepository
 import com.tawandachiteshe.coinage.feature.add.AddScreen
 import com.tawandachiteshe.coinage.feature.add.AddType
 import com.tawandachiteshe.coinage.feature.debt.DebtScreen
@@ -23,12 +25,17 @@ import com.tawandachiteshe.coinage.feature.onboarding.OnboardingScreen
 import com.tawandachiteshe.coinage.feature.profile.ProfileScreen
 import com.tawandachiteshe.coinage.feature.settings.SettingsScreen
 import com.tawandachiteshe.coinage.ui.components.CoinageTab
+import org.koin.compose.koinInject
 
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: Route = Route.Onboarding,
 ) {
+    val prefs by koinInject<UserPrefsRepository>().getFlow().collectAsState(initial = null)
+    // Render nothing until the first DB row arrives (single SQLite read, imperceptible).
+    val prefs_ = prefs ?: return
+    val startDestination: Route = if (prefs_.onboarding_done == 1L) Route.Home else Route.Onboarding
+
     var addType by remember { mutableStateOf<AddType?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {

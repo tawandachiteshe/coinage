@@ -17,129 +17,189 @@ object ReceiptParser {
         )
     }
 
+    // ─── Tuning constants ────────────────────────────────────────────────────
+
+    private val  MERCHANT_LENGTH_RANGE  = 2..60
+    private const val MERCHANT_SCAN_WINDOW    = 10
+
+    private const val SCORE_PER_EARLY_LINE    = 3
+    private const val SCORE_ALL_CAPS          = 20
+    private const val SCORE_EMPHASIZED        = 30
+    private const val SCORE_KNOWN_BRAND       = 35
+    private const val SCORE_LETTER_RATIO_HIGH = 15
+    private const val SCORE_LETTER_RATIO_MED  = 8
+    private const val SCORE_WORD_COUNT_OK     = 5
+    private const val SCORE_DIGIT_PENALTY     = 12
+    private const val LETTER_RATIO_HIGH       = 0.85f
+    private const val LETTER_RATIO_MED        = 0.70f
+    private val       BRAND_WORD_COUNT        = 1..4
+
+    private val       LOCATION_DESC_LENGTH    = 2..25
+
+    private const val SCORE_TOTAL_HIGH_CONF   = 100
+    private const val SCORE_TOTAL_MED_CONF    = 50
+    private const val POS_LOWER_HALF          = 0.50f
+    private const val POS_LOWER_THIRD         = 0.65f
+    private const val POS_BOTTOM_FIFTH        = 0.80f
+    private const val SCORE_POS_LOWER_HALF    = 15
+    private const val SCORE_POS_LOWER_THIRD   = 15
+    private const val SCORE_POS_BOTTOM_FIFTH  = 10
+
+    private const val MIN_YEAR               = 1900
+
+    private const val PHONE_MIN_DIGITS       = 7
+    private const val PHONE_DIGIT_RATIO      = 0.5f
+
     // ─── Merchant ────────────────────────────────────────────────────────────
 
-    private val PHONE_REGEX = Regex("""[+\d][\d\s()\-]{6,}""")
-    private val SKIP_MERCHANT = listOf(
-        "tel:", "tel :", "phone:", "fax:", "www.", "http", "@",
-        "reg no", "vat no", "tax no", "reg:", "vat:", "co. reg",
-        "receipt", "invoice", "tax invoice", "cash sale",
-        "change", "cash", "card", "visa", "mastercard",
-        // taglines / pleasantries
-        "thank you", "welcome", "have a nice", "please retain",
-        "keep this", "customer copy", "merchant copy", "duplicate",
-        "serving you", "shop at", "store hours",
-    )
-    private val ADDRESS_WORDS = listOf(
-        "street", "st.", " ave", "avenue", "road", "rd", "drive", "dr.",
-        "floor", "suite", "unit", "po box", "p.o box", "shopping centre",
-        "mall", "park", "plaza", "corner", "cnr",
+    private val SKIP_WORDS = setOf(
+        "tel", "phone", "fax", "www", "http",
+        "reg", "vat", "tax", "receipt", "invoice", "cash", "sale",
+        "change", "card", "visa", "mastercard",
+        "thank", "welcome", "duplicate", "retain",
     )
 
-    // Legal suffixes to strip from the extracted merchant name
-    private val LEGAL_SUFFIX = Regex(
-        """\s*[(\[]?(?:pty\.?\s*ltd|ltd|llc|inc|corp|cc|sa|plc|gmbh|bv|nv|co\.?\s*ltd)[)\]]?\.?\s*$""",
-        RegexOption.IGNORE_CASE,
+    private val SKIP_PHRASES = listOf(
+        "thank you", "please retain", "keep this",
+        "customer copy", "merchant copy",
+        "serving you", "shop at", "store hours",
+        "have a nice",
     )
-    // Store/branch codes appended to names: "WOOLWORTHS #123", "KFC - 045"
-    private val STORE_CODE = Regex("""[\s\-–#]+\d+\s*$""")
-    // Location/branch descriptor after a separator: "PICK N PAY - SANDTON", "SPAR | RIVONIA"
-    private val LOCATION_SUFFIX = Regex("""\s*[-–|/]\s*[A-Za-z][A-Za-z\s]{2,25}$""")
-    // "T/A" or "TRADING AS" — the real brand name follows
-    private val TRADING_AS = Regex("""\bt/?a\b|\btrading\s+as\b""", RegexOption.IGNORE_CASE)
+
+    private val ADDRESS_WORDS = setOf(
+        "street", "st", "ave", "avenue", "road", "rd", "drive", "dr",
+        "floor", "suite", "unit", "box", "mall", "park", "plaza", "corner", "cnr",
+    )
+
+    private val LEGAL_WORDS = setOf(
+        "pty", "ltd", "llc", "inc", "corp", "cc", "sa", "plc", "gmbh", "bv", "nv",
+    )
+
+    private val BRAND_SEPARATORS = listOf(" - ", " – ", " | ", " / ")
+
+    private val TRADING_AS_MARKERS = listOf(" t/a ", " ta ", " trading as ")
 
     private fun isMerchantCandidate(line: String): Boolean {
+        if (line.length !in MERCHANT_LENGTH_RANGE) return false
+        if (looksLikePhone(line)) return false
+        if (looksLikeDate(line)) return false
+        if (amountsIn(line).isNotEmpty()) return false
+        if (line.startsWith("#")) return false
+        if (line.all { it.isDigit() || it == '-' || it == '/' || it.isWhitespace() }) return false
         val lower = line.lowercase()
-        return line.length in 2..60 &&
-            !PHONE_REGEX.containsMatchIn(line) &&
-            !looksLikeDate(line) &&
-            !AMOUNT_REGEX.containsMatchIn(line) &&
-            !line.startsWith("#") &&
-            SKIP_MERCHANT.none { lower.contains(it) } &&
-            ADDRESS_WORDS.none { lower.contains(it) } &&
-            !line.all { c -> c.isDigit() || c == '-' || c == '/' || c.isWhitespace() }
+        val words = wordsOf(lower)
+        if (words.any { it in SKIP_WORDS }) return false
+        if (SKIP_PHRASES.any { lower.contains(it) }) return false
+        if (words.any { it in ADDRESS_WORDS }) return false
+        return true
     }
 
     private fun scoreMerchant(line: String, position: Int, emphasizedLineTexts: Set<String>): Int {
         var score = 0
         val lower = line.lowercase()
-        // Earlier lines are more likely to be the merchant header
-        score += (10 - position).coerceAtLeast(0) * 3
-        // ALL CAPS = typical receipt header style
-        if (line == line.uppercase() && line.any { it.isLetter() }) score += 20
-        // Bold/large text detected by OCR bounding-box height
-        if (line.trim() in emphasizedLineTexts) score += 30
-        // Known brand name from our category keywords — strong signal
-        if (CATEGORY_KEYWORDS.values.flatten().any { lower.contains(it) }) score += 35
-        // Mostly letters/spaces = clean brand name
+        score += (MERCHANT_SCAN_WINDOW - position).coerceAtLeast(0) * SCORE_PER_EARLY_LINE
+        if (line == line.uppercase() && line.any { it.isLetter() }) score += SCORE_ALL_CAPS
+        if (line.trim() in emphasizedLineTexts) score += SCORE_EMPHASIZED
+        if (CATEGORY_KEYWORDS.values.flatten().any { lower.contains(it) }) score += SCORE_KNOWN_BRAND
         val letterRatio = line.count { it.isLetter() || it.isWhitespace() }.toFloat() / line.length
-        if (letterRatio >= 0.85f) score += 15
-        else if (letterRatio >= 0.70f) score += 8
-        // Embedded digits (not a pure digit line) suggest a store code or ref number
-        if (line.any { it.isDigit() }) score -= 12
-        // Sweet-spot word count: 1–4 words is typical for a brand
-        val wordCount = line.trim().split(Regex("""\s+""")).size
-        if (wordCount in 1..4) score += 5
+        when {
+            letterRatio >= LETTER_RATIO_HIGH -> score += SCORE_LETTER_RATIO_HIGH
+            letterRatio >= LETTER_RATIO_MED  -> score += SCORE_LETTER_RATIO_MED
+        }
+        if (line.any { it.isDigit() }) score -= SCORE_DIGIT_PENALTY
+        if (wordsOf(line).size in BRAND_WORD_COUNT) score += SCORE_WORD_COUNT_OK
         return score
     }
 
     private fun extractMerchant(lines: List<String>, emphasizedLineTexts: Set<String> = emptySet()): String? {
         data class Candidate(val line: String, val score: Int)
 
-        val best = lines.take(10)
+        val best = lines.take(MERCHANT_SCAN_WINDOW)
             .mapIndexedNotNull { idx, line ->
-                if (isMerchantCandidate(line)) Candidate(line, scoreMerchant(line, idx, emphasizedLineTexts)) else null
+                if (isMerchantCandidate(line))
+                    Candidate(line, scoreMerchant(line, idx, emphasizedLineTexts))
+                else null
             }
             .maxByOrNull { it.score }
             ?.line ?: return null
 
-        // "JOHN'S STORE T/A WOOLWORTHS" → "WOOLWORTHS"
-        val afterTa = if (TRADING_AS.containsMatchIn(best))
-            TRADING_AS.split(best).last().trim()
-        else best
-
-        return afterTa
-            .trim()
-            .replace(Regex("""\s{2,}"""), " ")
-            .replace(LEGAL_SUFFIX, "")
-            .replace(STORE_CODE, "")
-            .replace(LOCATION_SUFFIX, "")
+        return best
+            .let(::splitOnTradingAs)
+            .normalizeSpaces()
+            .let(::stripLegalSuffix)
+            .let(::stripStoreCode)
+            .let(::stripLocationSuffix)
             .trim()
             .ifBlank { null }
     }
 
+    private fun splitOnTradingAs(name: String): String {
+        val lower = name.lowercase()
+        for (marker in TRADING_AS_MARKERS) {
+            val idx = lower.indexOf(marker)
+            if (idx >= 0) return name.substring(idx + marker.length).trim()
+        }
+        return name
+    }
+
+    private fun stripLegalSuffix(name: String): String {
+        val words = name.trim().split(' ').filter { it.isNotBlank() }
+        var end = words.size
+        while (end > 0 && words[end - 1].lowercase().trimEnd('.', ',', '(', ')') in LEGAL_WORDS) end--
+        return words.take(end).joinToString(" ").trim()
+    }
+
+    private fun stripStoreCode(name: String): String {
+        var result = name.trimEnd()
+        while (result.isNotEmpty()) {
+            val sepIdx = result.indexOfLast { it == '-' || it == '#' || it == '–' }
+            if (sepIdx < 0) break
+            val after = result.substring(sepIdx + 1).trim()
+            if (after.isNotEmpty() && after.all { it.isDigit() || it.isWhitespace() }) {
+                result = result.substring(0, sepIdx).trimEnd()
+            } else break
+        }
+        return result
+    }
+
+    private fun stripLocationSuffix(name: String): String {
+        for (sep in BRAND_SEPARATORS) {
+            val idx = name.indexOf(sep)
+            if (idx <= 0) continue
+            val after = name.substring(idx + sep.length).trim()
+            if (after.length in LOCATION_DESC_LENGTH && after.first().isLetter()) return name.substring(0, idx).trim()
+        }
+        return name
+    }
+
     // ─── Amount ──────────────────────────────────────────────────────────────
 
-    // Alt 1 (tried first — more specific): space-grouped thousands, currency symbol required.
-    //   Handles "R 8 999,00" common on SA receipts. Currency required to avoid false
-    //   positives on phone numbers like "011 555 1234".
-    // Alt 2: standard dot/comma separators, currency symbol optional.
-    private val AMOUNT_REGEX = Regex(
-        """[${'$'}R£€¥₹]\s*(\d{1,3}(?:\s\d{3})+(?:[.,]\d{1,2})?)(?!\d)""" +
-        """|[${'$'}R£€¥₹]?\s*(\d{1,6}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)(?!\d)"""
-    )
-
-    // Lines whose amount we should never treat as the receipt total.
-    // NOTE: high-confidence total lines (TOTAL_HIGH) are never skipped even if they
-    // contain these words (e.g. "TOTAL INCL VAT" contains "vat").
     private val SKIP_AMOUNT_LINES = listOf(
         "cash", "change", "tendered", "card", "visa", "mastercard",
         "discount", "saving", "points", "loyalty",
-        "vat excl", "tax excl",          // standalone VAT/tax lines, not "total incl vat"
+        "vat excl", "tax excl",
         "qty", "price each", "per unit",
     )
 
-    // High-confidence total keywords (score 100)
     private val TOTAL_HIGH = listOf(
-        "grand total", "total due", "total amount due", "amount due",
-        "amount to pay", "please pay", "balance due", "net payable",
+        "total", "grand total", "total due", "total amount due", "total amount",
+        "amount due", "amount to pay", "please pay", "balance due", "net payable",
         "total incl vat", "total incl", "total to pay", "net amount",
         "you owe",
     )
-    // Medium-confidence total keywords (score 50)
-    private val TOTAL_MED = listOf(
-        "total", "amount", "balance", "net",
-    )
+
+    private val TOTAL_MED = listOf("amount", "balance", "net")
+
+    // Amounts preceded by a currency symbol; R requires a word boundary (not mid-word).
+    // Allows space-grouped thousands: "R 8 999,00".
+    private val CURRENCY_AMOUNT_RE = Regex("""(?:[$£€¥₹]|(?<![A-Za-z])R)\s*(\d[\d ,]*(?:[.,]\d{1,2})?)""")
+
+    // Bare decimal amounts without a currency prefix (no space grouping, avoids false positives).
+    private val PLAIN_AMOUNT_RE = Regex("""(?<![,.\d])(\d[\d,]*[.,]\d{1,2})(?![,.\d])""")
+
+    // Whole-number amounts without a currency prefix or decimal ("TOTAL   144").
+    // Minimum 2 digits to avoid single-digit quantity false positives.
+    private val PLAIN_WHOLE_RE = Regex("""(?<![,.\d])(\d{2,})(?![,.\d])""")
 
     private data class AmountCandidate(val amount: Double, val score: Int)
 
@@ -149,61 +209,68 @@ object ReceiptParser {
 
         lines.forEachIndexed { idx, line ->
             val lower = line.lowercase()
-            val isHighConfidence = TOTAL_HIGH.any { lower.contains(it) }
-            // TOTAL_HIGH lines are never skipped — "TOTAL INCL VAT" contains "vat" but is the real total.
+            // Collapse runs of whitespace so "TOTAL   AMOUNT" matches the phrase "total amount".
+            val normalized = lower.replace(Regex("\\s+"), " ")
+            val isHighConfidence = TOTAL_HIGH.any { normalized.contains(it) }
             if (!isHighConfidence && SKIP_AMOUNT_LINES.any { lower.contains(it) }) return@forEachIndexed
 
-            val amounts = AMOUNT_REGEX.findAll(line)
-                .mapNotNull { m ->
-                    // groupValues[1] = alt-1 (standard), groupValues[2] = alt-2 (space-grouped)
-                    normalizeAmount(m.groupValues[1].ifEmpty { m.groupValues[2] })
-                }
-                .filter { it > 0.0 }
-                .toList()
+            val amounts = amountsIn(line).filter { it > 0.0 }
             if (amounts.isEmpty()) return@forEachIndexed
 
-            val lineAmount = amounts.maxOrNull() ?: return@forEachIndexed
+            val lineAmount = amounts.max()
 
             var score = 0
             when {
-                TOTAL_HIGH.any { lower.contains(it) } -> score += 100
-                TOTAL_MED.any { lower.contains(it) } -> score += 50
+                TOTAL_HIGH.any { normalized.contains(it) } -> score += SCORE_TOTAL_HIGH_CONF
+                TOTAL_MED.any { normalized.contains(it) } -> score += SCORE_TOTAL_MED_CONF
             }
-            // Receipts print the grand total in the lower half
             val posRatio = idx.toFloat() / total.coerceAtLeast(1)
-            if (posRatio > 0.50f) score += 15
-            if (posRatio > 0.65f) score += 15
-            if (posRatio > 0.80f) score += 10
+            if (posRatio > POS_LOWER_HALF)   score += SCORE_POS_LOWER_HALF
+            if (posRatio > POS_LOWER_THIRD)  score += SCORE_POS_LOWER_THIRD
+            if (posRatio > POS_BOTTOM_FIFTH) score += SCORE_POS_BOTTOM_FIFTH
 
             candidates.add(AmountCandidate(lineAmount, score))
         }
 
         if (candidates.isEmpty()) return null
-
         val maxScore = candidates.maxOf { it.score }
-        // Among highest-scored candidates, pick the largest amount
-        return candidates
-            .filter { it.score == maxScore }
-            .maxOfOrNull { it.amount }
+        return candidates.filter { it.score == maxScore }.maxOfOrNull { it.amount }
     }
 
-    // Normalise amount strings that may use either convention:
-    //   US  : 1,234.56  →  1234.56
-    //   EU  : 1.234,56  →  1234.56
-    //   ZA  : 1 234,56  →  1234.56  (space-grouped)
+    private fun amountsIn(line: String): List<Double> {
+        val found = mutableListOf<Double>()
+        // Each pass blanks its matches so later passes don't double-count sub-spans.
+        var remaining = line
+        CURRENCY_AMOUNT_RE.findAll(line).forEach { m ->
+            normalizeAmount(m.groupValues[1].trimEnd(' ', ',', '.'))
+                ?.takeIf { it > 0 }?.let { found.add(it) }
+            remaining = remaining.replaceRange(m.range, " ".repeat(m.value.length))
+        }
+        PLAIN_AMOUNT_RE.findAll(remaining).forEach { m ->
+            normalizeAmount(m.groupValues[1])?.takeIf { it > 0 }?.let { found.add(it) }
+            remaining = remaining.replaceRange(m.range, " ".repeat(m.value.length))
+        }
+        // Whole-number fallback: "TOTAL   144" — runs only on whatever spans remain.
+        PLAIN_WHOLE_RE.findAll(remaining).forEach { m ->
+            normalizeAmount(m.groupValues[1])?.takeIf { it > 0 }?.let { found.add(it) }
+        }
+        return found.distinct()
+    }
+
+    // Handles US (1,234.56), EU (1.234,56), and SA space-grouped (1 234,56) formats.
     private fun normalizeAmount(raw: String): Double? {
         val cleaned = raw.replace(" ", "")
         return when {
             cleaned.contains(',') && cleaned.contains('.') -> {
                 val lastComma = cleaned.lastIndexOf(',')
-                val lastDot = cleaned.lastIndexOf('.')
-                if (lastDot > lastComma) cleaned.replace(",", "")          // US
-                else cleaned.replace(".", "").replace(",", ".")             // EU
+                val lastDot   = cleaned.lastIndexOf('.')
+                if (lastDot > lastComma) cleaned.replace(",", "")
+                else cleaned.replace(".", "").replace(",", ".")
             }
             cleaned.contains(',') -> {
                 val afterComma = cleaned.substringAfterLast(',')
-                if (afterComma.length <= 2) cleaned.replace(",", ".")      // EU decimal
-                else cleaned.replace(",", "")                              // thousands
+                if (afterComma.length <= 2) cleaned.replace(",", ".")
+                else cleaned.replace(",", "")
             }
             else -> cleaned
         }.toDoubleOrNull()
@@ -211,44 +278,56 @@ object ReceiptParser {
 
     // ─── Date ────────────────────────────────────────────────────────────────
 
-    private val DATE_REGEXES = listOf(
-        Regex("""\b(\d{4})[/-](\d{2})[/-](\d{2})\b"""),                          // YYYY-MM-DD
-        Regex("""\b(\d{4})/(\d{2})/(\d{2})\b"""),                                // YYYY/MM/DD
-        Regex("""\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b"""),                     // DD/MM/YYYY or MM/DD/YYYY
-        Regex("""\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{2,4})\b""", RegexOption.IGNORE_CASE),
-        Regex("""\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s.]+(\d{1,2})[\s,]+(\d{4})\b""", RegexOption.IGNORE_CASE),
-    )
-
-    private fun looksLikeDate(line: String) = DATE_REGEXES.any { it.containsMatchIn(line) }
-
     private val MONTH_MAP = mapOf(
         "jan" to 1, "feb" to 2, "mar" to 3, "apr" to 4, "may" to 5, "jun" to 6,
         "jul" to 7, "aug" to 8, "sep" to 9, "oct" to 10, "nov" to 11, "dec" to 12,
     )
 
+    // YYYY-MM-DD or YYYY/MM/DD — backreference \2 enforces consistent separator
+    private val DATE_YMD_RE = Regex("""(\d{4})([-/])(\d{1,2})\2(\d{1,2})""")
+    // DD-MM-YYYY or DD/MM/YYYY — backreference \2 enforces consistent separator
+    private val DATE_DMY_RE = Regex("""(\d{1,2})([-/])(\d{1,2})\2(\d{4})""")
+    // "15 Jan 2024"
+    private val DATE_DMY_TEXT_RE = Regex("""(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})""", RegexOption.IGNORE_CASE)
+    // "Jan 15, 2024" or "Jan 15 2024"
+    private val DATE_MDY_TEXT_RE = Regex("""([A-Za-z]{3,9})\s+(\d{1,2})[,\s]+(\d{4})""", RegexOption.IGNORE_CASE)
+
+    private fun looksLikeDate(line: String): Boolean =
+        parseNumericDate(line) != null || parseTextDate(line) != null
+
     private fun extractDate(rawText: String): Long? {
-        // ISO / YYYY-MM-DD / YYYY/MM/DD
-        Regex("""\b(\d{4})[/-](\d{1,2})[/-](\d{1,2})\b""").find(rawText)?.let { m ->
-            return tryParseDate(m.groupValues[1].toInt(), m.groupValues[2].toInt(), m.groupValues[3].toInt())
+        for (line in rawText.lines()) {
+            (parseNumericDate(line) ?: parseTextDate(line))?.let { return it }
         }
-        // DD/MM/YYYY — common on receipts
-        Regex("""\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b""").find(rawText)?.let { m ->
-            return tryParseDate(m.groupValues[3].toInt(), m.groupValues[2].toInt(), m.groupValues[1].toInt())
+        return null
+    }
+
+    private fun parseNumericDate(line: String): Long? {
+        DATE_YMD_RE.find(line)?.let { m ->
+            tryDate(m.groupValues[1].toInt(), m.groupValues[3].toInt(), m.groupValues[4].toInt())
+                ?.let { return it }
         }
-        // "15 Jan 2024" or "Jan 15, 2024"
-        Regex("""\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{4})\b""", RegexOption.IGNORE_CASE).find(rawText)?.let { m ->
-            val month = MONTH_MAP[m.groupValues[2].lowercase().take(3)] ?: return@let
-            return tryParseDate(m.groupValues[3].toInt(), month, m.groupValues[1].toInt())
+        DATE_DMY_RE.find(line)?.let { m ->
+            tryDate(m.groupValues[4].toInt(), m.groupValues[3].toInt(), m.groupValues[1].toInt())
+                ?.let { return it }
         }
-        Regex("""\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s.]+(\d{1,2})[\s,]+(\d{4})\b""", RegexOption.IGNORE_CASE).find(rawText)?.let { m ->
-            val month = MONTH_MAP[m.groupValues[1].lowercase().take(3)] ?: return@let
-            return tryParseDate(m.groupValues[3].toInt(), month, m.groupValues[2].toInt())
+        return null
+    }
+
+    private fun parseTextDate(line: String): Long? {
+        DATE_DMY_TEXT_RE.find(line)?.let { m ->
+            val month = MONTH_MAP[m.groupValues[2].take(3).lowercase()] ?: return@let
+            tryDate(m.groupValues[3].toInt(), month, m.groupValues[1].toInt())?.let { return it }
+        }
+        DATE_MDY_TEXT_RE.find(line)?.let { m ->
+            val month = MONTH_MAP[m.groupValues[1].take(3).lowercase()] ?: return@let
+            tryDate(m.groupValues[3].toInt(), month, m.groupValues[2].toInt())?.let { return it }
         }
         return null
     }
 
     @OptIn(kotlin.time.ExperimentalTime::class)
-    private fun tryParseDate(year: Int, month: Int, day: Int): Long? = try {
+    private fun tryDate(year: Int, month: Int, day: Int): Long? = try {
         LocalDate(year, month, day).atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     } catch (_: Exception) { null }
 
@@ -297,5 +376,20 @@ object ReceiptParser {
     private fun suggestCategory(rawText: String): String? {
         val lower = rawText.lowercase()
         return CATEGORY_KEYWORDS.entries.firstOrNull { (_, kws) -> kws.any { lower.contains(it) } }?.key
+    }
+
+    // ─── String utilities ────────────────────────────────────────────────────
+
+    private fun wordsOf(text: String): List<String> =
+        text.split(' ', '\t', ',', '.', ':', ';')
+            .map { it.trim().trimEnd('.', ',', '(', ')') }
+            .filter { it.isNotBlank() }
+
+    private fun String.normalizeSpaces(): String =
+        split(' ').filter { it.isNotBlank() }.joinToString(" ")
+
+    private fun looksLikePhone(line: String): Boolean {
+        val digits = line.count { it.isDigit() }
+        return digits >= PHONE_MIN_DIGITS && digits.toFloat() / line.length > PHONE_DIGIT_RATIO
     }
 }

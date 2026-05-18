@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.play.services)
             implementation(libs.sqldelight.android.driver)
             implementation(libs.mlkit.text.recognition)
+            implementation(libs.androidx.biometric)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

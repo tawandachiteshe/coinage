@@ -41,7 +41,12 @@ class GoalRepository(
         q.insert(id, name, icon, targetAmount, savedAmount, deadline, isCompleted, 0L, createdAt)
     }
 
+    fun getArchived(): Flow<List<Goal>> =
+        q.selectArchived().asFlow().mapToList(ioDispatcher)
+
     suspend fun archive(id: String) = withContext(ioDispatcher) { q.archive(id) }
+
+    suspend fun unarchive(id: String) = withContext(ioDispatcher) { q.unarchive(id) }
 
     suspend fun addToSaved(id: String, amount: Double) =
         withContext(ioDispatcher) { q.addToSaved(amount, id) }

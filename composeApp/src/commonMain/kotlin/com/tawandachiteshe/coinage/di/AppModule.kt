@@ -40,7 +40,7 @@ val appModule = module {
     viewModel { InsightsViewModel(get(), get()) }
     viewModel { AddViewModel(get(), get(), get(), get(), get()) }
     viewModel { JarsManagerViewModel(get(), get()) }
-    viewModel { OnboardingViewModel(get()) }
+    viewModel { OnboardingViewModel(get(), get()) }
     viewModel { ProfileViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(currencyRepo = get(), userPrefsRepo = get(), googleAuthRepo = getOrNull(), backupOrchestrator = getOrNull()) }
 }

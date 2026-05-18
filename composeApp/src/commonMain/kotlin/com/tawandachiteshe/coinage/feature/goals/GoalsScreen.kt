@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -22,12 +23,18 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,7 +79,36 @@ fun GoalsScreen(
     var customGoalEntry by remember { mutableStateOf<GoalUi?>(null) }
     var customGoalAmount by remember { mutableStateOf("") }
 
-    CoinageScaffold(activeTab = CoinageTab.Goals, onTabClick = onTabClick, onAddClick = onAddClick) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is GoalsEvent.ShowUndoArchive -> {
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "\"${event.goalName}\" archived",
+                            actionLabel = "Undo",
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.onAction(GoalsAction.OnUnarchiveGoal(event.goalId))
+                        }
+                    }
+                }
+                is GoalsEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(event.msg)
+                }
+            }
+        }
+    }
+
+    CoinageScaffold(
+        activeTab = CoinageTab.Goals,
+        onTabClick = onTabClick,
+        onAddClick = onAddClick,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) {
             PageHeader(
                 eyebrow = "Goals · ${state.goals.size} in flight",
                 title = "Saving",
@@ -170,26 +206,26 @@ fun GoalsScreen(
                                 }
                                 Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxSize()
                                         .background(bgColor, RoundedCornerShape(18.dp))
-                                        .padding(horizontal = 24.dp),
+                                        .padding(horizontal = 28.dp),
                                     contentAlignment = if (isDelete) Alignment.CenterEnd else Alignment.CenterStart,
                                 ) {
                                     if (dir != SwipeToDismissBoxValue.Settled) {
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                                            verticalArrangement = Arrangement.spacedBy(6.dp),
                                         ) {
                                             Icon(
                                                 imageVector = if (isDelete) CoinageIcons.Trash else CoinageIcons.Archive,
                                                 contentDescription = if (isDelete) "Delete" else "Archive",
                                                 tint = if (isDelete) CoinageColors.Cherry else CoinageColors.Sky,
-                                                modifier = Modifier.size(20.dp),
+                                                modifier = Modifier.size(36.dp),
                                             )
                                             Text(
                                                 text = if (isDelete) "Delete" else "Archive",
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
                                                 fontFamily = FontFamily.Monospace,
                                                 color = if (isDelete) CoinageColors.Cherry else CoinageColors.Sky,
                                             )
@@ -322,6 +358,106 @@ fun GoalsScreen(
                         Text("+", fontSize = 22.sp, lineHeight = 22.sp, color = CoinageColors.Ink2)
                         Spacer(Modifier.width(10.dp))
                         Text("Plant a new goal", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink2)
+                    }
+                }
+
+                // Archived toggle
+                if (state.archivedGoals.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { viewModel.onAction(GoalsAction.OnToggleShowArchived) }
+                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = CoinageIcons.Archive,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = CoinageColors.Ink2.copy(alpha = 0.55f),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "${state.archivedGoals.size} archived goal${if (state.archivedGoals.size != 1) "s" else ""}",
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = CoinageColors.Ink2.copy(alpha = 0.55f),
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            imageVector = if (state.showArchived) CoinageIcons.ChevronLeft else CoinageIcons.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = CoinageColors.Ink2.copy(alpha = 0.45f),
+                        )
+                    }
+                }
+
+                // Archived goals list
+                if (state.showArchived) {
+                    state.archivedGoals.forEachIndexed { i, goal ->
+                        val color = GOAL_COLORS[i % GOAL_COLORS.size].copy(alpha = 0.45f)
+                        StickerCard(
+                            bgColor = CoinageColors.Paper2.copy(alpha = 0.6f),
+                            modifier = Modifier.fillMaxWidth(),
+                            cornerRadius = 16.dp,
+                            borderWidth = 1.2.dp,
+                            shadowX = 2.dp,
+                            shadowY = 2.dp,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(color, RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = CoinageIcons.fromKey(goal.icon),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = CoinageColors.Ink.copy(alpha = 0.5f),
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        goal.name,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = CoinageColors.Ink.copy(alpha = 0.5f),
+                                    )
+                                    Text(
+                                        "${goal.pct.toInt()}% · \$${goal.savedAmount.fmtWhole()} of \$${goal.targetAmount.fmtWhole()}",
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = CoinageColors.Ink2.copy(alpha = 0.4f),
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(CoinageColors.Paper3, RoundedCornerShape(999.dp))
+                                        .border(1.dp, CoinageColors.Ink.copy(alpha = 0.3f), RoundedCornerShape(999.dp))
+                                        .clickable { viewModel.onAction(GoalsAction.OnUnarchiveGoal(goal.id)) }
+                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                ) {
+                                    Text(
+                                        "Restore",
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = CoinageColors.Ink2.copy(alpha = 0.6f),
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
