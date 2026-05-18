@@ -129,5 +129,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 delete:
 DELETE FROM `Transaction` WHERE id = ?;
 
+deleteByDateRange:
+DELETE FROM `Transaction` WHERE date >= :startMs AND date < :endMs;
+
 deleteAll:
 DELETE FROM `Transaction`;

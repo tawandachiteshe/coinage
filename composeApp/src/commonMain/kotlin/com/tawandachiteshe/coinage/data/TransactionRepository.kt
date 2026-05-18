@@ -113,5 +113,9 @@ class TransactionRepository(
         q.selectAll().executeAsList()
     }
 
+    suspend fun deleteByDateRange(startMs: Long, endMs: Long) = withContext(ioDispatcher) {
+        q.deleteByDateRange(startMs, endMs)
+    }
+
     suspend fun deleteAll() = withContext(ioDispatcher) { q.deleteAll() }
 }

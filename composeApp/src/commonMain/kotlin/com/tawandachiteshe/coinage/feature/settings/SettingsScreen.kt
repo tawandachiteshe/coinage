@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,14 @@ fun SettingsScreen(
     googleAuthRepository: GoogleAuthRepository = koinInject(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val clipboard = LocalClipboardManager.current
+
+    LaunchedEffect(state.exportCsv) {
+        state.exportCsv?.let { csv ->
+            clipboard.setText(AnnotatedString(csv))
+            viewModel.onAction(SettingsAction.DismissExportCsv)
+        }
+    }
 
     var theme by remember { mutableStateOf("Tropicana") }
     var voice by remember { mutableStateOf("Wise sibling") }
@@ -260,15 +269,21 @@ fun SettingsScreen(
                 Text("Danger zone".uppercase(), fontSize = 10.5.sp, fontFamily = FontFamily.Monospace, letterSpacing = 1.4.sp, color = CoinageColors.Butter)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    listOf("Export data", "Reset month", "Delete everything").forEachIndexed { i, label ->
+                    data class DangerBtn(val label: String, val isDestructive: Boolean, val action: SettingsAction)
+                    listOf(
+                        DangerBtn("Export data",       false, SettingsAction.OnExportData),
+                        DangerBtn("Reset month",       false, SettingsAction.OnResetMonth),
+                        DangerBtn("Delete everything", true,  SettingsAction.OnDeleteEverything),
+                    ).forEach { btn ->
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(if (i == 2) CoinageColors.Cherry else CoinageColors.Paper)
+                                .background(if (btn.isDestructive) CoinageColors.Cherry else CoinageColors.Paper)
                                 .border(1.4.dp, CoinageColors.Paper, RoundedCornerShape(999.dp))
+                                .clickable { viewModel.onAction(btn.action) }
                                 .padding(horizontal = 11.dp, vertical = 6.dp),
                         ) {
-                            Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (i == 2) CoinageColors.Paper else CoinageColors.Ink)
+                            Text(btn.label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = if (btn.isDestructive) CoinageColors.Paper else CoinageColors.Ink)
                         }
                     }
                 }
@@ -296,6 +311,43 @@ fun SettingsScreen(
                     fontFamily = FontFamily.Monospace,
                     color = CoinageColors.Ink2,
                     lineHeight = 16.sp,
+                )
+            }
+        }
+
+        // Danger zone dialogs
+        if (state.showResetMonthConfirm) {
+            CoinageDialog(
+                title = "Reset this month?",
+                onDismissRequest = { viewModel.onAction(SettingsAction.DismissResetMonthConfirm) },
+                confirmLabel = "Reset",
+                confirmColor = CoinageColors.Coral,
+                onConfirm = { viewModel.onAction(SettingsAction.OnConfirmResetMonth) },
+                onDismiss = { viewModel.onAction(SettingsAction.DismissResetMonthConfirm) },
+            ) {
+                Text(
+                    "All transactions from this calendar month will be permanently deleted.",
+                    fontSize = 13.sp,
+                    color = CoinageColors.Ink2,
+                    lineHeight = 18.sp,
+                )
+            }
+        }
+
+        if (state.showDeleteAllConfirm) {
+            CoinageDialog(
+                title = "Delete everything?",
+                onDismissRequest = { viewModel.onAction(SettingsAction.DismissDeleteAllConfirm) },
+                confirmLabel = "Delete all",
+                confirmColor = CoinageColors.Cherry,
+                onConfirm = { viewModel.onAction(SettingsAction.OnConfirmDeleteEverything) },
+                onDismiss = { viewModel.onAction(SettingsAction.DismissDeleteAllConfirm) },
+            ) {
+                Text(
+                    "All transactions, goals, and debts will be permanently deleted. This cannot be undone.",
+                    fontSize = 13.sp,
+                    color = CoinageColors.Ink2,
+                    lineHeight = 18.sp,
                 )
             }
         }
