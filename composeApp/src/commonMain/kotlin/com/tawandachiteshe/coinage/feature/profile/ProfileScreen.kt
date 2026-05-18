@@ -42,10 +42,14 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tawandachiteshe.coinage.ui.components.StickerCard
+import com.tawandachiteshe.coinage.ui.components.CoinageDialog
 import com.tawandachiteshe.coinage.ui.components.CoinageScaffold
 import com.tawandachiteshe.coinage.ui.components.CoinageTab
+import com.tawandachiteshe.coinage.ui.components.CoinageTextField
+import com.tawandachiteshe.coinage.ui.components.StickerCard
 import com.tawandachiteshe.coinage.ui.components.popShadow
 import com.tawandachiteshe.coinage.ui.theme.CoinageColors
 import com.tawandachiteshe.coinage.ui.theme.CoinageIcons
@@ -62,18 +66,26 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val clipboard = LocalClipboardManager.current
     var badgeToast by remember { mutableStateOf<ProfileEvent.BadgeEarned?>(null) }
+    var exportToast by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
-            if (event is ProfileEvent.BadgeEarned) badgeToast = event
+            when (event) {
+                is ProfileEvent.BadgeEarned -> badgeToast = event
+                is ProfileEvent.ExportReady -> {
+                    clipboard.setText(AnnotatedString(event.csv))
+                    exportToast = "Copied ${event.csv.lines().size - 2} rows to clipboard"
+                }
+            }
         }
     }
     LaunchedEffect(badgeToast) {
-        if (badgeToast != null) {
-            delay(3_000)
-            badgeToast = null
-        }
+        if (badgeToast != null) { delay(3_000); badgeToast = null }
+    }
+    LaunchedEffect(exportToast) {
+        if (exportToast != null) { delay(2_500); exportToast = null }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -228,9 +240,9 @@ fun ProfileScreen(
         Spacer(Modifier.height(24.dp))
         data class ProfileLink(val label: String, val hint: String, val icon: ImageVector, val isCta: Boolean = false, val onClick: () -> Unit = {})
         val links = listOf(
-            ProfileLink("Account · ${state.name}", "Face ID linked",                CoinageIcons.User),
+            ProfileLink("Account · ${state.name}", "tap to edit name",              CoinageIcons.User,     onClick = { viewModel.onAction(ProfileAction.ShowEditName) }),
             ProfileLink("Categories & jars",       "${state.jarCount} active",      CoinageIcons.Layers,   onClick = onManageJars),
-            ProfileLink("Export your data",        "JSON or CSV",                   CoinageIcons.Download),
+            ProfileLink("Export your data",        "CSV · copied to clipboard",     CoinageIcons.Download, onClick = { viewModel.onAction(ProfileAction.ExportData) }),
             ProfileLink("Open Settings",           "theme, currency, sync",         CoinageIcons.Settings, isCta = true, onClick = onOpenSettings),
         )
         Column(
@@ -281,7 +293,34 @@ fun ProfileScreen(
     ) {
         badgeToast?.let { toast -> BadgeToastCard(toast.label) }
     }
+
+    AnimatedVisibility(
+        visible = exportToast != null,
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp, start = 22.dp, end = 22.dp),
+    ) {
+        exportToast?.let { msg -> ExportToastCard(msg) }
+    }
     } // end outer Box
+
+    if (state.showEditName) {
+        CoinageDialog(
+            title = "Edit your name",
+            onDismissRequest = { viewModel.onAction(ProfileAction.DismissEditName) },
+            confirmLabel = "Save",
+            confirmColor = com.tawandachiteshe.coinage.ui.theme.CoinageColors.Mint,
+            onConfirm = { viewModel.onAction(ProfileAction.SaveName) },
+            onDismiss = { viewModel.onAction(ProfileAction.DismissEditName) },
+        ) {
+            CoinageTextField(
+                value = state.editNameValue,
+                onValueChange = { viewModel.onAction(ProfileAction.OnEditNameChange(it)) },
+                label = "Name",
+                placeholder = "Your name",
+            )
+        }
+    }
 }
 
 @Composable
@@ -330,6 +369,27 @@ private fun BadgeToastCard(label: String) {
                     color = CoinageColors.Ink,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ExportToastCard(message: String) {
+    StickerCard(
+        bgColor = CoinageColors.Mint,
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 16.dp,
+        borderWidth = 2.dp,
+        shadowX = 4.dp,
+        shadowY = 5.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(CoinageIcons.Download, contentDescription = null, modifier = Modifier.size(20.dp), tint = CoinageColors.Ink)
+            Text(message, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = CoinageColors.Ink)
         }
     }
 }

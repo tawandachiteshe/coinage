@@ -30,10 +30,21 @@ data class ProfileUiState(
     val hasBigSpender: Boolean = false,
     val hasLongHauler: Boolean = false,
     val hasJarMaster: Boolean = false,
+    val showEditName: Boolean = false,
+    val editNameValue: String = "",
 )
 
 sealed interface ProfileEvent {
     data class BadgeEarned(val label: String) : ProfileEvent
+    data class ExportReady(val csv: String) : ProfileEvent
+}
+
+sealed interface ProfileAction {
+    data object ShowEditName : ProfileAction
+    data object DismissEditName : ProfileAction
+    data class OnEditNameChange(val value: String) : ProfileAction
+    data object SaveName : ProfileAction
+    data object ExportData : ProfileAction
 }
 
 class ProfileViewModel(
@@ -47,6 +58,44 @@ class ProfileViewModel(
 
     private val _events = Channel<ProfileEvent>(BUFFERED)
     val events = _events.receiveAsFlow()
+
+    private var latestTxsForExport: List<TxExportRow> = emptyList()
+
+    fun onAction(action: ProfileAction) {
+        when (action) {
+            ProfileAction.ShowEditName ->
+                _state.update { it.copy(showEditName = true, editNameValue = it.name) }
+            ProfileAction.DismissEditName ->
+                _state.update { it.copy(showEditName = false) }
+            is ProfileAction.OnEditNameChange ->
+                _state.update { it.copy(editNameValue = action.value) }
+            ProfileAction.SaveName -> {
+                val name = _state.value.editNameValue.trim().ifBlank { return }
+                _state.update { it.copy(showEditName = false) }
+                viewModelScope.launch {
+                    profileRepo.saveName(name)
+                    _state.update { it.copy(name = name, initial = name.first().uppercaseChar().toString()) }
+                }
+            }
+            ProfileAction.ExportData -> {
+                val rows = latestTxsForExport
+                viewModelScope.launch {
+                    val csv = buildString {
+                        appendLine("date,type,merchant,category,amount,currency,notes")
+                        rows.forEach { r ->
+                            val date = kotlinx.datetime.Instant.fromEpochMilliseconds(r.dateMs)
+                                .toString().take(10)
+                            val merchant = r.merchant.replace(",", ";")
+                            val category = r.category.replace(",", ";")
+                            val notes = r.notes?.replace(",", ";") ?: ""
+                            appendLine("$date,${r.type},$merchant,$category,${r.amount},${r.currency},$notes")
+                        }
+                    }
+                    _events.trySend(ProfileEvent.ExportReady(csv))
+                }
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -67,9 +116,13 @@ class ProfileViewModel(
                     val daysUsed = if (joinedAt > 0L)
                         (Clock.System.now().toEpochMilliseconds() - joinedAt) / 86_400_000L
                         else 0L
-                    Tuple(total, count, jars.size, epochDays, maxSingle, jarsWithTx, activeJarIds, daysUsed)
+                    val exportRows = txs.map { t ->
+                        TxExportRow(t.date, t.type, t.merchant, t.category_name, t.amount, t.currency_code, t.notes)
+                    }
+                    Tuple(total, count, jars.size, epochDays, maxSingle, jarsWithTx, activeJarIds, daysUsed, exportRows)
                 }
-                .collect { (total, count, jarCount, epochDays, maxSingle, jarsWithTx, activeJarIds, daysUsed) ->
+                .collect { (total, count, jarCount, epochDays, maxSingle, jarsWithTx, activeJarIds, daysUsed, exportRows) ->
+                    latestTxsForExport = exportRows
                     val prev = _state.value
                     val next = prev.copy(
                         totalTrackedLabel = total.toTrackedLabel(),
@@ -120,6 +173,17 @@ private data class Tuple(
     val jarsWithTx: Set<String>,
     val activeJarIds: Set<String>,
     val daysUsed: Long,
+    val exportRows: List<TxExportRow>,
+)
+
+private data class TxExportRow(
+    val dateMs: Long,
+    val type: String,
+    val merchant: String,
+    val category: String,
+    val amount: Double,
+    val currency: String,
+    val notes: String?,
 )
 
 internal fun hasConsecutiveDayStreak(epochDays: Set<Long>, n: Int): Boolean {
